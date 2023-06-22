@@ -26,6 +26,7 @@ public class FlowExtension : ModuleRules
 			new string[]
 			{
 				"Core",
+				"Flow"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -38,7 +39,6 @@ public class FlowExtension : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"Flow"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

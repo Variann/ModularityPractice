@@ -18,12 +18,13 @@
 		{
 			"Name": "FlowExtension",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"RequiredPlugins": [
-				{
-					"Name": "Flow"
-				}
-			]
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "Flow",
+			"Enabled": true
 		}
 	]
 }
