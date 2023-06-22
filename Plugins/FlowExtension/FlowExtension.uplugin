@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "FlowExtension",
+	"Description": "Extends the plugin \"Flow\" to provide common systems such as dialogue and quests.",
+	"Category": "Other",
+	"CreatedBy": "Varian",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "FlowExtension",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"RequiredPlugins": [
+				{
+					"Name": "Flow"
+				}
+			]
+		}
+	]
+}

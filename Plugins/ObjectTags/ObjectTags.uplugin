@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ObjectTags",
+	"Description": "Gives a foundation for reaction based code based on Gameplay Tags by adding tags to any UObject.",
+	"Category": "Other",
+	"CreatedBy": "Varian",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ObjectTags",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
