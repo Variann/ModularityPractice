@@ -10,23 +10,21 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract, Blueprintable, DisplayName = "Base Dialogue Node")
 class FLOWEXTENSION_API UFN_DialogueBase : public UFlowNode
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 
 protected:
+
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FText Text;
+	FS_Script DialogueText;
+
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	TArray<FText> Answers;
+	TArray<FS_DialogueOption> DialogueOptions;
 
 public:
 	static const FString Continue;
-
-	explicit UFN_DialogueBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-	virtual void ExecuteInput(const FName& PinName) override;
 
 #if WITH_EDITOR
 
@@ -34,15 +32,22 @@ public:
 
 	virtual void FixNode(UEdGraphNode* NewGraph) override;
 
-#endif
-
 private:
 	void RefreshOutputs();
+
+#endif
+
 protected:
 	virtual void Stop() const;
 
 
 public:
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<FS_DialogueOption> GetDialogueOptions();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FS_DialogueSettings GetSettingsForDialogue(FS_DialogueOption DialogueOption);
 
 	UFUNCTION(BlueprintNativeEvent)
 	UTexture2D* GetSpeakerPortrait();
