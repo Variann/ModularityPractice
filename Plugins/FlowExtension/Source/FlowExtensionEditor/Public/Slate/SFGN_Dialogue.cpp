@@ -89,7 +89,12 @@ void SFGN_Dialogue::UpdateGraphNode()
 										+ SVerticalBox::Slot()
 											.AutoHeight()
 											[
-												CreateTitleWidget(NodeTitle)
+												// CreateTitleWidget(NodeTitle)
+											SAssignNew(InlineEditableText, SInlineEditableTextBlock)
+											.Style(FEditorStyle::Get(), "Graph.Node.NodeTitleInlineEditableText")
+											.Text(NodeTitleText)
+											.ColorAndOpacity(SpeakerTextColor)
+											.IsReadOnly(true)
 											]
 										+ SVerticalBox::Slot()
 											.AutoHeight()
