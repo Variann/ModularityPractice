@@ -91,7 +91,7 @@ void SFGN_Dialogue::UpdateGraphNode()
 											[
 												// CreateTitleWidget(NodeTitle)
 											SAssignNew(InlineEditableText, SInlineEditableTextBlock)
-											.Style(FEditorStyle::Get(), "Graph.Node.NodeTitleInlineEditableText")
+											.Style(FAppStyle::Get(), "Graph.Node.NodeTitleInlineEditableText")
 											.Text(NodeTitleText)
 											.ColorAndOpacity(SpeakerTextColor)
 											.IsReadOnly(true)
@@ -295,7 +295,7 @@ TSharedRef<SWidget> SFGN_Dialogue::CreateDialogueContentArea()
 TSharedRef<SWidget> SFGN_Dialogue::CreateNodeContentArea()
 {
 	return SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush("NoBorder"))
+		.BorderImage(FAppStyle::GetBrush("NoBorder"))
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
 		[
