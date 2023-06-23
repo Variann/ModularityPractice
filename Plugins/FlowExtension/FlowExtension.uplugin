@@ -18,6 +18,11 @@
 		{
 			"Name": "FlowExtension",
 			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "FlowExtensionEditor",
+			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
 	],
