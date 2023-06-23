@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Data/FE_CommonData.h"
+#include "DataAssets/DA_DialogueCharacter.h"
 #include "Nodes/FlowNode.h"
 #include "FN_DialogueBase.generated.h"
 
@@ -17,6 +18,9 @@ class FLOWEXTENSION_API UFN_DialogueBase : public UFlowNode
 
 protected:
 
+	UPROPERTY(EditAnywhere, Category=Dialogue)
+	UDA_DialogueCharacter* Character = nullptr;
+	
 	UPROPERTY(EditAnywhere, Category=Dialogue)
 	FS_Script DialogueText;
 

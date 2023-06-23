@@ -62,11 +62,18 @@ TArray<FS_DialogueOption> UFN_DialogueBase::GetDialogueOptions()
 
 FS_DialogueSettings UFN_DialogueBase::GetSettingsForDialogue(FS_DialogueOption DialogueOption)
 {
+	bool bInEditor = false;
+	
 #if WITH_EDITOR
 	
-	return DialogueOption.DialogueSettings;
+	bInEditor = true;
 
 #endif
+	
+	if(bInEditor)
+	{
+		return DialogueOption.DialogueSettings;
+	}
 	
 	for(auto& CurrentOverride : DialogueOption.OptionOverrides)
 	{
@@ -78,6 +85,8 @@ FS_DialogueSettings UFN_DialogueBase::GetSettingsForDialogue(FS_DialogueOption D
 			}
 		}
 	}
+
+	return DialogueOption.DialogueSettings;
 }
 
 // TArray<FFlowPin> UFN_DialogueBase::GetCustomOutputPins_Implementation()
@@ -87,24 +96,35 @@ FS_DialogueSettings UFN_DialogueBase::GetSettingsForDialogue(FS_DialogueOption D
 
 UTexture2D* UFN_DialogueBase::GetSpeakerPortrait_Implementation()
 {
+	if(IsValid(Character))
+	{
+		return Character->FlowNodePortrait;
+	}
 	return nullptr;
 }
 
 FText UFN_DialogueBase::GetReadableDialogueString_Implementation()
 {
+
+	bool bInEditor = false;
+	
 #if WITH_EDITOR
 	
-	if(!DialogueText.DialogueText.IsEmpty())
-	{
-		return DialogueText.DialogueText;
-	}
-	else
-	{
-		return FText(FText::FromString("No text set"));
-	}
+	bInEditor = true;
 
 #endif
-	
+
+	if(bInEditor)
+	{
+		if(!DialogueText.DialogueText.IsEmpty())
+		{
+			return DialogueText.DialogueText;
+		}
+		else
+		{
+			return FText(FText::FromString("No text set"));
+		}
+	}
 	
 	for(auto& CurrentOverride : DialogueText.OptionOverrides)
 	{
@@ -122,6 +142,11 @@ FText UFN_DialogueBase::GetReadableDialogueString_Implementation()
 
 FText UFN_DialogueBase::GetSpeakerName_Implementation()
 {
+	if(IsValid(Character))
+	{
+		return Character->Name;
+	}
+	
 	return FText(FText::FromString("No Name"));
 }
 
