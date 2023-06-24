@@ -89,11 +89,6 @@ FS_DialogueSettings UFN_DialogueBase::GetSettingsForDialogue(FS_DialogueOption D
 	return DialogueOption.DialogueSettings;
 }
 
-// TArray<FFlowPin> UFN_DialogueBase::GetCustomOutputPins_Implementation()
-// {
-// 	return OutputPins;
-// }
-
 UTexture2D* UFN_DialogueBase::GetSpeakerPortrait_Implementation()
 {
 	if(IsValid(Character))
@@ -152,5 +147,10 @@ FText UFN_DialogueBase::GetSpeakerName_Implementation()
 
 FLinearColor UFN_DialogueBase::GetSpeakerColor_Implementation()
 {
+	if(IsValid(Character))
+	{
+		return Character->NodeColor;
+	}
+	
 	return FLinearColor();
 }

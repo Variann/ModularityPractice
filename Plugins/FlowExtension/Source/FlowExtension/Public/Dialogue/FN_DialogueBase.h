@@ -64,7 +64,4 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	FLinearColor GetSpeakerColor();
-
-	// UFUNCTION(BlueprintNativeEvent)
-	// TArray<FS_FlowPin> GetCustomOutputPins();
 };

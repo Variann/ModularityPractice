@@ -27,6 +27,9 @@ public:
 	
 	UPROPERTY(Category = "Developer Settings", BlueprintReadOnly, EditAnywhere, meta = (DevelopmentOnly))
 	UTexture2D* FlowNodePortrait = nullptr;
+
+	UPROPERTY(Category = "Developer Settings", BlueprintReadOnly, EditAnywhere, meta = (DevelopmentOnly))
+	FLinearColor NodeColor;
 	
 #endif
 	
