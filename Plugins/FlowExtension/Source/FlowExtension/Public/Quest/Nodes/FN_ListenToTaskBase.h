@@ -12,5 +12,16 @@
 UCLASS()
 class FLOWEXTENSION_API UFN_ListenToTaskBase : public UFlowNode
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
+
+public:
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	FGameplayTag TaskToListenTo;
+
+#if WITH_EDITOR
+public:
+	virtual FString GetNodeDescription() const override;
+	virtual EDataValidationResult ValidateNode() override;
+#endif
 };
