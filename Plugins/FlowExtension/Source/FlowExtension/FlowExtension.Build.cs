@@ -26,7 +26,9 @@ public class FlowExtension : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Flow"
+				"Flow",
+				"GameplayTags",
+				"UMG"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

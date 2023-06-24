@@ -12,6 +12,7 @@ public class FlowExtensionEditor : ModuleRules
                 "Core", "EditorStyle", "KismetWidgets", "FlowExtension",
                 "EditorSubsystem",
                 "Flow",
+                "FlowEditor",
                 "MessageLog"
             }
         );
@@ -23,8 +24,7 @@ public class FlowExtensionEditor : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "FlowEditor",
-                "GraphEditor",
+                "GraphEditor"
             }
         );
     }

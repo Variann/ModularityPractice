@@ -24,6 +24,9 @@ class FLOWEXTENSION_API II_FlowQuest
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
+	/**Quest component should always live on the player controller, this can
+	 * help retrieve the correct quest component in a multiplayer session
+	 * from a specific actor.*/
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
 	void GetQuestComponent(UQuestComponent*& QuestComponent);
 };
