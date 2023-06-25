@@ -118,12 +118,31 @@ struct FS_TaskRequirement
 };
 
 USTRUCT(BlueprintType)
-struct FS_TaskWrapper
+struct FS_QuestTask
 {
 	GENERATED_BODY()
 
-	// UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	// TSubclassOf<UFE_QuestTask> Task;
+	/**The task itself*/
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	FGameplayTag Task;
+
+	/**How much progress does this task require?*/
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests.State"))
+	float ProgressRequired;
+
+	/**What scenarios will fail this task?*/
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests"))
+	TMap<FGameplayTag, float> FailStates;
+};
+
+USTRUCT(BlueprintType)
+struct FS_TaskWrapper
+{
+	GENERATED_BODY()
+	
+	/**The task itself*/
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	FGameplayTag Task;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskRequirement> Requirements;
