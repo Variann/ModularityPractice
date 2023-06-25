@@ -1,16 +1,16 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "O_QuestRequirement.generated.h"
+#include "O_TaskFailCondition.generated.h"
 
 /**
  * 
  */
 UCLASS(Abstract, Blueprintable, BlueprintType, meta=(ShowWorldContextPin), AutoExpandCategories = ("Default"), EditInlineNew)
-class FLOWEXTENSION_API UO_QuestRequirement : public UObject
+class FLOWEXTENSION_API UO_TaskFailCondition : public UObject
 {
 	GENERATED_BODY()
 };
