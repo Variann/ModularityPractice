@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/FE_CommonData.h"
 #include "Nodes/FlowNode.h"
 #include "FN_QuestBase.generated.h"
 
@@ -16,11 +17,5 @@ class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode
 public:
 
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FGameplayTag Quest;
-
-	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FGameplayTagContainer Tasks;
-
-	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FText QuestText;
+	FS_Quest Quest;
 };

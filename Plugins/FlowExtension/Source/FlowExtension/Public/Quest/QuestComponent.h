@@ -56,10 +56,8 @@
  *	functions in C++ and then create a way for Blueprint to work with your
  *	C++ data.
  *
- *	The CDO is heavily used for default values, but then when a quest or task
- *	is started, it is converted into a struct where things can be modified.
- *	Most things are actor components primarily to reduce the amount of
- *	upkeep I'd have to do and utilize all the automatic networking.
+ * For quests to be progressed, the graph owning the quest node MUST be alive.
+ * 
  */
 
 /**Things to do:

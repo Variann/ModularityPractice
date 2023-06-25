@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Quest/Objects/O_QuestFailCondition.h"
 #include "UObject/Object.h"
 #include "FE_CommonData.generated.h"
 
-class UFE_QuestRequirement;
-class UFE_Reward;
+class UFlowNode;
+class UFlowAsset;
+class UO_QuestRequirement;
 class UWidget;
-class UFE_QuestTask;
-class UFE_Quest;
 class UO_DialogueOverrideBase;
 
 USTRUCT(BlueprintType)
@@ -131,8 +131,11 @@ struct FS_QuestTask
 	float ProgressRequired;
 
 	/**What scenarios will fail this task?*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests"))
-	TMap<FGameplayTag, float> FailStates;
+	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
+	UO_QuestFailCondition* FailConditions;
+
+	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
+	UO_QuestRequirement* Requirements;
 };
 
 USTRUCT(BlueprintType)
@@ -155,10 +158,11 @@ struct FS_TaskWrapper
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
 	TMap<FGameplayTag, float> Metadata;
 
-	/**When the task receives interface updates, these widgets will receive the same
-	 * interface call.*/
+	/**When the task receives interface updates, these objects will receive the same
+	 * interface call.
+	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<UWidget*> ExternalWidgets;
+	TArray<UObject*> Listeners;
 };
 
 //----------//
@@ -172,11 +176,33 @@ struct FS_QuestRequirement
 {
 	GENERATED_BODY()
 
-	// UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	// UFE_QuestRequirement* QuestRequirement;
+	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
+	UO_QuestRequirement* QuestRequirement;
 
 	UPROPERTY(Category = "Quest", BlueprintReadOnly)
 	bool bIsCompleted = false;
+};
+
+USTRUCT(BlueprintType)
+struct FS_Quest
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	FGameplayTag Quest;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_QuestTask> Tasks;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	FText QuestText;
+
+	/**What scenarios will fail this quest?*/
+	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
+	UO_QuestFailCondition* FailConditions;
+
+	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
+	UO_QuestRequirement* Requirements;
 };
 
 USTRUCT(BlueprintType)
@@ -184,8 +210,16 @@ struct FS_QuestWrapper
 {
 	GENERATED_BODY()
 
-	// UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	// TSubclassOf<UFE_Quest> Quest;
+	/**The graph that made the quest*/
+	UPROPERTY(Category = "Quest", BlueprintReadOnly)
+	UFlowAsset* Graph;
+
+	/**The node in the graph that started the quest*/
+	UPROPERTY(Category = "Quest", BlueprintReadOnly)
+	UFlowNode* ParentNode;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	FGameplayTag Quest;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskWrapper> Tasks;
@@ -201,10 +235,11 @@ struct FS_QuestWrapper
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
 	TMap<FGameplayTag, float> Metadata;
 
-	/**When the quest receives interface updates, these widgets will receive the same
-	 * interface call.*/
+	/**When the quest receives interface updates, these objects will receive the same
+	 * interface call.
+	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<UWidget*> ExternalWidgets;
+	TArray<UObject*> Listeners;
 };
 
 //----------//
