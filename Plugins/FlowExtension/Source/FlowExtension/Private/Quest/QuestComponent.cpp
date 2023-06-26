@@ -151,3 +151,117 @@ bool UQuestComponent::HasFailedQuest(FGameplayTag Quest)
 
 	return false;
 }
+
+FS_QuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex)
+{
+	ArrayIndex = -1;
+	for(int32 CurrentIndex = 0; CurrentIndex < ActiveQuests.Num(); CurrentIndex++)
+	{
+		for(auto& CurrentTask : ActiveQuests[CurrentIndex].Tasks)
+		{
+			if(CurrentTask.TaskID == Task)
+			{
+				ArrayIndex = CurrentIndex;
+				return ActiveQuests[CurrentIndex];
+			}
+		}
+	}
+
+	return FS_QuestWrapper();
+}
+
+bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator)
+{
+	int32 QuestIndex;
+	GetQuestForTask_Active(Task, QuestIndex);
+
+	bool TaskCompleted = false;
+	bool QuestCompleted = true;
+
+	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		return false;
+	}
+	
+	for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+	{
+		if(CurrentTask.TaskID == Task)
+		{
+			//Only tasks that are in progress can be progressed.
+			if(CurrentTask.State != InProgress)
+			{
+				return false;
+			}
+
+			//Progress is 0 or less, don't bother with math ahd delegate.
+			if(CurrentTask.CurrentProgress <= 0)
+			{
+				return false;
+			}
+			
+			const float ProgressDelta = (UKismetMathLibrary::Clamp(CurrentTask.CurrentProgress + ProgressToAdd, 0,CurrentTask.ProgressRequired) - CurrentTask.CurrentProgress);
+			
+			CurrentTask.CurrentProgress = UKismetMathLibrary::Clamp(CurrentTask.CurrentProgress + ProgressToAdd,0,CurrentTask.ProgressRequired);
+
+			if(CurrentTask.CurrentProgress == CurrentTask.ProgressRequired)
+			{
+				CurrentTask.State = Finished;
+				TaskCompleted = true;
+			}
+			TaskProgressed.Broadcast(CurrentTask, ProgressDelta, Instigator);
+
+			continue;
+		}
+
+		if(CurrentTask.State == InProgress)
+		{
+			QuestCompleted = false;
+		}
+	}
+
+	if(QuestCompleted)
+	{
+		CompleteQuest(ActiveQuests[QuestIndex].QuestID);
+	}
+
+	if(TaskCompleted)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool UQuestComponent::CanTaskBeProgressed(const FGameplayTag Task)
+{
+	int32 QuestIndex;
+	GetQuestForTask_Active(Task, QuestIndex);
+
+	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		return false;
+	}
+
+	for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+	{
+		if(CurrentTask.TaskID == Task)
+		{
+			if(CurrentTask.CurrentProgress >= CurrentTask.ProgressRequired)
+			{
+				return false;
+			}
+			
+			if(CurrentTask.State == InProgress)
+			{
+				return CanTaskBeProgressed_Internal(CurrentTask);
+			}
+		}
+	}
+	
+	return false;
+}
+
+bool UQuestComponent::CanTaskBeProgressed_Internal_Implementation(FS_TaskWrapper Task)
+{
+	return true;
+}

@@ -118,5 +118,33 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasFailedQuest(FGameplayTag Quest);
+
+ //------------------
+
+
+ //------------------
+ // Task
+
+ /**Search the active quests for the task.
+  * @ArrayIndex can return -1 if the quest was not found.*/
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ FS_QuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
+
+ /**Add or deduct progress to a task.
+  * @Instigator Who is attempting to progress the task?*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool CanTaskBeProgressed(const FGameplayTag Task);
+
+ /**Small optimization, CanTaskBeProgressed already looks up
+  * the task, overriding that function at a blueprint level means
+  * you have to search for the task again. This will automatically
+  * receive the already-found task.*/
+ UFUNCTION(Category = "Quest", BlueprintNativeEvent, DisplayName = "Can task be progressed?")
+ bool CanTaskBeProgressed_Internal(FS_TaskWrapper Task);
+
+ //------------------
  
 };
