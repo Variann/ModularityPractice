@@ -12,7 +12,7 @@ class UFlowAsset;
 class UWidget;
 class UO_DialogueOverrideBase;
 
-UENUM()
+UENUM(BlueprintType)
 enum EQuestState
 {
 	//The player has not interacted
@@ -173,10 +173,14 @@ struct FS_TaskWrapper
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	float CurrentProgress = 0;
 
+	/**How much progress does this task require?*/
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	float ProgressRequired;
+
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskRequirement> Requirements;
 
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskFailCondition> FailConditions;
 
 	/**What state is the task currently in?*/
@@ -232,13 +236,14 @@ struct FS_Quest
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
+	
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	FText QuestText;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestTask> Tasks;
 
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	FText QuestText;
-	
+	/**Requirements to accept the quest.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestRequirement> Requirements;
 

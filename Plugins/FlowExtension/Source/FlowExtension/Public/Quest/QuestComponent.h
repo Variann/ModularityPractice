@@ -60,26 +60,16 @@
  *	It is also meant to live on the player controller
  *
  * For quests to be progressed, the graph owning the quest node MUST be alive.
- * 
  */
 
-/**Things to do:
- * 1. Accept quest
- * 2. Complete quest
- * 3. Drop quest
- * 4. Set active quest
- * 5. Fail quest
- * 6. Get tasks for quest
- *
- * 1. Start task
- * 2. Progress task
- * 3. Fail task
- * 4. Remove task
- * 5. Add/Remove task
- *
- * 1. Accept reward
- * 2. Add/Remove reward
- */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FS_QuestWrapper, Quest, TEnumAsByte<EQuestState>, NewState);
+
+/**@Task the task that was progressed.
+ * @ProgressMade the delta of the current and the added progress. This can be negative.
+ * @Instigator The object that progressed the quest.*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTaskProgressed, FS_TaskWrapper, Task, float, ProgressMade, UObject*, Instigator);
+
 
 UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
 class FLOWEXTENSION_API UQuestComponent : public UActorComponent
@@ -88,14 +78,26 @@ class FLOWEXTENSION_API UQuestComponent : public UActorComponent
 
 public:
 
- UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
  TArray<FS_QuestWrapper> ActiveQuests;
 
- UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
  TArray<FS_QuestWrapper> CompletedQuests;
 
- UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
  TArray<FS_QuestWrapper> FailedQuests;
+
+ //Delegates
+
+ UPROPERTY(Category = "Quest", BlueprintAssignable)
+ FQuestStateUpdated QuestStateUpdated;
+
+ UPROPERTY(Category = "Quest", BlueprintAssignable)
+ FTaskProgressed TaskProgressed;
+ 
+ 
+ //------------------
+ // Quest
 
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
@@ -106,6 +108,14 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool CanAcceptQuest(FGameplayTag Quest);
+
+ /**Get the index of the quest from the active quests array.
+  * Can return -1 if the quest is not found.*/
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ int32 GetQuestIndex_Active(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ void CompleteQuest(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasCompletedQuest(FGameplayTag Quest);

@@ -3,6 +3,8 @@
 
 #include "Quest/QuestComponent.h"
 
+#include "Kismet/KismetMathLibrary.h"
+
 bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 {
 	if(!CanAcceptQuest(Quest->QuestInformation.QuestID))

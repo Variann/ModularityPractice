@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract, AutoExpandCategories = "Task")
 class FLOWEXTENSION_API UFN_ListenToTaskBase : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
