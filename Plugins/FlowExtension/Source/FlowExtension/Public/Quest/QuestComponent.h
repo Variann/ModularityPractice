@@ -7,8 +7,6 @@
 
 
 /**
- * commit test 1
- *
  * The quest system has the following requirements:
  * 1. Serialization
  * 2. Reusable components to create complex and consistent game behavior.
