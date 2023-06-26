@@ -189,7 +189,7 @@ struct FS_Quest
 	GENERATED_BODY()
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag Quest;
+	FGameplayTag QuestID;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestTask> Tasks;
@@ -219,7 +219,7 @@ struct FS_QuestWrapper
 	UFlowNode* ParentNode;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag Quest;
+	FGameplayTag QuestID;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskWrapper> Tasks;

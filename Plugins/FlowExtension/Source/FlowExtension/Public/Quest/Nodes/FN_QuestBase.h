@@ -17,5 +17,5 @@ class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode
 public:
 
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FS_Quest Quest;
+	FS_Quest QuestInformation;
 };
