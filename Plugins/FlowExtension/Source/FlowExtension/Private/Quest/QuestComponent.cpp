@@ -39,6 +39,35 @@ bool UQuestComponent::CanAcceptQuest(FGameplayTag Quest)
 	return true;
 }
 
+int32 UQuestComponent::GetQuestIndex_Active(FGameplayTag Quest)
+{
+	for(int32 CurrentIndex = 0; CurrentIndex < ActiveQuests.Num(); CurrentIndex++)
+	{
+		if(ActiveQuests[CurrentIndex].QuestID == Quest)
+		{
+			return CurrentIndex;
+		}
+	}
+
+	return -1;
+}
+
+void UQuestComponent::CompleteQuest(FGameplayTag Quest)
+{
+	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		FS_QuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
+		QuestWrapper.State = Finished;
+		QuestWrapper.Listeners.Empty();
+		QuestWrapper.Graph = nullptr;
+		QuestWrapper.ParentNode = nullptr;
+
+		QuestStateUpdated.Broadcast(QuestWrapper, Finished);
+	}
+}
+
 bool UQuestComponent::HasCompletedQuest(FGameplayTag Quest)
 {
 	for(auto& CurrentQuest : CompletedQuests)
