@@ -9,13 +9,17 @@
 
 
 
-UCLASS()
+UCLASS(AutoExpandCategories = "Quest", Abstract)
 class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
 
 public:
 
-	UPROPERTY(EditAnywhere, Category=Dialogue)
+	UPROPERTY(Category= "Quest", EditAnywhere)
 	FS_Quest QuestInformation;
+
+#if WITH_EDITOR
+	virtual EDataValidationResult ValidateNode() override;
+#endif
 };
