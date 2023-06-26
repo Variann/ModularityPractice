@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
+#include "Nodes/FN_QuestBase.h"
 #include "QuestComponent.generated.h"
 
 
@@ -55,6 +57,7 @@
  *	have blueprint children. It is still advised to store all variables and
  *	functions in C++ and then create a way for Blueprint to work with your
  *	C++ data.
+ *	It is also meant to live on the player controller
  *
  * For quests to be progressed, the graph owning the quest node MUST be alive.
  * 
@@ -78,8 +81,42 @@
  * 2. Add/Remove reward
  */
 
-UCLASS(DisplayName = "Core Quest Manager", Blueprintable)
+UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
 class FLOWEXTENSION_API UQuestComponent : public UActorComponent
 {
 	GENERATED_BODY()
+
+public:
+
+ UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ TArray<FS_QuestWrapper> ActiveQuests;
+
+ UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ TArray<FS_QuestWrapper> CompletedQuests;
+
+ UPROPERTY(Category = "Quest", BlueprintReadOnly)
+ TArray<FS_QuestWrapper> FailedQuests;
+
+ /**Accept a quest from a node.
+  * Will only return true if the quest was accepted,
+  * if it returns false it means the player has already
+  * completed it or has it.*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool AcceptQuest(UFN_QuestBase* Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ bool CanAcceptQuest(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ bool HasCompletedQuest(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ TMap<FGameplayTag, bool> HasCompletedQuests(FGameplayTagContainer Quests);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ bool IsQuestActive(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ bool HasFailedQuest(FGameplayTag Quest);
+ 
 };
