@@ -4,15 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Quest/Objects/O_QuestFailCondition.h"
 #include "UObject/Object.h"
 #include "FE_CommonData.generated.h"
 
 class UFlowNode;
 class UFlowAsset;
-class UO_QuestRequirement;
 class UWidget;
 class UO_DialogueOverrideBase;
+
+UENUM()
+enum EQuestState
+{
+	//The player has not interacted
+	//with this quest or task yet.
+	Inactive,
+	
+	InProgress,
+	Finished,
+	Failed
+};
 
 USTRUCT(BlueprintType)
 struct FS_FlowPin
@@ -105,16 +115,28 @@ struct FS_TaskReward
 	bool bIsAccepted = false;
 };
 
+//Requirements for a quest.
+//Being left inside a struct in case someone
+//needs to add more basic data to this.
 USTRUCT(BlueprintType)
 struct FS_TaskRequirement
 {
 	GENERATED_BODY()
 
-	// UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	// TSubclassOf<UFE_> Task;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> QuestRequirements;
+};
 
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	bool bIsCompleted = false;
+//Fail conditions for a quest.
+//Being left inside a struct in case someone
+//needs to add more basic data to this.
+USTRUCT(BlueprintType)
+struct FS_TaskFailCondition
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> FailConditions;
 };
 
 USTRUCT(BlueprintType)
@@ -124,18 +146,19 @@ struct FS_QuestTask
 
 	/**The task itself*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag Task;
+	FGameplayTag TaskID;
 
 	/**How much progress does this task require?*/
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests.State"))
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	float ProgressRequired;
 
-	/**What scenarios will fail this task?*/
-	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	UO_QuestFailCondition* FailConditions;
+	//Requirements for progressing this task.
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_TaskRequirement> Requirements;
 
-	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	UO_QuestRequirement* Requirements;
+	/**What scenarios will fail this task?*/
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_TaskFailCondition> FailConditions;
 };
 
 USTRUCT(BlueprintType)
@@ -145,14 +168,20 @@ struct FS_TaskWrapper
 	
 	/**The task itself*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag Task;
+	FGameplayTag TaskID;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	float CurrentProgress = 0;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskRequirement> Requirements;
 
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_TaskFailCondition> FailConditions;
+
 	/**What state is the task currently in?*/
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests.State"))
-	FGameplayTag State;
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	TEnumAsByte<EQuestState> State = Inactive;
 
 	/**Arbitrary data which can be added to a task, such as a timer, repeat count, etc.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
@@ -171,16 +200,29 @@ struct FS_TaskWrapper
 //----------//
 //	Quest	//
 
+
+//Requirements for a quest.
+//Being left inside a struct in case someone
+//needs to add more basic data to this.
 USTRUCT(BlueprintType)
 struct FS_QuestRequirement
 {
 	GENERATED_BODY()
 
-	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	UO_QuestRequirement* QuestRequirement;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> QuestRequirements;
+};
 
-	UPROPERTY(Category = "Quest", BlueprintReadOnly)
-	bool bIsCompleted = false;
+//Fail conditions for a quest.
+//Being left inside a struct in case someone
+//needs to add more basic data to this.
+USTRUCT(BlueprintType)
+struct FS_QuestFailCondition
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> FailConditions;
 };
 
 USTRUCT(BlueprintType)
@@ -196,13 +238,13 @@ struct FS_Quest
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	FText QuestText;
+	
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_QuestRequirement> Requirements;
 
 	/**What scenarios will fail this quest?*/
-	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	UO_QuestFailCondition* FailConditions;
-
-	UPROPERTY(Category = "Quest", Instanced, EditAnywhere, BlueprintReadOnly)
-	UO_QuestRequirement* Requirements;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_QuestFailCondition> FailConditions;
 };
 
 USTRUCT(BlueprintType)
@@ -210,13 +252,15 @@ struct FS_QuestWrapper
 {
 	GENERATED_BODY()
 
-	/**The graph that made the quest*/
+	/**The graph that made the quest
+	 * Might not be valid if the graph has been destroyed.*/
 	UPROPERTY(Category = "Quest", BlueprintReadOnly)
-	UFlowAsset* Graph;
+	UFlowAsset* Graph = nullptr;
 
-	/**The node in the graph that started the quest*/
+	/**The node in the graph that started the quest
+	 * Might not be valid if the owning graph has been destroyed.*/
 	UPROPERTY(Category = "Quest", BlueprintReadOnly)
-	UFlowNode* ParentNode;
+	UFlowNode* ParentNode = nullptr;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
@@ -228,8 +272,8 @@ struct FS_QuestWrapper
 	TArray<FS_QuestRequirement> Requirements;
 
 	/**What state is the quest currently in?*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests.State"))
-	FGameplayTag State;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TEnumAsByte<EQuestState> State = Inactive;
 
 	/**Arbitrary data which can be added to a quest, such as a timer, repeat count, etc.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
