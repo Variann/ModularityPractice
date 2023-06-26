@@ -12,11 +12,32 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 
 	//Player can accept the quest, start accepting it.
 
+	//Wrap the quest into a struct that is more easily
+	//serialized and manageable.
 	FS_QuestWrapper QuestWrapper;
 	QuestWrapper.Graph = Quest->GetFlowAsset();
 	QuestWrapper.ParentNode = Quest;
+	QuestWrapper.QuestID = Quest->QuestInformation.QuestID;
+	QuestWrapper.State = InProgress;
+
+	//Wrap the tasks into a struct that is more easily
+	//serialized and manageable.
+	for(auto& CurrentTask : Quest->QuestInformation.Tasks)
+	{
+		FS_TaskWrapper TaskWrapper;
+		TaskWrapper.TaskID = CurrentTask.TaskID;
+		TaskWrapper.Requirements = CurrentTask.Requirements;
+		TaskWrapper.FailConditions = CurrentTask.FailConditions;
+		TaskWrapper.State = InProgress;
+		TaskWrapper.ProgressRequired = CurrentTask.ProgressRequired;
+		
+		QuestWrapper.Tasks.Add(TaskWrapper);
+	}
+
+	ActiveQuests.Add(QuestWrapper);
+	QuestStateUpdated.Broadcast(QuestWrapper, InProgress);
 	
-	return false;
+	return true;
 }
 
 bool UQuestComponent::CanAcceptQuest(FGameplayTag Quest)
