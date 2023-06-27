@@ -107,6 +107,12 @@ public:
  //------------------
  // Quest
 
+ UFUNCTION(Category = "Quest", BlueprintCallable)
+ void AddListenerToQuest(FGameplayTag Quest, UObject* Listener);
+
+ UFUNCTION(Category = "Quest", BlueprintPure, meta = (DisplayName = "Get Quest Wrapper (Active)"))
+ FS_QuestWrapper GetQuestWrapper_Active(FGameplayTag Quest);
+
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
   * if it returns false it means the player has already
@@ -147,6 +153,9 @@ public:
   * @ArrayIndex can return -1 if the quest was not found.*/
  UFUNCTION(Category = "Quest", BlueprintPure)
  FS_QuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable)
+ void AddListenerToTask(FGameplayTag Task, UObject* Listener);
 
  /**Add or deduct progress to a task.
   * @Instigator Who is attempting to progress the task?*/

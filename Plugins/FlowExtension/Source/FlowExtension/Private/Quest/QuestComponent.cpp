@@ -7,6 +7,31 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Quest/I_QuestUpdates.h"
 
+
+void UQuestComponent::AddListenerToQuest(FGameplayTag Quest, UObject* Listener)
+{
+	int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		return;
+	}
+
+	ActiveQuests[QuestIndex].Listeners.AddUnique(Listener);
+}
+
+FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest)
+{
+	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		return ActiveQuests[QuestIndex];
+	}
+
+	return FS_QuestWrapper();
+}
+
 bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 {
 	if(!CanAcceptQuest(Quest->QuestInformation.QuestID))
@@ -184,6 +209,23 @@ FS_QuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32
 	}
 
 	return FS_QuestWrapper();
+}
+
+void UQuestComponent::AddListenerToTask(FGameplayTag Task, UObject* Listener)
+{
+	int32 QuestIndex = 0;
+	GetQuestForTask_Active(Task, QuestIndex);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+		{
+			if(CurrentTask.TaskID == Task)
+			{
+				CurrentTask.Listeners.AddUnique(Listener);
+			}
+		}
+	}
 }
 
 bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator)
