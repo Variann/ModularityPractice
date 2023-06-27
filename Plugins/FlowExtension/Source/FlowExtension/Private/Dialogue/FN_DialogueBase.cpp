@@ -30,6 +30,53 @@ void UFN_DialogueBase::FixNode(UEdGraphNode* NewGraph)
 	RefreshOutputs();
 }
 
+EDataValidationResult UFN_DialogueBase::ValidateNode()
+{
+	bool FailedValidation = false;
+	
+	if(!IsValid(Character))
+	{
+		ValidationLog.Error<UFlowNode>(TEXT("Missing Character data"), this);
+		FailedValidation = true;
+	}
+
+	if(DialogueText.DialogueText.IsEmpty())
+	{
+		ValidationLog.Error<UFlowNode>(TEXT("No dialogue text"), this);
+		FailedValidation = true;
+	}
+
+	if(DialogueOptions.IsEmpty())
+	{
+		ValidationLog.Error<UFlowNode>(TEXT("No dialogue options"), this);
+		FailedValidation = true;
+	}
+	else
+	{
+		for(auto& CurrentOption : DialogueOptions)
+		{
+			if(CurrentOption.DialogueSettings.ButtonText.IsEmpty())
+			{
+				ValidationLog.Error<UFlowNode>(TEXT("Dialogue option has no button text"), this);
+				FailedValidation = true;
+			}
+
+			if(CurrentOption.DialogueSettings.DialogueText.IsEmpty())
+			{
+				ValidationLog.Error<UFlowNode>(TEXT("Dialogue has no dialogue text"), this);
+				FailedValidation = true;
+			}
+		}
+	}
+
+	if(FailedValidation)
+	{
+		return EDataValidationResult::Invalid;
+	}
+	
+	return EDataValidationResult::Valid;
+}
+
 void UFN_DialogueBase::RefreshOutputs()
 {
 	OutputPins.Empty();

@@ -36,6 +36,8 @@ public:
 
 	virtual void FixNode(UEdGraphNode* NewGraph) override;
 
+	virtual EDataValidationResult ValidateNode() override;
+
 private:
 	void RefreshOutputs();
 
