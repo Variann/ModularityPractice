@@ -69,7 +69,7 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 	return true;
 }
 
-bool UQuestComponent::CanAcceptQuest(FGameplayTag Quest)
+bool UQuestComponent::CanAcceptQuest_Implementation(FGameplayTag Quest)
 {
 	if(HasCompletedQuest(Quest))
 	{
@@ -102,17 +102,29 @@ int32 UQuestComponent::GetQuestIndex_Active(FGameplayTag Quest)
 	return -1;
 }
 
-void UQuestComponent::CompleteQuest(FGameplayTag Quest)
+void UQuestComponent::CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCheck)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+	const int32 QuestIndex = GetQuestIndex_Active(Quest.QuestID);
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
 	{
 		FS_QuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
+		if(!SkipCompletionCheck)
+		{
+			if(!CanCompleteQuest(QuestWrapper))
+			{
+				return;
+			}
+		}
+		
 		QuestWrapper.State = Finished;
 		QuestWrapper.Listeners.Empty();
 		QuestWrapper.Graph = nullptr;
 		QuestWrapper.ParentNode = nullptr;
+
+		//Move the quest to the completed array.
+		CompletedQuests.Add(QuestWrapper);
+		ActiveQuests.RemoveAt(QuestIndex);
 
 		QuestStateUpdated.Broadcast(QuestWrapper, Finished);
 
@@ -128,6 +140,28 @@ void UQuestComponent::CompleteQuest(FGameplayTag Quest)
 			}
 		}
 	}
+}
+
+bool UQuestComponent::CanCompleteQuest_Implementation(FS_QuestWrapper Quest)
+{
+	if(!Quest.QuestID.IsValid())
+	{
+		UKismetSystemLibrary::PrintString(this, TEXT("Invalid QuestID for quest"), true, true);
+		return false;
+	}
+	
+	if(Quest.State != InProgress)
+	{
+		return false;
+	}
+
+	if(Quest.Tasks.IsEmpty())
+	{
+		UKismetSystemLibrary::PrintString(this, TEXT("Quest has no tasks, can't complete"), true, true);
+		return false;
+	}
+
+	return true;
 }
 
 bool UQuestComponent::HasCompletedQuest(FGameplayTag Quest)
@@ -164,6 +198,52 @@ bool UQuestComponent::HasFailedQuest(FGameplayTag Quest)
 		{
 			return true;
 		}
+	}
+
+	return false;
+}
+
+bool UQuestComponent::DropQuest(FS_QuestWrapper Quest)
+{
+	if(Quest.State != InProgress)
+	{
+		return false;
+	}
+
+	if(ActiveQuests.Contains(Quest))
+	{
+		//Drop the tasks
+		for(const auto& CurrentTask : Quest.Tasks)
+		{
+			TaskDropped.Broadcast(CurrentTask);
+			
+			for(auto& CurrentListener : CurrentTask.Listeners)
+			{
+				if(IsValid(CurrentListener))
+				{
+					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+					{
+						II_QuestUpdates::Execute_TaskDropped(CurrentListener, CurrentTask);
+					}
+				}
+			}
+		}
+
+		QuestDropped.Broadcast(Quest);
+
+		//Announce the quest being dropped
+		for(const auto& CurrentListener : Quest.Listeners)
+		{
+			if(IsValid(CurrentListener))
+			{
+				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+				{
+					II_QuestUpdates::Execute_QuestDropped(CurrentListener, Quest);
+				}
+			}
+		}
+
+		return true;
 	}
 
 	return false;
@@ -227,8 +307,8 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 				return false;
 			}
 
-			//Progress is 0 or less, don't bother with math ahd delegate.
-			if(CurrentTask.CurrentProgress <= 0)
+			//Progress is less than 0, don't bother with math ahd delegate.
+			if(CurrentTask.CurrentProgress < 0)
 			{
 				return false;
 			}
@@ -267,7 +347,7 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 
 	if(QuestCompleted)
 	{
-		CompleteQuest(ActiveQuests[QuestIndex].QuestID);
+		CompleteQuest(ActiveQuests[QuestIndex], false);
 	}
 
 	if(TaskCompleted)

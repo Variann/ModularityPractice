@@ -120,7 +120,7 @@ public:
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool AcceptQuest(UFN_QuestBase* Quest);
 
- UFUNCTION(Category = "Quest", BlueprintPure)
+ UFUNCTION(Category = "Quest", BlueprintPure, BlueprintNativeEvent)
  bool CanAcceptQuest(FGameplayTag Quest);
 
  /**Get the index of the quest from the active quests array.
@@ -128,8 +128,14 @@ public:
  UFUNCTION(Category = "Quest", BlueprintPure)
  int32 GetQuestIndex_Active(FGameplayTag Quest);
 
+ /**Complete the quest.
+  * @SkipCompletionCheck Typically you want CanCompleteQuest to be called,
+  * but sometimes you want to forcibly complete the quest.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- void CompleteQuest(FGameplayTag Quest);
+ void CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCheck);
+ 
+ UFUNCTION(Category = "Quest", BlueprintPure, BlueprintNativeEvent)
+ bool CanCompleteQuest(FS_QuestWrapper Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasCompletedQuest(FGameplayTag Quest);
@@ -139,6 +145,9 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasFailedQuest(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool DropQuest(FS_QuestWrapper Quest);
 
  //------------------
 
