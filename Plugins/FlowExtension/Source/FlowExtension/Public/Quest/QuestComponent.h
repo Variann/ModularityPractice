@@ -135,9 +135,6 @@ public:
  bool HasCompletedQuest(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- TMap<FGameplayTag, bool> HasCompletedQuests(FGameplayTagContainer Quests);
-
- UFUNCTION(Category = "Quest", BlueprintPure)
  bool IsQuestActive(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)

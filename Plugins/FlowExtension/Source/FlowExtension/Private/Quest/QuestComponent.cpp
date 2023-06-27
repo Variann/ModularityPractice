@@ -143,30 +143,6 @@ bool UQuestComponent::HasCompletedQuest(FGameplayTag Quest)
 	return false;
 }
 
-TMap<FGameplayTag, bool> UQuestComponent::HasCompletedQuests(FGameplayTagContainer Quests)
-{
-	TMap<FGameplayTag, bool> FoundQuests;
-	
-	for(auto& CurrentQuest : CompletedQuests)
-	{
-		if(Quests.HasTagExact(CurrentQuest.QuestID))
-		{
-			FoundQuests.Add(CurrentQuest.QuestID, true);
-		}
-	}
-
-	for(auto& CurrentFound : FoundQuests)
-	{
-		if(!Quests.HasTagExact(CurrentFound.Key))
-		{
-			FoundQuests.Add(CurrentFound.Key, false);
-		}
-	}
-	
-	return FoundQuests;
-	
-}
-
 bool UQuestComponent::IsQuestActive(FGameplayTag Quest)
 {
 	for(auto& CurrentQuest : ActiveQuests)
