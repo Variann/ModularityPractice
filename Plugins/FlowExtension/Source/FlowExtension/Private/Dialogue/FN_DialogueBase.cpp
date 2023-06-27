@@ -92,7 +92,7 @@ void UFN_DialogueBase::RefreshOutputs()
 
 		FText PinText = DialogueSettings.ButtonText;
 		// Dialogue.DialogueSettings.
-		OutputPins.Add(PinText);
+		OutputPins.Add(FFlowPin(PinText.ToString(), FText(), DialogueSettings.DialogueText.ToString()));
 	}
 }
 #endif
