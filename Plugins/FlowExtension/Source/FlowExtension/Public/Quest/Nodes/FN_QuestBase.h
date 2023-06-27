@@ -5,18 +5,19 @@
 #include "CoreMinimal.h"
 #include "Data/FE_CommonData.h"
 #include "Nodes/FlowNode.h"
+#include "Quest/I_QuestUpdates.h"
 #include "FN_QuestBase.generated.h"
 
 
 
 UCLASS(AutoExpandCategories = "Quest", Abstract)
-class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode
+class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode, public II_QuestUpdates
 {
 	GENERATED_UCLASS_BODY()
 
 public:
 
-	UPROPERTY(Category= "Quest", EditAnywhere)
+	UPROPERTY(Category= "Quest", EditAnywhere, BlueprintReadOnly)
 	FS_Quest QuestInformation;
 
 #if WITH_EDITOR

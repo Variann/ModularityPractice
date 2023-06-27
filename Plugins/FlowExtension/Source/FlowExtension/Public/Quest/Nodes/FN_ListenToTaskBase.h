@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Nodes/FlowNode.h"
+#include "Quest/I_QuestUpdates.h"
 #include "FN_ListenToTaskBase.generated.h"
 
 /**
  * 
  */
 UCLASS(Abstract, AutoExpandCategories = "Task")
-class FLOWEXTENSION_API UFN_ListenToTaskBase : public UFlowNode
+class FLOWEXTENSION_API UFN_ListenToTaskBase : public UFlowNode, public II_QuestUpdates
 {
 	GENERATED_UCLASS_BODY()
 
