@@ -289,6 +289,26 @@ struct FS_QuestWrapper
 	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<UObject*> Listeners;
+
+	bool operator==(const FS_QuestWrapper& Argument) const
+	{
+		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
+		{
+			return false;
+		}
+
+		return QuestID == Argument.QuestID;
+	}
+
+	bool operator!=(const FS_QuestWrapper& Argument) const
+	{
+		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
+		{
+			return false;
+		}
+
+		return QuestID != Argument.QuestID;
+	}
 };
 
 //----------//
