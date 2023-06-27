@@ -28,7 +28,7 @@ class FLOWEXTENSION_API II_QuestUpdates
 public:
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
-	void QuestStateUpdated(FS_QuestWrapper Quest, TEnumAsByte<EQuestState> NewState);
+	void QuestStateUpdated(FS_QuestWrapper Quest, EQuestState NewState);
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
 	void QuestDropped(FS_QuestWrapper Quest);
