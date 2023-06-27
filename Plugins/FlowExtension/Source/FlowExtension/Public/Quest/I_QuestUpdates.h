@@ -31,5 +31,11 @@ public:
 	void QuestStateUpdated(FS_QuestWrapper Quest, TEnumAsByte<EQuestState> NewState);
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
+	void QuestDropped(FS_QuestWrapper Quest);
+
+	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
 	void TaskProgressed(FS_TaskWrapper Task, float ProgressMade, UObject* Instigator);
+
+	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
+	void TaskDropped(FS_TaskWrapper Task);
 };
