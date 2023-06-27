@@ -4,6 +4,8 @@
 #include "Quest/QuestComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Quest/I_QuestUpdates.h"
 
 bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 {
@@ -88,6 +90,18 @@ void UQuestComponent::CompleteQuest(FGameplayTag Quest)
 		QuestWrapper.ParentNode = nullptr;
 
 		QuestStateUpdated.Broadcast(QuestWrapper, Finished);
+
+		//Notify listeners
+		for(const auto& CurrentListener : QuestWrapper.Listeners)
+		{
+			if(IsValid(CurrentListener))
+			{
+				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+				{
+					II_QuestUpdates::Execute_QuestStateUpdated(CurrentListener, QuestWrapper, Finished);
+				}
+			}
+		}
 	}
 }
 
@@ -211,6 +225,18 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 				TaskCompleted = true;
 			}
 			TaskProgressed.Broadcast(CurrentTask, ProgressDelta, Instigator);
+
+			//Notify listeners
+			for(const auto& CurrentListener : CurrentTask.Listeners)
+			{
+				if(IsValid(CurrentListener))
+				{
+					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+					{
+						II_QuestUpdates::Execute_TaskProgressed(CurrentListener, CurrentTask, ProgressDelta, Instigator);
+					}
+				}
+			}
 
 			continue;
 		}
