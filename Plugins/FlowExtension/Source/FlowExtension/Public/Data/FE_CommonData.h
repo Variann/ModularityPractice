@@ -147,7 +147,8 @@ struct FS_QuestTask
 	/**The task itself*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag TaskID;
-
+ 
+    /**Name of the task presented to the player*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	FText TaskName;
 
@@ -173,6 +174,7 @@ struct FS_TaskWrapper
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag TaskID;
 
+    /**Name of the task presented to the player*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	FText TaskName;
 
@@ -243,6 +245,7 @@ struct FS_Quest
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
 
+    /**Name of the quest presented to the player*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	FText QuestName;
 	
@@ -279,6 +282,7 @@ struct FS_QuestWrapper
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
 
+    /**Name of the quest presented to the player*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	FText QuestName;
 
