@@ -66,6 +66,7 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 		TaskWrapper.FailConditions = CurrentTask.FailConditions;
 		TaskWrapper.State = InProgress;
 		TaskWrapper.ProgressRequired = CurrentTask.ProgressRequired;
+		TaskWrapper.IsOptional = CurrentTask.IsOptional;
 		
 		QuestWrapper.Tasks.Add(TaskWrapper);
 	}
