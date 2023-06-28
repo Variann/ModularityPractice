@@ -139,6 +139,9 @@ struct FS_TaskFailCondition
 	TMap<FGameplayTag, float> FailConditions;
 };
 
+//If you add any data into this struct, remember to go into
+//QuestComponent.cpp -> AcceptQuest and update how FS_TaskWrapper
+//wraps this struct.
 USTRUCT(BlueprintType)
 struct FS_QuestTask
 {
@@ -163,8 +166,14 @@ struct FS_QuestTask
 	/**What scenarios will fail this task?*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskFailCondition> FailConditions;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	bool IsOptional = false;
 };
 
+//If you add any data into this struct, remember to go into
+//QuestComponent.cpp -> AcceptQuest and update how FS_QuestTask
+//is wrapped into this one.
 USTRUCT(BlueprintType)
 struct FS_TaskWrapper
 {
@@ -198,6 +207,9 @@ struct FS_TaskWrapper
 	/**Arbitrary data which can be added to a task, such as a timer, repeat count, etc.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
 	TMap<FGameplayTag, float> Metadata;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	bool IsOptional = false;
 
 	/**When the task receives interface updates, these objects will receive the same
 	 * interface call.
@@ -237,6 +249,9 @@ struct FS_QuestFailCondition
 	TMap<FGameplayTag, float> FailConditions;
 };
 
+//If you add any data into this struct, remember to go into
+//QuestComponent.cpp -> AcceptQuest and update how FS_QuestWrapper
+//wraps this struct.
 USTRUCT(BlueprintType)
 struct FS_Quest
 {
@@ -264,6 +279,9 @@ struct FS_Quest
 	TArray<FS_QuestFailCondition> FailConditions;
 };
 
+//If you add any data into this struct, remember to go into
+//QuestComponent.cpp -> AcceptQuest and update how FS_Quest
+//is wrapped into this one.
 USTRUCT(BlueprintType)
 struct FS_QuestWrapper
 {
