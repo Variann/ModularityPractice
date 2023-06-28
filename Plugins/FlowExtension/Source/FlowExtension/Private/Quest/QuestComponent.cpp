@@ -34,6 +34,11 @@ FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest)
 
 bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 {
+	if(!IsValid(Quest))
+	{
+		return false;
+	}
+	
 	if(!CanAcceptQuest(Quest->QuestInformation.QuestID))
 	{
 		return false;
@@ -110,37 +115,37 @@ void UQuestComponent::CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCh
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
 	{
-		FS_QuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
 		if(!SkipCompletionCheck)
 		{
-			if(!CanCompleteQuest(QuestWrapper))
+			if(!CanCompleteQuest(ActiveQuests[QuestIndex]))
 			{
 				return;
 			}
 		}
-		
-		QuestWrapper.State = Finished;
-		QuestWrapper.Listeners.Empty();
-		QuestWrapper.Graph = nullptr;
-		QuestWrapper.ParentNode = nullptr;
+
+		ActiveQuests[QuestIndex].State = Finished;
 
 		//Move the quest to the completed array.
-		CompletedQuests.Add(QuestWrapper);
+		int32 NewQuestIndex = CompletedQuests.Add(ActiveQuests[QuestIndex]);
 		ActiveQuests.RemoveAt(QuestIndex);
 
-		QuestStateUpdated.Broadcast(QuestWrapper, Finished);
+		QuestStateUpdated.Broadcast(CompletedQuests[NewQuestIndex], Finished);
 
 		//Notify listeners
-		for(const auto& CurrentListener : QuestWrapper.Listeners)
+		for(const auto& CurrentListener : CompletedQuests[NewQuestIndex].Listeners)
 		{
 			if(IsValid(CurrentListener))
 			{
 				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
 				{
-					II_QuestUpdates::Execute_QuestStateUpdated(CurrentListener, QuestWrapper, Finished);
+					II_QuestUpdates::Execute_QuestStateUpdated(CurrentListener, CompletedQuests[NewQuestIndex], Finished);
 				}
 			}
 		}
+		
+		CompletedQuests[NewQuestIndex].Graph = nullptr;
+		CompletedQuests[NewQuestIndex].ParentNode = nullptr;
+		CompletedQuests[NewQuestIndex].Listeners.Empty();
 	}
 }
 

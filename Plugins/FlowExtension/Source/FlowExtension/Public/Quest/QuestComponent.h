@@ -129,6 +129,7 @@ public:
  int32 GetQuestIndex_Active(FGameplayTag Quest);
 
  /**Complete the quest.
+  *
   * @SkipCompletionCheck Typically you want CanCompleteQuest to be called,
   * but sometimes you want to forcibly complete the quest.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
