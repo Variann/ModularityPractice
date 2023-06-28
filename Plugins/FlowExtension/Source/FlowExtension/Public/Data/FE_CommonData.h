@@ -148,6 +148,9 @@ struct FS_QuestTask
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag TaskID;
 
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	FText TaskName;
+
 	/**How much progress does this task require?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	float ProgressRequired;
@@ -169,6 +172,9 @@ struct FS_TaskWrapper
 	/**The task itself*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag TaskID;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	FText TaskName;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	float CurrentProgress = 0;
@@ -236,6 +242,9 @@ struct FS_Quest
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	FText QuestName;
 	
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	FText QuestText;
@@ -269,6 +278,9 @@ struct FS_QuestWrapper
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	FText QuestName;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskWrapper> Tasks;

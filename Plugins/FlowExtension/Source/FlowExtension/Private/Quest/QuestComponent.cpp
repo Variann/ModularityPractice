@@ -47,6 +47,7 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 	QuestWrapper.Graph = Quest->GetFlowAsset();
 	QuestWrapper.ParentNode = Quest;
 	QuestWrapper.QuestID = Quest->QuestInformation.QuestID;
+	QuestWrapper.QuestName = Quest->QuestInformation.QuestName;
 	QuestWrapper.State = InProgress;
 
 	//Wrap the tasks into a struct that is more easily
@@ -55,6 +56,7 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 	{
 		FS_TaskWrapper TaskWrapper;
 		TaskWrapper.TaskID = CurrentTask.TaskID;
+		TaskWrapper.TaskName = CurrentTask.TaskName;
 		TaskWrapper.Requirements = CurrentTask.Requirements;
 		TaskWrapper.FailConditions = CurrentTask.FailConditions;
 		TaskWrapper.State = InProgress;
