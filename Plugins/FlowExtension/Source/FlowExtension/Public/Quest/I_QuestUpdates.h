@@ -34,8 +34,14 @@ public:
 	void QuestDropped(FS_QuestWrapper Quest);
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
+	void QuestFailed(FS_QuestWrapper Quest);
+
+	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
 	void TaskProgressed(FS_TaskWrapper Task, float ProgressMade, UObject* Instigator);
 
-	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
 	void TaskDropped(FS_TaskWrapper Task);
+
+	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
+	void TaskFailed(FS_TaskWrapper Task);
 };

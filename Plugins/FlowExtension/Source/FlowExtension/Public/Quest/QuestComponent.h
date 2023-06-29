@@ -65,12 +65,14 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FS_QuestWrapper, Quest, TEnumAsByte<EQuestState>, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestDropped, FS_QuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestFailed, FS_QuestWrapper, Quest);
 
 /**@Task the task that was progressed.
  * @ProgressMade the delta of the current and the added progress. This can be negative.
  * @Instigator The object that progressed the quest.*/
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTaskProgressed, FS_TaskWrapper, Task, float, ProgressMade, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskDropped, FS_TaskWrapper, Task);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFailed, FS_TaskWrapper, Task);
 
 
 UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
@@ -97,11 +99,18 @@ public:
  UPROPERTY(Category = "Quest", BlueprintAssignable)
  FQuestDropped QuestDropped;
 
+ UPROPERTY(Category = "Quest", BlueprintAssignable)
+ FQuestFailed QuestFailed;
+
+
  UPROPERTY(Category = "Task", BlueprintAssignable)
  FTaskProgressed TaskProgressed;
 
  UPROPERTY(Category = "Task", BlueprintAssignable)
  FTaskDropped TaskDropped;
+
+ UPROPERTY(Category = "Task", BlueprintAssignable)
+ FTaskFailed TaskFailed;
  
  
  //------------------
