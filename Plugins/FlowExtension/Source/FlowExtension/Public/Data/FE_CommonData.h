@@ -104,12 +104,12 @@ struct FS_Script
 //	 Task	//
 
 USTRUCT(BlueprintType)
-struct FS_TaskReward
+struct FS_Reward
 {
 	GENERATED_BODY()
 
-	// UPROPERTY(Category = "Reward", EditAnywhere, BlueprintReadOnly)
-	// TSubclassOf<UFE_Reward> Task;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> Rewards;
 
 	UPROPERTY(Category = "Reward", EditAnywhere, BlueprintReadOnly)
 	bool bIsAccepted = false;
@@ -140,8 +140,7 @@ struct FS_TaskFailCondition
 };
 
 //If you add any data into this struct, remember to go into
-//QuestComponent.cpp -> AcceptQuest and update how FS_TaskWrapper
-//wraps this struct.
+//FL_QuestHelpers and update WrapTask.
 USTRUCT(BlueprintType)
 struct FS_QuestTask
 {
@@ -160,20 +159,22 @@ struct FS_QuestTask
 	float ProgressRequired;
 
 	//Requirements for progressing this task.
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskRequirement> Requirements;
 
 	/**What scenarios will fail this task?*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskFailCondition> FailConditions;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_Reward> Rewards;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	bool IsOptional = false;
 };
 
 //If you add any data into this struct, remember to go into
-//QuestComponent.cpp -> AcceptQuest and update how FS_QuestTask
-//is wrapped into this one.
+//FL_QuestHelpers and update WrapTask.
 USTRUCT(BlueprintType)
 struct FS_TaskWrapper
 {
@@ -199,6 +200,9 @@ struct FS_TaskWrapper
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskFailCondition> FailConditions;
+
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_Reward> Rewards;
 
 	/**What state is the task currently in?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
@@ -250,8 +254,7 @@ struct FS_QuestFailCondition
 };
 
 //If you add any data into this struct, remember to go into
-//QuestComponent.cpp -> AcceptQuest and update how FS_QuestWrapper
-//wraps this struct.
+//FL_QuestHelpers and update WrapQuest.
 USTRUCT(BlueprintType)
 struct FS_Quest
 {
@@ -277,11 +280,13 @@ struct FS_Quest
 	/**What scenarios will fail this quest?*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestFailCondition> FailConditions;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_Reward> Rewards;
 };
 
 //If you add any data into this struct, remember to go into
-//QuestComponent.cpp -> AcceptQuest and update how FS_Quest
-//is wrapped into this one.
+//FL_QuestHelpers and update WrapQuest.
 USTRUCT(BlueprintType)
 struct FS_QuestWrapper
 {
@@ -309,6 +314,12 @@ struct FS_QuestWrapper
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestRequirement> Requirements;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_QuestFailCondition> FailConditions;
+
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	TArray<FS_Reward> Rewards;
 
 	/**What state is the quest currently in?*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
