@@ -120,7 +120,7 @@ public:
  void AddListenerToQuest(FGameplayTag Quest, UObject* Listener);
 
  UFUNCTION(Category = "Quest", BlueprintPure, meta = (DisplayName = "Get Quest Wrapper (Active)"))
- FS_QuestWrapper GetQuestWrapper_Active(FGameplayTag Quest);
+ FS_QuestWrapper GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex);
 
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
@@ -158,6 +158,15 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool DropQuest(FS_QuestWrapper Quest);
+
+ /**Attempt to fail the quest, only returns false if the quest is
+  * not in progress.
+  *
+  * @FailTasks Whether or not the tasks should be labelled as "failed"
+  * and if we should notify its listeners and broadcast the
+  * failure delegate.*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool FailQuest(FS_QuestWrapper Quest, bool FailTasks);
 
  //------------------
 

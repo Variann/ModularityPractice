@@ -20,13 +20,13 @@ void UQuestComponent::AddListenerToQuest(FGameplayTag Quest, UObject* Listener)
 	ActiveQuests[QuestIndex].Listeners.AddUnique(Listener);
 }
 
-FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest)
+FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+	ArrayIndex = GetQuestIndex_Active(Quest);
 
-	if(ActiveQuests.IsValidIndex(QuestIndex))
+	if(ActiveQuests.IsValidIndex(ArrayIndex))
 	{
-		return ActiveQuests[QuestIndex];
+		return ActiveQuests[ArrayIndex];
 	}
 
 	return FS_QuestWrapper();
@@ -251,6 +251,62 @@ bool UQuestComponent::DropQuest(FS_QuestWrapper Quest)
 			}
 		}
 
+		ActiveQuests.RemoveSingle(Quest);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool UQuestComponent::FailQuest(FS_QuestWrapper Quest, bool FailTasks)
+{
+	if(Quest.State != InProgress)
+	{
+		return false;
+	}
+
+	Quest.State = Failed;
+	ActiveQuests.RemoveSingle(Quest);
+	FailedQuests.Add(Quest);
+
+	if(ActiveQuests.Contains(Quest))
+	{
+		if(FailTasks)
+		{
+			//Fail the tasks
+			for(auto& CurrentTask : Quest.Tasks)
+			{
+				CurrentTask.State = Failed;
+				TaskFailed.Broadcast(CurrentTask);
+			
+				for(auto& CurrentListener : CurrentTask.Listeners)
+				{
+					if(IsValid(CurrentListener))
+					{
+						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+						{
+							II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
+						}
+					}
+				}
+			}
+		}
+
+		QuestFailed.Broadcast(Quest);
+
+		//Announce the quest failure
+		for(const auto& CurrentListener : Quest.Listeners)
+		{
+			if(IsValid(CurrentListener))
+			{
+				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+				{
+					II_QuestUpdates::Execute_QuestFailed(CurrentListener, Quest);
+				}
+			}
+		}
+
 		return true;
 	}
 
@@ -347,7 +403,7 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 			continue;
 		}
 
-		if(CurrentTask.State == InProgress)
+		if(CurrentTask.State == InProgress && CurrentTask.IsOptional != true)
 		{
 			QuestCompleted = false;
 		}
