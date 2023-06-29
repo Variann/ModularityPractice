@@ -331,6 +331,19 @@ FS_QuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32
 	return FS_QuestWrapper();
 }
 
+TArray<FS_TaskWrapper> UQuestComponent::GetTasksForQuest_Active(FGameplayTag Quest)
+{
+	TArray<FS_TaskWrapper> FoundTasks;
+	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		return ActiveQuests[QuestIndex].Tasks;
+	}
+	
+	return FoundTasks;
+}
+
 void UQuestComponent::AddListenerToTask(FGameplayTag Task, UObject* Listener)
 {
 	int32 QuestIndex = 0;

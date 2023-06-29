@@ -187,6 +187,9 @@ public:
  UFUNCTION(Category = "Quest", BlueprintPure)
  FS_QuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
 
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ TArray<FS_TaskWrapper> GetTasksForQuest_Active(FGameplayTag Quest);
+
  UFUNCTION(Category = "Quest", BlueprintCallable)
  void AddListenerToTask(FGameplayTag Task, UObject* Listener);
 
