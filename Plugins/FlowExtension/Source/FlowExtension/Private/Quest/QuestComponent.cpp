@@ -5,6 +5,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Quest/FL_QuestHelpers.h"
 #include "Quest/I_QuestUpdates.h"
 
 
@@ -48,25 +49,13 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 
 	//Wrap the quest into a struct that is more easily
 	//serialized and manageable.
-	FS_QuestWrapper QuestWrapper;
-	QuestWrapper.Graph = Quest->GetFlowAsset();
-	QuestWrapper.ParentNode = Quest;
-	QuestWrapper.QuestID = Quest->QuestInformation.QuestID;
-	QuestWrapper.QuestName = Quest->QuestInformation.QuestName;
-	QuestWrapper.State = InProgress;
+	FS_QuestWrapper QuestWrapper = UFL_QuestHelpers::WrapQuest(Quest->QuestInformation, Quest);
 
 	//Wrap the tasks into a struct that is more easily
 	//serialized and manageable.
 	for(auto& CurrentTask : Quest->QuestInformation.Tasks)
 	{
-		FS_TaskWrapper TaskWrapper;
-		TaskWrapper.TaskID = CurrentTask.TaskID;
-		TaskWrapper.TaskName = CurrentTask.TaskName;
-		TaskWrapper.Requirements = CurrentTask.Requirements;
-		TaskWrapper.FailConditions = CurrentTask.FailConditions;
-		TaskWrapper.State = InProgress;
-		TaskWrapper.ProgressRequired = CurrentTask.ProgressRequired;
-		TaskWrapper.IsOptional = CurrentTask.IsOptional;
+		FS_TaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(CurrentTask);
 		
 		QuestWrapper.Tasks.Add(TaskWrapper);
 	}
