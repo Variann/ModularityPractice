@@ -73,6 +73,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestFailed, FS_QuestWrapper, Quest
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTaskProgressed, FS_TaskWrapper, Task, float, ProgressMade, UObject*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskDropped, FS_TaskWrapper, Task);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFailed, FS_TaskWrapper, Task);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskAddedToQuest, FS_TaskWrapper, Task, FS_QuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FS_TaskWrapper, Task, FS_QuestWrapper, Quest);
 
 
 UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
@@ -111,6 +113,12 @@ public:
 
  UPROPERTY(Category = "Task", BlueprintAssignable)
  FTaskFailed TaskFailed;
+ 
+ UPROPERTY(Category = "Task", BlueprintAssignable)
+ FTaskAddedToQuest TaskAddedToQuest;
+
+ UPROPERTY(Category = "Task", BlueprintAssignable)
+ FTaskRemovedFromQuest TaskRemovedFromQuest;
  
  
  //------------------

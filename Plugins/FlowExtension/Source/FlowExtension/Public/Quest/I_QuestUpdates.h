@@ -44,4 +44,10 @@ public:
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
 	void TaskFailed(FS_TaskWrapper Task);
+
+	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
+	void TaskAddedToQuest(FS_TaskWrapper Task, FS_QuestWrapper Quest);
+
+	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
+	void TaskRemovedFromQuest(FS_TaskWrapper Task, FS_QuestWrapper Quest);
 };
