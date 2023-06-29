@@ -208,6 +208,27 @@ public:
  UFUNCTION(Category = "Quest", BlueprintNativeEvent, DisplayName = "Can task be progressed?")
  bool CanTaskBeProgressed_Internal(FS_TaskWrapper Task);
 
+ /**Attempt to fail a task.
+  *
+  * @FailQuest Whether or not the entire quest this task belongs to
+  * should also be failed.*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool FailTask(FGameplayTag Task, bool FailQuest);
+
+ /**Adds a task to a quest, this is not generally advised to use,
+  * since the design process is supposed to be all within the quest
+  * flow node.
+  * The better way would be to have tasks that are hidden from the
+  * player, then revealed once you want to "add" the task to the
+  * quest.*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool AddTaskToQuest(FS_QuestTask Task, FGameplayTag Quest);
+
+ /**Attempt to remove a task from a quest.
+  * If there's no tasks left, the quest will be dropped.*/
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ bool RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest);
+
  //------------------
  
 };

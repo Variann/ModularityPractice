@@ -464,6 +464,129 @@ bool UQuestComponent::CanTaskBeProgressed(const FGameplayTag Task)
 	return false;
 }
 
+bool UQuestComponent::FailTask(FGameplayTag Task, bool FailQuest)
+{
+	int32 QuestIndex;
+	GetQuestForTask_Active(Task, QuestIndex);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		FS_QuestWrapper& Quest = ActiveQuests[QuestIndex];
+
+		for(auto& CurrentTask : Quest.Tasks)
+		{
+			if(CurrentTask.TaskID == Task)
+			{
+				CurrentTask.State = Failed;
+
+				TaskFailed.Broadcast(CurrentTask);
+				
+				for(auto& CurrentListener : CurrentTask.Listeners)
+				{
+					if(IsValid(CurrentListener))
+					{
+						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+						{
+							II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
+						}
+					}
+				}
+				break;
+			}
+		}
+		
+		if(FailQuest)
+		{
+			Quest.State = Failed;
+
+			QuestFailed.Broadcast(Quest);
+
+			for(const auto& CurrentListener : Quest.Listeners)
+			{
+				if(IsValid(CurrentListener))
+				{
+					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+					{
+						II_QuestUpdates::Execute_QuestFailed(CurrentListener, Quest);
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+	
+	return false;
+}
+
+bool UQuestComponent::AddTaskToQuest(FS_QuestTask Task, FGameplayTag Quest)
+{
+	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		const FS_TaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(Task);
+
+		ActiveQuests[QuestIndex].Tasks.Add(TaskWrapper);
+
+		TaskAddedToQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
+
+		for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
+		{
+			if(IsValid(CurrentListener))
+			{
+				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+				{
+					II_QuestUpdates::Execute_TaskAddedToQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	return false;
+}
+
+bool UQuestComponent::RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest)
+{
+	const int32 QuestIndex = GetQuestIndex_Active(Quest);
+
+	if(ActiveQuests.IsValidIndex(QuestIndex))
+	{
+		FS_QuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
+		for(int32 CurrentIndex = 0; CurrentIndex < QuestWrapper.Tasks.Num(); CurrentIndex++)
+		{
+			if(QuestWrapper.Tasks[CurrentIndex].TaskID == Task)
+			{
+				const FS_TaskWrapper TaskWrapper = QuestWrapper.Tasks[CurrentIndex];
+				QuestWrapper.Tasks.RemoveAt(CurrentIndex);
+
+				TaskRemovedFromQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
+
+				for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
+				{
+					if(IsValid(CurrentListener))
+					{
+						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+						{
+							II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+						}
+					}
+				}
+
+				if(QuestWrapper.Tasks.Num() == 0)
+				{
+					DropQuest(QuestWrapper);
+				}
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
 bool UQuestComponent::CanTaskBeProgressed_Internal_Implementation(FS_TaskWrapper Task)
 {
 	return true;
