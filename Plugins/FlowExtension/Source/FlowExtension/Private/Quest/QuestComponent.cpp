@@ -378,6 +378,11 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 			{
 				return false;
 			}
+
+			if(!CanTaskBeProgressed(CurrentTask))
+			{
+				return false;
+			}
 			
 			const float ProgressDelta = (UKismetMathLibrary::Clamp(CurrentTask.CurrentProgress + ProgressToAdd, 0,CurrentTask.ProgressRequired) - CurrentTask.CurrentProgress);
 			
@@ -422,10 +427,10 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 	return false;
 }
 
-bool UQuestComponent::CanTaskBeProgressed(const FGameplayTag Task)
+bool UQuestComponent::CanTaskBeProgressed(FS_TaskWrapper Task)
 {
 	int32 QuestIndex;
-	GetQuestForTask_Active(Task, QuestIndex);
+	GetQuestForTask_Active(Task.TaskID, QuestIndex);
 
 	if(!ActiveQuests.IsValidIndex(QuestIndex))
 	{
@@ -434,7 +439,7 @@ bool UQuestComponent::CanTaskBeProgressed(const FGameplayTag Task)
 
 	for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
 	{
-		if(CurrentTask.TaskID == Task)
+		if(CurrentTask.TaskID == Task.TaskID)
 		{
 			if(CurrentTask.CurrentProgress >= CurrentTask.ProgressRequired)
 			{
@@ -443,7 +448,25 @@ bool UQuestComponent::CanTaskBeProgressed(const FGameplayTag Task)
 			
 			if(CurrentTask.State == InProgress)
 			{
-				return CanTaskBeProgressed_Internal(CurrentTask);
+				bool ProgressTask = true;
+				if(II_QuestUpdates::Execute_PreventTaskProgress(this, CurrentTask))
+				{
+					return false;
+				}
+
+				for(const auto& CurrentListener : CurrentTask.Listeners)
+				{
+					if(IsValid(CurrentListener))
+					{
+						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+						{
+							if(II_QuestUpdates::Execute_PreventTaskProgress(CurrentListener, CurrentTask))
+							{
+								return false;
+							}
+						}
+					}
+				}
 			}
 		}
 	}

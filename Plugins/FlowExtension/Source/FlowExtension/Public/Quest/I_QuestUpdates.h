@@ -8,7 +8,7 @@
 #include "I_QuestUpdates.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE()
+UINTERFACE(BlueprintType)
 class UI_QuestUpdates : public UInterface
 {
 	GENERATED_BODY()
@@ -38,6 +38,9 @@ public:
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
 	void TaskProgressed(FS_TaskWrapper Task, float ProgressMade, UObject* Instigator);
+
+	UFUNCTION(Category = "Quest System|Task", BlueprintImplementableEvent, BlueprintCallable)
+	bool PreventTaskProgress(FS_TaskWrapper Task);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
 	void TaskDropped(FS_TaskWrapper Task);

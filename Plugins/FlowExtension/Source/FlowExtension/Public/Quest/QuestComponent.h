@@ -198,15 +198,23 @@ public:
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator);
 
+ /**Evaluate if the task can be progressed.
+  *
+  * This will also send the I_QuestUpdates -> PreventTaskProgress interface
+  * event to this component AND the listeners of the task. Allowing any
+  * UObject to prevent the tasks progress, for example a task might
+  * be to kill a boss. If the boss is a listener for the task, you can
+  * ask the boss if they are dead or not, if the boss isn't dead,
+  * you can prevent the task from being progressed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool CanTaskBeProgressed(const FGameplayTag Task);
+ bool CanTaskBeProgressed(FS_TaskWrapper Task);
 
  /**Small optimization, CanTaskBeProgressed already looks up
   * the task, overriding that function at a blueprint level means
   * you have to search for the task again. This will automatically
   * receive the already-found task.*/
- UFUNCTION(Category = "Quest", BlueprintNativeEvent, DisplayName = "Can task be progressed?")
- bool CanTaskBeProgressed_Internal(FS_TaskWrapper Task);
+ // UFUNCTION(Category = "Quest", BlueprintNativeEvent, DisplayName = "Can task be progressed?")
+ // bool CanTaskBeProgressed_Internal(FS_TaskWrapper Task);
 
  /**Attempt to fail a task.
   *
@@ -220,7 +228,10 @@ public:
   * flow node.
   * The better way would be to have tasks that are hidden from the
   * player, then revealed once you want to "add" the task to the
-  * quest.*/
+  * quest.
+  * Also note: If you try and add a task AFTER all the tasks in the
+  * quest have been completed, the quest will still get labelled as
+  * completed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool AddTaskToQuest(FS_QuestTask Task, FGameplayTag Quest);
 
