@@ -401,8 +401,6 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 					}
 				}
 			}
-
-			continue;
 		}
 
 		if(CurrentTask.State == InProgress && CurrentTask.IsOptional != true)
