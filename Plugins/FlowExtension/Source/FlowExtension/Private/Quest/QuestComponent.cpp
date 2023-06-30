@@ -584,20 +584,27 @@ bool UQuestComponent::RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest)
 						}
 					}
 				}
-
-				if(QuestWrapper.Tasks.Num() == 0)
-				{
-					DropQuest(QuestWrapper);
-				}
 			}
 		}
+
+		//If all the remaining tasks are optional, drop the quest.
+		bool RemainingTasksAreOptional = true;
+		for(auto& CurrentTask : QuestWrapper.Tasks)
+		{
+			if(!CurrentTask.IsOptional)
+			{
+				RemainingTasksAreOptional = false;
+				break;
+			}
+		}
+
+		if(QuestWrapper.Tasks.Num() == 0 || RemainingTasksAreOptional)
+		{
+			DropQuest(QuestWrapper);
+		}
+		
 		return true;
 	}
 
 	return false;
-}
-
-bool UQuestComponent::CanTaskBeProgressed_Internal_Implementation(FS_TaskWrapper Task)
-{
-	return true;
 }
