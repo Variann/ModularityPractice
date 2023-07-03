@@ -40,7 +40,7 @@ EDataValidationResult UFN_DialogueBase::ValidateNode()
 		FailedValidation = true;
 	}
 
-	if(DialogueText.DialogueText.IsEmpty())
+	if(Script.DialogueText.IsEmpty())
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("No dialogue text"), this);
 		FailedValidation = true;
@@ -101,6 +101,11 @@ void UFN_DialogueBase::Stop() const
 {
 }
 
+FS_Script UFN_DialogueBase::GetScript()
+{
+	return Script;
+}
+
 TArray<FS_DialogueOption> UFN_DialogueBase::GetDialogueOptions()
 {
 	return DialogueOptions;
@@ -158,9 +163,9 @@ FText UFN_DialogueBase::GetReadableDialogueString_Implementation()
 
 	if(bInEditor)
 	{
-		if(!DialogueText.DialogueText.IsEmpty())
+		if(!Script.DialogueText.IsEmpty())
 		{
-			return DialogueText.DialogueText;
+			return Script.DialogueText;
 		}
 		else
 		{
@@ -168,7 +173,7 @@ FText UFN_DialogueBase::GetReadableDialogueString_Implementation()
 		}
 	}
 	
-	for(auto& CurrentOverride : DialogueText.OptionOverrides)
+	for(auto& CurrentOverride : Script.OptionOverrides)
 	{
 		if(IsValid(CurrentOverride))
 		{

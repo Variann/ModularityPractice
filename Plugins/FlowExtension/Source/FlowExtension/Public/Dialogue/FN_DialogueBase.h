@@ -22,7 +22,7 @@ protected:
 	UDA_DialogueCharacter* Character = nullptr;
 	
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FS_Script DialogueText;
+	FS_Script Script;
 
 	UPROPERTY(EditAnywhere, Category=Dialogue)
 	TArray<FS_DialogueOption> DialogueOptions;
@@ -48,6 +48,9 @@ protected:
 
 
 public:
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FS_Script GetScript();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<FS_DialogueOption> GetDialogueOptions();
