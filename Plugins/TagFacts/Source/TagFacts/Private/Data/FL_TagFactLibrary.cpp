@@ -3,6 +3,13 @@
 
 #include "Data/FL_TagFactLibrary.h"
 
+#include "Kismet/GameplayStatics.h"
+
+UGI_FactGameInstance* UFL_TagFactLibrary::GetFactGameInstance(UObject* WorldContext)
+{
+	return Cast<UGI_FactGameInstance>(UGameplayStatics::GetGameInstance(WorldContext)) ;
+}
+
 bool UFL_TagFactLibrary::CompareFact(FS_Fact Fact, int32 Value, TEnumAsByte<EFactComparator> Comparator)
 {
 	switch (Comparator)
