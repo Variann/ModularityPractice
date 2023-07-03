@@ -78,7 +78,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FS_TaskWrapp
 
 
 UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOWEXTENSION_API UQuestComponent : public UActorComponent
+class FLOWEXTENSION_API UQuestComponent : public UActorComponent, public II_QuestUpdates
 {
 	GENERATED_BODY()
 
@@ -163,6 +163,9 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasFailedQuest(FGameplayTag Quest);
+
+ UFUNCTION(Category = "Quest", BlueprintPure)
+ TEnumAsByte<EQuestState> GetQuestState(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool DropQuest(FS_QuestWrapper Quest);

@@ -200,6 +200,35 @@ bool UQuestComponent::HasFailedQuest(FGameplayTag Quest)
 	return false;
 }
 
+TEnumAsByte<EQuestState> UQuestComponent::GetQuestState(FGameplayTag Quest)
+{
+	for(auto& CurrentQuest : ActiveQuests)
+	{
+		if(CurrentQuest.QuestID == Quest)
+		{
+			return CurrentQuest.State;
+		}
+	}
+	
+	for(auto& CurrentQuest : FailedQuests)
+	{
+		if(CurrentQuest.QuestID == Quest)
+		{
+			return CurrentQuest.State;
+		}
+	}
+
+	for(auto& CurrentQuest : CompletedQuests)
+	{
+		if(CurrentQuest.QuestID == Quest)
+		{
+			return CurrentQuest.State;
+		}
+	}
+
+	return Inactive;
+}
+
 bool UQuestComponent::DropQuest(FS_QuestWrapper Quest)
 {
 	if(Quest.State != InProgress)
@@ -448,8 +477,7 @@ bool UQuestComponent::CanTaskBeProgressed(FS_TaskWrapper Task)
 			
 			if(CurrentTask.State == InProgress)
 			{
-				bool ProgressTask = true;
-				if(II_QuestUpdates::Execute_PreventTaskProgress(this, CurrentTask))
+				if(Execute_PreventTaskProgress(this, CurrentTask))
 				{
 					return false;
 				}
@@ -460,7 +488,7 @@ bool UQuestComponent::CanTaskBeProgressed(FS_TaskWrapper Task)
 					{
 						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
 						{
-							if(II_QuestUpdates::Execute_PreventTaskProgress(CurrentListener, CurrentTask))
+							if(Execute_PreventTaskProgress(CurrentListener, CurrentTask))
 							{
 								return false;
 							}
@@ -471,7 +499,7 @@ bool UQuestComponent::CanTaskBeProgressed(FS_TaskWrapper Task)
 		}
 	}
 	
-	return false;
+	return true;
 }
 
 bool UQuestComponent::FailTask(FGameplayTag Task, bool FailQuest)
@@ -575,6 +603,17 @@ bool UQuestComponent::RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest)
 				TaskRemovedFromQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
 
 				for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
+				{
+					if(IsValid(CurrentListener))
+					{
+						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+						{
+							II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+						}
+					}
+				}
+
+				for(const auto& CurrentListener : TaskWrapper.Listeners)
 				{
 					if(IsValid(CurrentListener))
 					{
