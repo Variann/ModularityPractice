@@ -65,12 +65,6 @@ struct FS_DialogueSettings
 	 * the dialogue button.*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
 	FText DialogueText;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	bool Optional;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	bool Test;
 };
 
 USTRUCT(BlueprintType)
