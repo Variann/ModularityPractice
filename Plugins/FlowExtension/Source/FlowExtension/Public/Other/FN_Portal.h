@@ -1,0 +1,41 @@
+﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Nodes/FlowNode.h"
+#include "FN_Portal.generated.h"
+
+UENUM()
+enum EPortalDirection
+{
+	Entrance,
+	Exit
+};
+
+UCLASS(DisplayName = "Portal")
+class FLOWEXTENSION_API UFN_Portal : public UFlowNode
+{
+	GENERATED_UCLASS_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TEnumAsByte<EPortalDirection> PortalDirection = Entrance;
+
+	UPROPERTY(EditAnywhere)
+	FName PortalID;
+
+	UPROPERTY(EditAnywhere)
+	UFlowNode* Node = nullptr;
+
+#if WITH_EDITOR
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	void RefreshPins();
+
+	virtual FString GetNodeDescription() const override { return PortalID.ToString(); }
+
+#endif
+	
+	virtual void ExecuteInput(const FName& PinName) override;
+};
