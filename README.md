@@ -25,3 +25,7 @@ What this provides:
 ---
  - Relations, a simple plugin that brings a "reputation" or "experience" system to players, but is tied to a data asset, which is meant to be a character.
 	 - This can display if a character is "friendly" or "hated" by the player character in your game.
+
+---
+ - Puppeteer, this brings a procedural generation to level sequencer, allowing you to quickly animate characters, similar system used by Witcher 3 and Assassin's Creed Odyssey.
+	- This is still in the concept phase and won't be worked on in a while as it is not relevant to the game I'm currently working on, but it is something I want to make in the future.
