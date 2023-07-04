@@ -27,6 +27,13 @@ protected:
 	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_DialogueOption> DialogueOptions;
 
+	/**After a dialogue option has been chosen, how long should we wait
+	 * until we trigger the next node.
+	 * If the node has no dialogue options, this delay will be triggered
+	 * instantly.*/
+	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
+	float FinishDelay = 0.4;
+
 public:
 	static const FString Continue;
 
