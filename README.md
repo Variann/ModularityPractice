@@ -1,5 +1,10 @@
 # ModularityPractice
 Practice repository for modular and reusable game systems.
+These systems are design-agnostic and are meant to fit in as many projects as possible with minimal modification.
+
+NOTE: These systems may not be complete or have bugs I have not encountered yet. I use these systems in my personal projects, but are developed here so it is easier to plug-and-play them into each game I work on.
+
+Majority is designed to stay inside of C++, but some things are handled in Blueprints where it makes sense. This is meant to be a healthy mix of C++ and blueprints.
 
 What this provides:
 
