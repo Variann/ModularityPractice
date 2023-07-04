@@ -18,13 +18,13 @@ class FLOWEXTENSION_API UFN_DialogueBase : public UFlowNode
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category=Dialogue)
+	UPROPERTY(Category = "Dialogue", EditAnywhere)
 	UDA_DialogueCharacter* Character = nullptr;
 	
 	UPROPERTY(EditAnywhere, Category=Dialogue)
 	FS_Script Script;
 
-	UPROPERTY(EditAnywhere, Category=Dialogue, BlueprintReadOnly)
+	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_DialogueOption> DialogueOptions;
 
 public:
