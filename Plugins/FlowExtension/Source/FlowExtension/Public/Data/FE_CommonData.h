@@ -24,6 +24,13 @@ enum EQuestState
 	Failed
 };
 
+UENUM(BlueprintType)
+enum EConditionHandling
+{
+	SingularCondition,
+	AllConditions
+};
+
 USTRUCT(BlueprintType)
 struct FS_FlowPin
 {
@@ -76,10 +83,15 @@ struct FS_DialogueOption
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
 	FS_DialogueSettings DialogueSettings;
 
-	/**If any of these objects override conditions return true, their dialogue
-	 * settings will be used.*/
+	/**When we process the conditions, we can control if only a single condition
+	 * has to return true or if all of them have to return true.*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
+	TEnumAsByte<EConditionHandling> ConditionHandling = AllConditions;
+
+	/**When it's time to present this option to the player, what conditions must
+	 * be met?*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Dialogue Option")
-	TArray<UO_DialogueOverrideBase*> OptionOverrides;
+	TArray<UO_DialogueConditionBase*> Conditions;
 };
 
 USTRUCT(BlueprintType)
@@ -89,11 +101,6 @@ struct FS_Script
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
 	FText DialogueText;
-
-	/**If any of these objects override conditions return true, their dialogue
-	 * settings will be used.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Dialogue Option")
-	TArray<UO_DialogueOverrideBase*> OptionOverrides;
 };
 
 
