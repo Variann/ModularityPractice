@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Dialogue/Objects/O_DialogueConditionBase.h"
 #include "UObject/Object.h"
 #include "FE_CommonData.generated.h"
 
 class UFlowNode;
 class UFlowAsset;
 class UWidget;
-class UO_DialogueOverrideBase;
 
 UENUM(BlueprintType)
 enum EQuestState
