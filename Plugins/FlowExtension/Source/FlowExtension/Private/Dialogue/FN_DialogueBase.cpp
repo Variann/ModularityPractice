@@ -3,8 +3,6 @@
 
 #include "Dialogue/FN_DialogueBase.h"
 
-#include "Objects/O_DialogueOverrideBase.h"
-
 const FString UFN_DialogueBase::Continue = TEXT("Continue");
 
 UFN_DialogueBase::UFN_DialogueBase(const FObjectInitializer& ObjectInitializer)
@@ -88,11 +86,9 @@ void UFN_DialogueBase::RefreshOutputs()
 
 	for (auto& Dialogue : DialogueOptions)
 	{
-		FS_DialogueSettings DialogueSettings = GetSettingsForDialogue(Dialogue);
-
-		FText PinText = DialogueSettings.ButtonText;
+		FText PinText = Dialogue.DialogueSettings.ButtonText;
 		// Dialogue.DialogueSettings.
-		OutputPins.Add(FFlowPin(PinText.ToString(), FText(), DialogueSettings.DialogueText.ToString()));
+		OutputPins.Add(FFlowPin(PinText.ToString(), FText(), Dialogue.DialogueSettings.DialogueText.ToString()));
 	}
 }
 #endif
@@ -111,36 +107,6 @@ TArray<FS_DialogueOption> UFN_DialogueBase::GetDialogueOptions()
 	return DialogueOptions;
 }
 
-
-FS_DialogueSettings UFN_DialogueBase::GetSettingsForDialogue(FS_DialogueOption DialogueOption)
-{
-	bool bInEditor = false;
-	
-#if WITH_EDITOR
-	
-	bInEditor = true;
-
-#endif
-	
-	if(bInEditor)
-	{
-		return DialogueOption.DialogueSettings;
-	}
-	
-	for(auto& CurrentOverride : DialogueOption.OptionOverrides)
-	{
-		if(IsValid(CurrentOverride))
-		{
-			if(CurrentOverride->IsOverrideConditionMet())
-			{
-				return CurrentOverride->NewDialogueOption;
-			}
-		}
-	}
-
-	return DialogueOption.DialogueSettings;
-}
-
 UTexture2D* UFN_DialogueBase::GetSpeakerPortrait_Implementation()
 {
 	if(IsValid(Character))
@@ -152,36 +118,9 @@ UTexture2D* UFN_DialogueBase::GetSpeakerPortrait_Implementation()
 
 FText UFN_DialogueBase::GetReadableDialogueString_Implementation()
 {
-
-	bool bInEditor = false;
-	
-#if WITH_EDITOR
-	
-	bInEditor = true;
-
-#endif
-
-	if(bInEditor)
+	if(!Script.DialogueText.IsEmpty())
 	{
-		if(!Script.DialogueText.IsEmpty())
-		{
-			return Script.DialogueText;
-		}
-		else
-		{
-			return FText(FText::FromString("No text set"));
-		}
-	}
-	
-	for(auto& CurrentOverride : Script.OptionOverrides)
-	{
-		if(IsValid(CurrentOverride))
-		{
-			if(CurrentOverride->IsOverrideConditionMet())
-			{
-				return CurrentOverride->NewDialogueOption.DialogueText;
-			}
-		}
+		return Script.DialogueText;
 	}
 	
 	return FText(FText::FromString("No text set"));

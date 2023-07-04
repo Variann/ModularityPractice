@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category=Dialogue)
 	FS_Script Script;
 
-	UPROPERTY(EditAnywhere, Category=Dialogue)
+	UPROPERTY(EditAnywhere, Category=Dialogue, BlueprintReadOnly)
 	TArray<FS_DialogueOption> DialogueOptions;
 
 public:
@@ -54,9 +54,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<FS_DialogueOption> GetDialogueOptions();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FS_DialogueSettings GetSettingsForDialogue(FS_DialogueOption DialogueOption);
 
 	UFUNCTION(BlueprintNativeEvent)
 	UTexture2D* GetSpeakerPortrait();
