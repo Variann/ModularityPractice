@@ -82,6 +82,12 @@ struct FS_DialogueOption
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
 	TEnumAsByte<EConditionHandling> ConditionHandling = AllConditions;
 
+	/**If the owning dialogue option does NOT want to be hidden, but the requirements
+	 * are still not met, the option will be greyed out and not selectable, but still
+	 * visible to the player.*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option", meta = (EditCondition = "Conditions.IsEmpty() == true", EditConditionHides))
+	bool HideIfConditionsAreNotMet = true;
+
 	/**When it's time to present this option to the player, what conditions must
 	 * be met?*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Dialogue Option")

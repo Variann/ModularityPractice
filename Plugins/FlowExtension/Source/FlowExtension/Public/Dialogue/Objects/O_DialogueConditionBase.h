@@ -20,12 +20,6 @@ public:
 	UPROPERTY(Category = "Dialogue", BlueprintReadOnly)
 	UFlowAsset* FlowGraph = nullptr;
 
-	/**If the owning dialogue option does NOT want to be hidden, but the requirements
-	 * are still not met, the option will be greyed out and not selectable, but still
-	 * visible to the player.*/
-	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
-	bool HideIfConditionIsNotMet = true;
-
 	UFUNCTION(Category = "Dialogue", BlueprintCallable, BlueprintPure, BlueprintNativeEvent)
 	bool IsConditionMet();
 };
