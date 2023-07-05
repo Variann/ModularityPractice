@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Data/FE_CommonData.h"
-#include "DataAssets/DA_DialogueCharacter.h"
+#include "Dialogue/DataAssets/DA_DialogueCharacter.h"
 #include "Nodes/FlowNode.h"
 #include "FN_DialogueBase.generated.h"
 

@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Dialogue/FN_DialogueBase.h"
+#include "Dialogue/Nodes/FN_DialogueBase.h"
 
 const FString UFN_DialogueBase::Continue = TEXT("Continue");
 

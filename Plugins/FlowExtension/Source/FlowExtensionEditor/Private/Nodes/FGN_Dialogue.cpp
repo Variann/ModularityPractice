@@ -2,7 +2,7 @@
 
 
 #include "Nodes/FGN_Dialogue.h"
-#include "Dialogue/FN_DialogueBase.h"
+#include "Dialogue/Nodes/FN_DialogueBase.h"
 
 #include "Slate/SFGN_Dialogue.h"
 
