@@ -44,12 +44,7 @@ EDataValidationResult UFN_DialogueBase::ValidateNode()
 		FailedValidation = true;
 	}
 
-	if(DialogueOptions.IsEmpty())
-	{
-		ValidationLog.Error<UFlowNode>(TEXT("No dialogue options"), this);
-		FailedValidation = true;
-	}
-	else
+	if(!DialogueOptions.IsEmpty())
 	{
 		for(auto& CurrentOption : DialogueOptions)
 		{
