@@ -286,8 +286,10 @@ void UFlowGraphNode::AutowireNewNode(UEdGraphPin* FromPin)
 		// Send all nodes that received a new pin connection a notification
 		for (auto It = NodeList.CreateConstIterator(); It; ++It)
 		{
-			UEdGraphNode* Node = (*It);
-			Node->NodeConnectionListChanged();
+			if(UEdGraphNode* Node = *It)
+			{
+				Node->NodeConnectionListChanged();
+			}
 		}
 	}
 }
