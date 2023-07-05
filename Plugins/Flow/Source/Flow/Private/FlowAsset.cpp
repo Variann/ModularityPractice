@@ -419,6 +419,8 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 	{
 		DeinitializeInstance();
 	}
+
+	GetFlowSubsystem()->FinishRootFlow(GetOwner(), this, EFlowFinishPolicy::Keep);
 }
 
 TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const
