@@ -303,16 +303,6 @@ UClass* UFlowGraphSchema::GetAssignedGraphNodeClass(const UClass* FlowNodeClass)
 	// Collect all possible parents and their corresponding GraphNodeClasses
 	for (const TPair<UClass*, UClass*>& GraphNodeByFlowNode : GraphNodesByFlowNodes)
 	{
-		if(GraphNodeByFlowNode.Value == UFlowGraphNode::StaticClass())
-		{
-			// We don't want assign the default by accident
-			continue;
-		}
-		if(FlowNodeClass->IsChildOf(GraphNodeByFlowNode.Key))
-		{
-			return  GraphNodeByFlowNode.Value;
-		}
-		
 		if (FlowNodeClass == GraphNodeByFlowNode.Key)
 		{
 			return GraphNodeByFlowNode.Value;

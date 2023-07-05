@@ -23,7 +23,7 @@
 		{
 			"Name": "FlowExtensionEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
