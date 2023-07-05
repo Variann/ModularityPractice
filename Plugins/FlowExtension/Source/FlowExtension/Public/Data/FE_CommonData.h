@@ -59,12 +59,12 @@ struct FS_DialogueSettings
 
 	/**The text displayed to the player to choose this option.*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText ButtonText;
+	FText ButtonText = FText();
 
 	/**The actual dialogue that occurs when the player presses
 	 * the dialogue button.*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText DialogueText;
+	FText DialogueText = FText();
 };
 
 USTRUCT(BlueprintType)

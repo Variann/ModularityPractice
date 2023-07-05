@@ -17,7 +17,7 @@ class FLOWEXTENSION_API UO_DialogueConditionBase : public UObject
 
 public:
 
-	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Dialogue", BlueprintReadOnly)
 	UFlowAsset* FlowGraph = nullptr;
 
 	/**If the owning dialogue option does NOT want to be hidden, but the requirements
