@@ -23,6 +23,25 @@ void UFN_Portal::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 {
 	RefreshPins();
 	PortalGUID = GetGuid();
+
+	//Update the PortalID so the node description is correct.
+	if(PortalDirection == Exit)
+	{
+		RefreshConnectedPortals();
+	}
+	else
+	{
+		//This is a entrance, get the exit portal and use its PortalID
+		UFlowAsset* FlowAsset = GetFlowAsset();
+
+		if(FlowAsset)
+		{
+			if(UFN_Portal* OtherPortal = Cast<UFN_Portal>(FlowAsset->GetNode(PortalGUIDToTrigger)))
+			{
+				PortalID = OtherPortal->PortalID;
+			}
+		}
+	}
 	
 	OnReconstructionRequested.ExecuteIfBound();
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -40,6 +59,33 @@ void UFN_Portal::RefreshPins()
 	else
 	{
 		OutputPins.Add(TEXT("Out"));
+	}
+}
+
+void UFN_Portal::RefreshConnectedPortals()
+{
+	UFlowAsset* FlowAsset = GetFlowAsset();
+
+	if(!FlowAsset)
+	{
+		return;
+	}
+	
+	TArray<UFlowNode*> FoundNodes;
+	FlowAsset->PreloadNodes();
+	const TMap<FGuid, UFlowNode*>& AssetNodes = FlowAsset->GetNodes();
+	AssetNodes.GenerateValueArray(FoundNodes);
+
+	for(auto& CurrentNode : FoundNodes)
+	{
+		UFN_Portal* OtherPortal = Cast<UFN_Portal>(CurrentNode);
+		if(OtherPortal)
+		{
+			if(OtherPortal->PortalDirection == Entrance && OtherPortal->PortalGUIDToTrigger == PortalGUID)
+			{
+				OtherPortal->PortalID = PortalID;
+			}
+		}
 	}
 }
 

@@ -21,7 +21,8 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	UPROPERTY(EditAnywhere)
 	TEnumAsByte<EPortalDirection> PortalDirection = Entrance;
 
-	UPROPERTY(EditAnywhere)
+	//General description of what this portal is meant for.
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
 	FName PortalID;
 
 	//GUID of the exit node
@@ -37,6 +38,8 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	void RefreshPins();
+
+	void RefreshConnectedPortals();
 
 	virtual FString GetNodeDescription() const override { return PortalID.ToString(); }
 
