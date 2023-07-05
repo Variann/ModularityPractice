@@ -8,7 +8,7 @@
 #include "TutorialMetaData.h"
 #include "Materials/MaterialInstance.h"
 
-#include "Dialogue/FN_DialogueBase.h"
+#include "Dialogue/Nodes/FN_DialogueBase.h"
 #include "Nodes/FGN_Dialogue.h"
 #include "Widgets/Text/SInlineEditableTextBlock.h"
 
