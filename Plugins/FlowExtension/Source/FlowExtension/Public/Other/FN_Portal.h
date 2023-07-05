@@ -40,6 +40,8 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 
 	virtual FString GetNodeDescription() const override { return PortalID.ToString(); }
 
+	virtual EDataValidationResult ValidateNode() override;
+
 #endif
 	
 	virtual void ExecuteInput(const FName& PinName) override;

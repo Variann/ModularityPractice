@@ -43,6 +43,17 @@ void UFN_Portal::RefreshPins()
 	}
 }
 
+EDataValidationResult UFN_Portal::ValidateNode()
+{
+	if(PortalDirection == Entrance && !PortalGUIDToTrigger.IsValid())
+	{
+		ValidationLog.Error<UFlowNode>(TEXT("Portal has no exit portal to trigger."), this);
+		return EDataValidationResult::Invalid;
+	}
+	
+	return EDataValidationResult::Valid;
+}
+
 #endif
 
 void UFN_Portal::ExecuteInput(const FName& PinName)
