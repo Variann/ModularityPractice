@@ -17,14 +17,16 @@ class TAGFACTS_API UFactSubSystem : public UGameInstanceSubsystem
 private:
 	
 	UPROPERTY(SaveGame)
-	TArray<FS_Fact> Facts;
+	TSet<FS_Fact> Facts;
 
 public:
+
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 	/**The fact array is private because you are supposed to interact
 	 * with it through the helper functions.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable, BlueprintPure)
-	TArray<FS_Fact> GetFacts();
+	TSet<FS_Fact> GetFacts();
 
 	/**Add a fact to the system. This will return false if the fact
 	 * did not already exist. Will only return true if this function
@@ -39,11 +41,11 @@ public:
 
 	/**Increment a fact by one.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
-	void IncrementFact(FGameplayTag Fact);
+	void IncrementFact(FGameplayTag Fact, int32 Amount = 1);
 
 	/**Decrement a fact by one.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
-	void DecrementFact(FGameplayTag Fact);
+	void DecrementFact(FGameplayTag Fact, int32 Amount = 1);
 
 	/**Not advised to be used. This will forcibly set the fact value.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
@@ -53,12 +55,8 @@ public:
 	UFUNCTION(Category = "Fact System", BlueprintCallable, BlueprintPure)
 	bool DoesFactExist(FGameplayTag Fact);
 
-	/**Get the value of a fact. Will return -1 if the fact is not found.*/
+	/**Get the value of a fact. Will return 0 if the fact is not found.
+	 * If you need to find out if a fact has a value, use DoesFactExist instead.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable, BlueprintPure)
 	int32 GetFactValue(FGameplayTag Fact);
-
-	/**Get the array index of the fact from the facts array.
-	 * Will return -1 if not found.*/
-	UFUNCTION(Category = "Fact System", BlueprintCallable, BlueprintPure)
-	int32 GetFactIndex(FGameplayTag Fact);
 };
