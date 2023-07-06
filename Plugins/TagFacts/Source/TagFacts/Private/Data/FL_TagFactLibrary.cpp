@@ -10,15 +10,16 @@ bool UFL_TagFactLibrary::CompareFact(FS_Fact Fact, int32 Value, TEnumAsByte<EFac
 	switch (Comparator)
 	{
 	case IsTrue:
-		if(Fact.Value > 0) { return true; } else { return false; }
+		return Fact.Value > 0;
 
 	case IsFactEqualTo:
-		if(Fact.Value == Value) { return true; } else { return false; }
+		return Fact.Value == Value;
 
 	case IsFactGreaterThan:
-		if(Fact.Value > Value) { return true; } else { return false; }
+		return Fact.Value > Value;
 	
-	case IsFactLessThan: if(Fact.Value < Value) { return true; } else { return false; }
+	case IsFactLessThan:
+		return Fact.Value < Value;
 
 	default:
 		return false;
