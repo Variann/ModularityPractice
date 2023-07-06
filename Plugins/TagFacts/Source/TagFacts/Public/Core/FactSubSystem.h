@@ -4,14 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Data/CoreTagFactData.h"
-#include "Engine/GameInstance.h"
-#include "GI_FactGameInstance.generated.h"
+#include "FactSubSystem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TAGFACTS_API UGI_FactGameInstance : public UGameInstance
+class TAGFACTS_API UFactSubSystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
