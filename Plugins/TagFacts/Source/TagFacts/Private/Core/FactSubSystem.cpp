@@ -15,6 +15,11 @@ TSet<FS_Fact> UFactSubSystem::GetFacts()
 	return Facts;
 }
 
+void UFactSubSystem::SetFacts(TSet<FS_Fact> NewFacts)
+{
+	Facts = NewFacts;
+}
+
 bool UFactSubSystem::AddFact(FS_Fact Fact)
 {
 	if(!Facts.Contains(Fact))

@@ -28,6 +28,11 @@ public:
 	UFUNCTION(Category = "Fact System", BlueprintCallable, BlueprintPure)
 	TSet<FS_Fact> GetFacts();
 
+	/**Completely override the current facts with a new list.
+	 * Primarily used for loading from a save.*/
+	UFUNCTION(Category = "Fact System", BlueprintCallable)
+	void SetFacts(TSet<FS_Fact> NewFacts);
+
 	/**Add a fact to the system. This will return false if the fact
 	 * did not already exist. Will only return true if this function
 	 * call added it to the array.*/
