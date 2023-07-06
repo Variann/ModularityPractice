@@ -41,11 +41,11 @@ public:
 
 	/**Increment a fact by one.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
-	void IncrementFact(FGameplayTag Fact, int32 Amount = 1);
+	void IncrementFact(const FGameplayTag Fact, const int32 Amount = 1);
 
 	/**Decrement a fact by one.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
-	void DecrementFact(FGameplayTag Fact, int32 Amount = 1);
+	void DecrementFact(const FGameplayTag Fact, const int32 Amount = 1);
 
 	/**Not advised to be used. This will forcibly set the fact value.*/
 	UFUNCTION(Category = "Fact System", BlueprintCallable)
