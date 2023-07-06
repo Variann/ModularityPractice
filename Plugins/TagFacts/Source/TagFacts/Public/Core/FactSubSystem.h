@@ -6,9 +6,12 @@
 #include "Data/CoreTagFactData.h"
 #include "FactSubSystem.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFactAdded, FS_Fact, NewFact);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFactRemoved, FS_Fact, RemovedFact);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFactIncremented, FS_Fact, Fact, int32, OldValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFactDecremented, FS_Fact, Fact, int32, OldValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFactOverriden, int32, OldValue, int32, NewValue);
+
 UCLASS()
 class TAGFACTS_API UFactSubSystem : public UGameInstanceSubsystem
 {
@@ -20,6 +23,21 @@ private:
 	TSet<FS_Fact> Facts;
 
 public:
+
+	UPROPERTY(Category = "Fact System", BlueprintAssignable)
+	FFactAdded FactAdded;
+
+	UPROPERTY(Category = "Fact System", BlueprintAssignable)
+	FFactRemoved FactRemoved;
+
+	UPROPERTY(Category = "Fact System", BlueprintAssignable)
+	FFactIncremented FactIncremented;
+
+	UPROPERTY(Category = "Fact System", BlueprintAssignable)
+	FFactDecremented FactDecremented;
+
+	UPROPERTY(Category = "Fact System", BlueprintAssignable)
+	FFactOverriden FactOverriden;
 
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 

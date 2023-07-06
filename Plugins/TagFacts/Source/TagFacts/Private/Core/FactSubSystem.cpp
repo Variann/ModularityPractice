@@ -25,6 +25,8 @@ bool UFactSubSystem::AddFact(FS_Fact Fact)
 	if(!Facts.Contains(Fact))
 	{
 		Facts.Add(Fact);
+		FactAdded.Broadcast(Fact);
+		
 		return true;
 	}
 
@@ -35,7 +37,10 @@ bool UFactSubSystem::RemoveFact(FGameplayTag Fact)
 {
 	if(!Facts.IsEmpty())
 	{
+		const FS_Fact FoundFact* = Facts.Find(FS_Fact({Fact}));
 		Facts.Remove(FS_Fact({Fact}));
+		FactRemoved.Broadcast(FS_Fact({FoundFact->Tag, FoundFact->Value}));
+		
 		return true;
 	}
 
@@ -53,7 +58,9 @@ void UFactSubSystem::IncrementFact(const FGameplayTag Fact, const int32 Amount)
 	{
 		if(FS_Fact* FoundFact = Facts.Find(FS_Fact({Fact})))
 		{
+			const int32 OldValue = FoundFact->Value;
 			FoundFact->Value = FoundFact->Value + Amount;
+			FactIncremented.Broadcast(FS_Fact({FoundFact->Tag, FoundFact->Value}), OldValue);
 		}
 	}
 }
@@ -69,7 +76,9 @@ void UFactSubSystem::DecrementFact(const FGameplayTag Fact, const int32 Amount)
 	{
 		if(FS_Fact* FoundFact = Facts.Find(FS_Fact({Fact})))
 		{
+			const int32 OldValue = FoundFact->Value;
 			FoundFact->Value = FoundFact->Value - Amount;
+			FactDecremented.Broadcast(FS_Fact({FoundFact->Tag, FoundFact->Value}), OldValue);
 		}
 	}
 }
@@ -80,7 +89,10 @@ bool UFactSubSystem::OverrideFactValue(FS_Fact Fact)
 	{
 		if(FS_Fact* FoundFact = Facts.Find(FS_Fact({Fact})))
 		{
+			const int32 OldValue = FoundFact->Value;
+			const int32 NewValue = Fact.Value;
 			FoundFact->Value = Fact.Value;
+			FactOverriden.Broadcast(OldValue, NewValue);
 		}
 	}
 
