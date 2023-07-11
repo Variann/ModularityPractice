@@ -37,7 +37,7 @@ bool UFactSubSystem::RemoveFact(FGameplayTag Fact)
 {
 	if(!Facts.IsEmpty())
 	{
-		const FS_Fact FoundFact* = Facts.Find(FS_Fact({Fact}));
+		const FS_Fact* FoundFact = Facts.Find(FS_Fact({Fact}));
 		Facts.Remove(FS_Fact({Fact}));
 		FactRemoved.Broadcast(FS_Fact({FoundFact->Tag, FoundFact->Value}));
 		
