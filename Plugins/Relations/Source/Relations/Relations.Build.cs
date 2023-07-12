@@ -26,6 +26,8 @@ public class Relations : ModuleRules
 			new string[]
 			{
 				"Core",
+				"GameplayTags", 
+				"GameplayAbilities"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

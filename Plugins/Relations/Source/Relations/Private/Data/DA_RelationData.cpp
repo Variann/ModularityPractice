@@ -13,7 +13,7 @@ FS_RelationStatus UDA_RelationData::GetCurrentStatus(const int32 Level)
 	
 	for(auto& CurrentStatus : RelationStatuses)
 	{
-		if(UKismetMathLibrary::InRange_IntInt(Level, CurrentStatus.MinLevel, CurrentStatus.MaxLevel))
+		if(UKismetMathLibrary::InRange_IntInt(Level, CurrentStatus.MinLevel, CurrentStatus.MaxLevel, true, false))
 		{
 			return CurrentStatus;
 		}
