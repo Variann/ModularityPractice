@@ -45,30 +45,15 @@ void URelations_AddExperience::Activate()
 				RemoveFromRoot();
 				return;
 			}
-	
-			if(FS_Relationship* FoundRelationship = RelationsSubSystem->Relationships.Find(FS_Relationship({LoadedEntity})))
+
+			if(RelationsSubSystem->AddExperienceToEntity_Internal(LoadedEntity, ExperienceToGrant))
 			{
-				FoundRelationship->CurrentXP = UKismetMathLibrary::Clamp(FoundRelationship->CurrentXP + ExperienceToGrant, LoadedEntity->GetMinimumExperience(), LoadedEntity->GetMaximumExperience());
 				Success.Broadcast();
-				RemoveFromRoot();
-				return;
 			}
-	
-			if(!LoadedEntity->ExperienceAndLevelCurve.GetRichCurve()->Keys.IsValidIndex(0))
+			else
 			{
-				UKismetSystemLibrary::PrintString(this, TEXT("Level curve has no keys. Can't add relationship."));
 				Fail.Broadcast();
-				RemoveFromRoot();
-				return;
 			}
-		
-			FS_Relationship NewRelationship;
-			NewRelationship.Entity = LoadedEntity;
-			NewRelationship.CurrentXP = LoadedEntity->DefaultExperience;
-			NewRelationship.CurrentXP = NewRelationship.CurrentXP + ExperienceToGrant;
-		
-			RelationsSubSystem->Relationships.Add(NewRelationship);
-			Success.Broadcast();
 		}
 		else
 		{

@@ -35,12 +35,12 @@ class RELATIONS_API URelations_AddExperience : public UBlueprintAsyncActionBase
 	FStreamableManager StreamableManager;
 	TSharedPtr<FStreamableHandle> Handle;
 
-	virtual void Activate() override;
-
 public:
 
 	/**Add experience for a specified entity.
 	 * If the entity is not found, it'll get added.*/
 	UFUNCTION(Category="Relations", BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="Context"))
 	static URelations_AddExperience* AddExperienceForEntity(TSoftObjectPtr<UDA_RelationData> Entity, float Experience, UObject* Context);
+
+	virtual void Activate() override;
 };

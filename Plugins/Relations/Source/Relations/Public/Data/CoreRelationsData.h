@@ -2,8 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "AttributeSet.h"
-#include "ScalableFloat.h"
 #include "CoreRelationsData.generated.h"
 
 class UDA_RelationData;
