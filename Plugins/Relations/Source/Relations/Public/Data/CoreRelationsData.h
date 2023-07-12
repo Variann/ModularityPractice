@@ -20,10 +20,10 @@ struct FS_RelationStatus
 	FGameplayTag StatusID;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	int32 MinLevel;
+	int32 MinLevel = 0;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	int32 MaxLevel;
+	int32 MaxLevel = 0;
 };
 
 USTRUCT(BlueprintType)

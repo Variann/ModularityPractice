@@ -16,6 +16,8 @@ class RELATIONS_API UFL_RelationHelpers : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
+public:
+
 	UFUNCTION(BlueprintCallable)
 	static float GetValueAtLevel(FScalableFloat ScalableFloat, float Level, FString ContextString);
 
