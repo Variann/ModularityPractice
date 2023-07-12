@@ -6,6 +6,8 @@
 #include "ScalableFloat.h"
 #include "CoreRelationsData.generated.h"
 
+class UDA_RelationData;
+
 USTRUCT(BlueprintType)
 struct FS_RelationStatus
 {
@@ -18,41 +20,33 @@ struct FS_RelationStatus
 	FGameplayTag StatusID;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	float MinLevel;
+	int32 MinLevel;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	float MaxLevel;
-};
-
-USTRUCT(BlueprintType)
-struct FS_RelationshipsDataRow : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	FGameplayTag Entity;
-
-	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	FText EntityName;
-
-	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	FRuntimeFloatCurve ExperienceAndLevelCurve;
-
-	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "StatusText"))
-	TArray<FS_RelationStatus> RelationStatuses;
+	int32 MaxLevel;
 };
 
 USTRUCT(BlueprintType)
 struct FS_Relationship
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	FGameplayTag Entity;
+	UDA_RelationData* Entity;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
 	float CurrentXP;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
 	FS_RelationStatus CurrentRelationStatus;
+
+	bool operator==(const FS_Relationship& Argument) const
+	{
+		return Argument.Entity == Entity;
+	}
 };
+FORCEINLINE uint32 GetTypeHash(const FS_Relationship& Thing)
+{
+	uint32 Hash = FCrc::MemCrc32(&Thing, sizeof(FS_Relationship));
+	return Hash;
+}
