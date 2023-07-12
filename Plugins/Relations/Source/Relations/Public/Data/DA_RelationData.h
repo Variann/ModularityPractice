@@ -33,7 +33,7 @@ public:
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
 	FRuntimeFloatCurve ExperienceAndLevelCurve;
 
-	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "StatusText"))
+	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "StatusText - {MinLevel}/{MaxLevel}"))
 	TArray<FS_RelationStatus> RelationStatuses;
 
 	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
@@ -41,4 +41,10 @@ public:
 
 	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
 	int32 GetLevelFromExperience(const float Experience);
+
+	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	float GetMinimumExperience();
+
+	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	float GetMaximumExperience();
 };

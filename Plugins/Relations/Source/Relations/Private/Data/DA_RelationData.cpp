@@ -18,6 +18,11 @@ FS_RelationStatus UDA_RelationData::GetCurrentStatus(const int32 Level)
 			return CurrentStatus;
 		}
 	}
+
+	if(RelationStatuses.Last().MaxLevel == Level)
+	{
+		return RelationStatuses[RelationStatuses.Num() - 1];
+	}
 	
 	return FoundStatus;
 }
@@ -55,6 +60,32 @@ int32 UDA_RelationData::GetLevelFromExperience(const float Experience)
 			return Keys[CurrentLevel];
 		}
 		
+	}
+
+	return 0;
+}
+
+float UDA_RelationData::GetMinimumExperience()
+{
+	TArray<float> Values;
+	UFL_RelationHelpers::GetRuntimeCurveKeys(ExperienceAndLevelCurve).GenerateValueArray(Values);
+
+	if(Values.IsValidIndex(0))
+	{
+		return Values[0];
+	}
+
+	return 0;
+}
+
+float UDA_RelationData::GetMaximumExperience()
+{
+	TArray<float> Values;
+	UFL_RelationHelpers::GetRuntimeCurveKeys(ExperienceAndLevelCurve).GenerateValueArray(Values);
+
+	if(Values.IsValidIndex(Values.Num() - 1))
+	{
+		return Values[Values.Num() - 1];
 	}
 
 	return 0;
