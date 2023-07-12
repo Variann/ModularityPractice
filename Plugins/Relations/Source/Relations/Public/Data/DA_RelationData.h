@@ -36,15 +36,15 @@ public:
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "StatusText - {MinLevel}/{MaxLevel}"))
 	TArray<FS_RelationStatus> RelationStatuses;
 
-	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	UFUNCTION(Category = "Relation|Getters", BlueprintCallable, BlueprintPure)
 	FS_RelationStatus GetCurrentStatus(const int32 Level);
 
-	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	UFUNCTION(Category = "Relation|Getters", BlueprintCallable, BlueprintPure)
 	int32 GetLevelFromExperience(const float Experience);
 
-	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	UFUNCTION(Category = "Relation|Getters", BlueprintCallable, BlueprintPure)
 	float GetMinimumExperience();
 
-	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	UFUNCTION(Category = "Relation|Getters", BlueprintCallable, BlueprintPure)
 	float GetMaximumExperience();
 };
