@@ -30,11 +30,11 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	FGuid PortalGUID;
 
 	//What exit node should this entrance node trigger?
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
+	UPROPERTY(EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
 	FGuid PortalGUIDToTrigger;
 
 #if WITH_EDITOR
-
+	
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	void RefreshPins();
