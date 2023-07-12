@@ -37,5 +37,8 @@ public:
 	TArray<FS_RelationStatus> RelationStatuses;
 
 	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
-	FS_RelationStatus GetCurrentStatus(const float Experience);
+	FS_RelationStatus GetCurrentStatus(const int32 Level);
+
+	UFUNCTION(Category = "Relation", BlueprintCallable, BlueprintPure)
+	int32 GetLevelFromExperience(const float Experience);
 };
