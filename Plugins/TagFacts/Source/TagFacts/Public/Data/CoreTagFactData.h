@@ -37,18 +37,12 @@ struct FS_Fact
 	{
 		return Argument.Tag == Tag;
 	}
-
-	// uint32 GetValueTypeHashInternal(const void* Src) const;
 };
 FORCEINLINE uint32 GetTypeHash(const FS_Fact& Thing)
 {
 	uint32 Hash = FCrc::MemCrc32(&Thing, sizeof(FS_Fact));
 	return Hash;
 }
-// inline uint32 GetTypeHash(const FS_Fact& Fact)
-// {
-// 	return GetTypeHash(Fact.Tag);
-// }
 
 
 USTRUCT(BlueprintType)
