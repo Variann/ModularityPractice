@@ -29,7 +29,6 @@ void URelations_AddExperience::Activate()
 		if(LoadedEntity)
 		{
 			UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
-
 			if(!GameInstance)
 			{
 				Fail.Broadcast();
@@ -38,7 +37,6 @@ void URelations_AddExperience::Activate()
 			}
 			
 			URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
-
 			if(!RelationsSubSystem)
 			{
 				Fail.Broadcast();
@@ -58,6 +56,60 @@ void URelations_AddExperience::Activate()
 		else
 		{
 			Fail.Broadcast();
+		}
+
+		RemoveFromRoot();
+	});
+}
+
+URelations_GetRelationship* URelations_GetRelationship::GetRelationshipForEntity(
+	TSoftObjectPtr<UDA_RelationData> Entity, UObject* Context)
+{
+	URelations_GetRelationship* NewAsyncObject = NewObject<URelations_GetRelationship>(Context);
+	NewAsyncObject->EntityToLoad = Entity;
+	return NewAsyncObject;
+}
+
+void URelations_GetRelationship::Activate()
+{
+	Super::Activate();
+
+	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToString(), [this]()
+	{
+		FS_Relationship Relationship;
+
+		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
+		if(LoadedEntity)
+		{
+			UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
+			if(!GameInstance)
+			{
+				NotFound.Broadcast(Relationship);
+				RemoveFromRoot();
+				return;
+			}
+			
+			URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
+			if(!RelationsSubSystem)
+			{
+				NotFound.Broadcast(Relationship);
+				RemoveFromRoot();
+				return;
+			}
+
+			
+			if(RelationsSubSystem->GetRelationshipForEntity_Internal(LoadedEntity, Relationship))
+			{
+				Found.Broadcast(Relationship);
+			}
+			else
+			{
+				NotFound.Broadcast(Relationship);
+			}
+		}
+		else
+		{
+			NotFound.Broadcast(Relationship);
 		}
 
 		RemoveFromRoot();
