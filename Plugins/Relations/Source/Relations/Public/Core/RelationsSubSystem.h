@@ -34,7 +34,5 @@ public:
 	bool AddExperienceToEntity_Internal(UDA_RelationData* Entity, float Experience);
 	
 	UFUNCTION(Category="Relations", BlueprintCallable)
-	FS_Relationship GetRelationshipForEntity(UDA_RelationData* Entity, bool Async = true);
-
-	bool GetRelationshipForEntity_Internal(UDA_RelationData* Entity, FS_Relationship& Relationship);
+	FS_Relationship GetRelationshipForEntity(UDA_RelationData* Entity);
 };

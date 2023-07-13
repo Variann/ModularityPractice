@@ -7,8 +7,6 @@
 #include "Data/DA_RelationData.h"
 #include "Engine/StreamableManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetSystemLibrary.h"
 
 URelations_AddExperience* URelations_AddExperience::AddExperienceForEntity(TSoftObjectPtr<UDA_RelationData> Entity, float Experience, UObject* Context)
 {
@@ -97,8 +95,8 @@ void URelations_GetRelationship::Activate()
 				return;
 			}
 
-			
-			if(RelationsSubSystem->GetRelationshipForEntity_Internal(LoadedEntity, Relationship))
+			Relationship = RelationsSubSystem->GetRelationshipForEntity(LoadedEntity);
+			if(Relationship.Entity)
 			{
 				Found.Broadcast(Relationship);
 			}

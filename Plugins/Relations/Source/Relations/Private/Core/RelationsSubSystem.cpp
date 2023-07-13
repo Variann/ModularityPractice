@@ -47,29 +47,12 @@ bool URelationsSubSystem::AddExperienceToEntity_Internal(UDA_RelationData* Entit
 	return true;
 }
 
-FS_Relationship URelationsSubSystem::GetRelationshipForEntity(UDA_RelationData* Entity, bool Async)
-{
-	FS_Relationship FoundRelationship;
-	if(Async)
-	{
-		URelations_GetRelationship* GetExperience = URelations_GetRelationship::GetRelationshipForEntity(Entity, this);
-		GetExperience->Activate();
-		return FoundRelationship;
-	}
-
-	GetRelationshipForEntity_Internal(Entity, FoundRelationship);
-	return FoundRelationship;
-}
-
-bool URelationsSubSystem::GetRelationshipForEntity_Internal(UDA_RelationData* Entity, FS_Relationship& Relationship)
+FS_Relationship URelationsSubSystem::GetRelationshipForEntity(UDA_RelationData* Entity)
 {
 	if(const FS_Relationship* FoundRelationship = Relationships.Find(FS_Relationship({Entity})))
 	{
-		Relationship = *FoundRelationship;
-		return true;
+		return *FoundRelationship;
 	}
 
-	Relationship = FS_Relationship();
-	return false;
+	return FS_Relationship();
 }
-
