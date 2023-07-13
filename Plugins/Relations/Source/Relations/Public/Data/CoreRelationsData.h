@@ -30,10 +30,10 @@ struct FS_Relationship
 	GENERATED_BODY()
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	UDA_RelationData* Entity;
+	UDA_RelationData* Entity = nullptr;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
-	float CurrentXP;
+	float CurrentXP = 0;
 
 	UPROPERTY(Category = "Relation", EditAnywhere, BlueprintReadWrite)
 	FS_RelationStatus CurrentRelationStatus;
