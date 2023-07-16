@@ -10,8 +10,9 @@ What this provides:
 
 ---
 - Flow extension plugin, which will NOT work without the Flow Graph plugin. This extension is meant to provide a base that most games using the Flow Graph plugin will need. This includes:
-	- Quest system
-	- Dialogue system
+	- Quest system.
+	- Dialogue system.
+   	- Other unrelated nodes, such as portals to reduce wire spaghetti.
 
 ---
  - TagFacts, a plugin that allows you to store gameplay tags with values to serve as a "fact system". This kind of system is very popular among triple A studios.
