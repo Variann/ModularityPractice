@@ -8,9 +8,7 @@
 #include "GameplayTagCustomizationOptions.h"
 #include "SGameplayTagWidget.h"
 
-struct FGameplayTagContainer;
-
-class FS_FactCustomization : public IPropertyTypeCustomization, public FEditorUndoClient
+class FS_FactCustomization : public IPropertyTypeCustomization
 {
 public:
 	
