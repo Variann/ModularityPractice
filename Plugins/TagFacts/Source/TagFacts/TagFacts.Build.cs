@@ -26,7 +26,8 @@ public class TagFacts : ModuleRules
 			new string[]
 			{
 				"Core",
-				"GameplayTags"
+				"GameplayTags",
+				"GameplayTagsEditor"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -38,7 +39,7 @@ public class TagFacts : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore",
+				"SlateCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
