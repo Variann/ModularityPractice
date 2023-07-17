@@ -9,7 +9,7 @@ public class TagFactsEditor : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core", "DataRegistryEditor",
+                "Core",
             }
         );
 
@@ -23,9 +23,8 @@ public class TagFactsEditor : ModuleRules
                 "EditorStyle",
                 "UnrealEd",
                 "PropertyEditor", 
-                "TagFacts", 
-                "GameplayTagsEditor",
-                "GameplayTags", "DataRegistry"
+                "TagFacts",
+                "GameplayTags"
             }
         );
     }

@@ -2,7 +2,6 @@
 
 
 #include "FS_FactCustomization.h"
-#include "DataRegistryId.h"
 #include "IDetailChildrenBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Data/CoreTagFactData.h"
@@ -27,24 +26,9 @@ void FS_FactCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InStruc
 	TSharedPtr<IPropertyHandle> TagHandle = InStructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FS_Fact, Tag));
 	TSharedPtr<IPropertyHandle> ValueHandle = InStructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FS_Fact, Value));
 
-	StructBuilder.AddCustomRow(LOCTEXT("MyStructRow", "FS_Fact")).NameContent()[
+	StructBuilder.AddCustomRow(LOCTEXT("Fact", "FS_Fact")).NameContent()[
 		StructBuilder.GenerateStructValueWidget(TagHandle.ToSharedRef())].ValueContent()[
 			ValueHandle->CreatePropertyValueWidget()];
-
-
-}
-
-void FS_FactCustomization::OnNameSelected(const FString& NameString)
-{
-	FDataRegistryId NewId = CachedIdValue;
-	NewId.ItemName = FName(*NameString);
-	
-	OnSetId.Execute(NewId);
-}
-
-void FS_FactCustomization::OnTagChanged(const FGameplayTag& NewTag)
-{
-	OnNameSelected(NewTag.GetTagName().ToString());
 }
 
 

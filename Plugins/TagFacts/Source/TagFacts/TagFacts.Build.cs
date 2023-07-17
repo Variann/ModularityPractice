@@ -27,7 +27,6 @@ public class TagFacts : ModuleRules
 			{
 				"Core",
 				"GameplayTags",
-				"GameplayTagsEditor"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

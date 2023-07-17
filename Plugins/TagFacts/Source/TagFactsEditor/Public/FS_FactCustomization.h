@@ -2,12 +2,6 @@
 
 #pragma once
 
-#include "DataRegistryEditorModule.h"
-#include "DataRegistryId.h"
-#include "GameplayTagsManager.h"
-#include "GameplayTagCustomizationOptions.h"
-#include "SGameplayTagWidget.h"
-
 class FS_FactCustomization : public IPropertyTypeCustomization
 {
 public:
@@ -26,20 +20,5 @@ public:
 		class IDetailChildrenBuilder& StructBuilder,
 		IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 	// END IPropertyTypeCustomization interface
-
-	/** Change value and forward to delegates */
-	void OnNameSelected(const FString& NameString);
-
-	void OnTagChanged(const FGameplayTag& NewTag);
-
-	/** Root gameplay tag to show */
-	FString CachedBaseGameplayTag;
 	
-	/** Tag representation of name */
-	TSharedPtr<FGameplayTag> CachedTag;
-	
-	/** Cached Id, if this changes then refresh items */
-	FDataRegistryId CachedIdValue;
-	FOnSetDataRegistryId OnSetId;
-
 };

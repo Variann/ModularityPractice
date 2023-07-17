@@ -25,11 +25,5 @@
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"
 		}
-	],
-	"Plugins": [
-		{
-			"Name": "GameplayTagsEditor",
-			"Enabled": true
-		}
 	]
 }
