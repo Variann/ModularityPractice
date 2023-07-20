@@ -16,16 +16,18 @@ What this provides:
 
 ---
  - TagFacts, a plugin that allows you to store gameplay tags with values to serve as a "fact system". This kind of system is very popular among triple A studios.
+   	- Can also be repurposed for an achievement system.
 
 ---
- - LayeredUI, inspired by Lyra's UI layering system using CommonUI, but isn't... Well to put it bluntly, my version is not shit.
+ - LayeredUI, inspired by Lyra's UI layering system using CommonUI, but isn't... Well to put it bluntly, my version is not sh*t.
 
 ---
  - ObjectTags, a simple layer for widgets, actors and objects where gameplay tags are added, with delegates going off notifying if a tag has been added or removed.
 
 ---
- - Relations, a simple plugin that brings a "reputation" or "experience" system to players, but is tied to a data asset, which is meant to be a character.
-	 - This can display if a character is "friendly" or "hated" by the player character in your game.
+ - Relations, a simple plugin that brings a "reputation" or "experience" system to players, but is tied to a data asset, which is meant to be a entity.
+	 - This can display if a entity is "friendly" or "hated" by the player character in your game, similar to WoW's reputation system.
+  	 - Can be repurposed for a leveling system. 
 
 ---
  - Puppeteer, this brings a procedural generation to level sequencer, allowing you to quickly animate characters, similar system used by Witcher 3 and Assassin's Creed Odyssey.
