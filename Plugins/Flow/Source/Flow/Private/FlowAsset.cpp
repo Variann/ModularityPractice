@@ -16,6 +16,10 @@
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
 
+#if WITH_EDITOR
+FString UFlowAsset::ValidationError_NodeClassNotAllowed = TEXT("Node class {0} is not allowed in this asset.");
+#endif
+
 UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, bWorldBound(true)
@@ -23,6 +27,7 @@ UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	, FlowGraph(nullptr)
 #endif
 	, AllowedNodeClasses({UFlowNode::StaticClass()})
+	, AllowedInSubgraphNodeClasses({UFlowNode_SubGraph::StaticClass()})
 	, bStartNodePlacedAsGhostNode(false)
 	, TemplateAsset(nullptr)
 	, FinishPolicy(EFlowFinishPolicy::Keep)
@@ -31,6 +36,8 @@ UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	{
 		AssetGuid = FGuid::NewGuid();
 	}
+
+	ExpectedOwnerClass = UFlowSettings::Get()->GetDefaultExpectedOwnerClass();
 }
 
 #if WITH_EDITOR
@@ -71,6 +78,12 @@ EDataValidationResult UFlowAsset::ValidateAsset(FFlowMessageLog& MessageLog)
 	{
 		if (Node.Value)
 		{
+			if (!IsNodeClassAllowed(Node.Value->GetClass()))
+			{
+				const FString ErrorMsg = FString::Format(*ValidationError_NodeClassNotAllowed, {*Node.Value->GetClass()->GetName()});
+				MessageLog.Error(*ErrorMsg, Node.Value);
+			}
+			
 			Node.Value->ValidationLog.Messages.Empty();
 			if (Node.Value->ValidateNode() == EDataValidationResult::Invalid)
 			{
@@ -80,6 +93,74 @@ EDataValidationResult UFlowAsset::ValidateAsset(FFlowMessageLog& MessageLog)
 	}
 
 	return MessageLog.Messages.Num() > 0 ? EDataValidationResult::Invalid : EDataValidationResult::Valid;
+}
+
+bool UFlowAsset::IsNodeClassAllowed(const UClass* FlowNodeClass) const
+{
+	if (FlowNodeClass == nullptr)
+	{
+		return false;
+	}
+
+	UFlowNode* NodeDefaults = FlowNodeClass->GetDefaultObject<UFlowNode>();
+
+	// UFlowNode class limits which UFlowAsset class can use it
+	{
+		for (const UClass* DeniedAssetClass : NodeDefaults->DeniedAssetClasses)
+		{
+			if (DeniedAssetClass && GetClass()->IsChildOf(DeniedAssetClass))
+			{
+				return false;
+			}
+		}
+
+		if (NodeDefaults->AllowedAssetClasses.Num() > 0)
+		{
+			bool bAllowedInAsset = false;
+			for (const UClass* AllowedAssetClass : NodeDefaults->AllowedAssetClasses)
+			{
+				if (AllowedAssetClass && GetClass()->IsChildOf(AllowedAssetClass))
+				{
+					bAllowedInAsset = true;
+					break;
+				}
+			}
+			if (!bAllowedInAsset)
+			{
+				return false;
+			}
+		}
+	}
+
+	// UFlowAsset class can limit which UFlowNode classes can be used
+	{
+		for (const UClass* DeniedNodeClass : DeniedNodeClasses)
+		{
+			if (DeniedNodeClass && FlowNodeClass->IsChildOf(DeniedNodeClass))
+			{
+				return false;
+			}
+		}
+
+		if (AllowedNodeClasses.Num() > 0)
+		{
+			bool bAllowedInAsset = false;
+			for (const UClass* AllowedNodeClass : AllowedNodeClasses)
+			{
+				if (AllowedNodeClass && FlowNodeClass->IsChildOf(AllowedNodeClass))
+				{
+					bAllowedInAsset = true;
+					break;
+				}
+			}
+			if (!bAllowedInAsset)
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 TSharedPtr<IFlowGraphInterface> UFlowAsset::FlowGraphInterface = nullptr;
@@ -188,36 +269,94 @@ void UFlowAsset::HarvestNodeConnections()
 		}
 	}
 }
-
-void UFlowAsset::AddCustomInput(const FName& InName)
-{
-	if (!CustomInputs.Contains(InName))
-	{
-		CustomInputs.Add(InName);
-	}
-}
-
-void UFlowAsset::RemoveCustomInput(const FName& InName)
-{
-	if (CustomInputs.Contains(InName))
-	{
-		CustomInputs.Remove(InName);
-	}
-}
-#endif // WITH_EDITOR
+#endif
 
 UFlowNode* UFlowAsset::GetDefaultEntryNode() const
 {
+	UFlowNode* FirstStartNode = nullptr;
+
 	for (const TPair<FGuid, UFlowNode*>& Node : Nodes)
 	{
-		UFlowNode_Start* StartNode = Cast<UFlowNode_Start>(Node.Value);
-		if (StartNode && StartNode->GetConnectedNodes().Num() > 0)
+		if (UFlowNode_Start* StartNode = Cast<UFlowNode_Start>(Node.Value))
 		{
-			return StartNode;
+			if (StartNode->GetConnectedNodes().Num() > 0)
+			{
+				return StartNode;
+			}
+			else if (FirstStartNode == nullptr)
+			{
+				FirstStartNode = StartNode;
+			}
+		}
+	}
+
+	// If none of the found start nodes have connections, fallback to the first start node we found
+	return FirstStartNode;
+}
+
+#if WITH_EDITOR
+void UFlowAsset::AddCustomInput(const FName& EventName)
+{
+	if (!CustomInputs.Contains(EventName))
+	{
+		CustomInputs.Add(EventName);
+	}
+}
+
+void UFlowAsset::RemoveCustomInput(const FName& EventName)
+{
+	if (CustomInputs.Contains(EventName))
+	{
+		CustomInputs.Remove(EventName);
+	}
+}
+
+void UFlowAsset::AddCustomOutput(const FName& EventName)
+{
+	if (!CustomOutputs.Contains(EventName))
+	{
+		CustomOutputs.Add(EventName);
+	}
+}
+
+void UFlowAsset::RemoveCustomOutput(const FName& EventName)
+{
+	if (CustomOutputs.Contains(EventName))
+	{
+		CustomOutputs.Remove(EventName);
+	}
+}
+#endif
+
+UFlowNode_CustomInput* UFlowAsset::TryFindCustomInputNodeByEventName(const FName& EventName) const
+{
+	for (UFlowNode_CustomInput* InputNode : CustomInputNodes)
+	{
+		if (IsValid(InputNode) && InputNode->GetEventName() == EventName)
+		{
+			return InputNode;
 		}
 	}
 
 	return nullptr;
+}
+
+TArray<UFlowNode*> UFlowAsset::GetNodesInExecutionOrder(UFlowNode* FirstIteratedNode, const TSubclassOf<UFlowNode> FlowNodeClass)
+{
+	TArray<UFlowNode*> FoundNodes;
+	GetNodesInExecutionOrder<UFlowNode>(FirstIteratedNode, FoundNodes);
+
+	// filter out nodes by class
+	for (int32 i = FoundNodes.Num() - 1; i >= 0; i--)
+	{
+		if (!FoundNodes[i]->GetClass()->IsChildOf(FlowNodeClass))
+		{
+			FoundNodes.RemoveAt(i);
+		}
+	}
+	FoundNodes.Shrink();
+	
+	return FoundNodes;
 }
 
 void UFlowAsset::AddInstance(UFlowAsset* Instance)
@@ -300,7 +439,7 @@ void UFlowAsset::BroadcastRuntimeMessageAdded(const TSharedRef<FTokenizedMessage
 {
 	RuntimeMessageEvent.Broadcast(this, Message);
 }
-#endif
+#endif // WITH_EDITOR
 
 void UFlowAsset::InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlowAsset* InTemplateAsset)
 {
@@ -326,43 +465,20 @@ void UFlowAsset::InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlow
 
 void UFlowAsset::DeinitializeInstance()
 {
+	for (const TPair<FGuid, UFlowNode*>& Node : Nodes)
+	{
+		if (IsValid(Node.Value))
+		{
+			Node.Value->DeinitializeInstance();
+		}
+	}
+
 	if (TemplateAsset)
 	{
 		const int32 ActiveInstancesLeft = TemplateAsset->RemoveInstance(this);
 		if (ActiveInstancesLeft == 0 && GetFlowSubsystem())
 		{
 			GetFlowSubsystem()->RemoveInstancedTemplate(TemplateAsset);
-		}
-	}
-}
-
-void UFlowAsset::PreloadNodes()
-{
-	TArray<UFlowNode*> GraphEntryNodes = {GetDefaultEntryNode()};
-	for (UFlowNode_CustomInput* CustomInput : CustomInputNodes)
-	{
-		GraphEntryNodes.Emplace(CustomInput);
-	}
-
-	// NOTE: this is just the example algorithm of gathering nodes for pre-load
-	for (UFlowNode* EntryNode : GraphEntryNodes)
-	{
-		for (const TPair<TSubclassOf<UFlowNode>, int32>& Node : UFlowSettings::Get()->DefaultPreloadDepth)
-		{
-			if (Node.Value > 0)
-			{
-				TArray<UFlowNode*> FoundNodes;
-				UFlowNode::RecursiveFindNodesByClass(EntryNode, Node.Key, Node.Value, FoundNodes);
-
-				for (UFlowNode* FoundNode : FoundNodes)
-				{
-					if (!PreloadedNodes.Contains(FoundNode))
-					{
-						FoundNode->TriggerPreload();
-						PreloadedNodes.Emplace(FoundNode);
-					}
-				}
-			}
 		}
 	}
 }
@@ -419,8 +535,22 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 	{
 		DeinitializeInstance();
 	}
+}
 
-	GetFlowSubsystem()->FinishRootFlow(GetOwner(), this, EFlowFinishPolicy::Keep);
+bool UFlowAsset::HasStartedFlow() const
+{
+	return RecordedNodes.Num() > 0;
+}
+
+AActor* UFlowAsset::TryFindActorOwner() const
+{
+	const UActorComponent* OwnerAsComponent = Cast<UActorComponent>(GetOwner());
+	if (IsValid(OwnerAsComponent))
+	{
+		return Cast<AActor>(OwnerAsComponent->GetOwner());
+	}
+
+	return nullptr;
 }
 
 TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const
@@ -428,25 +558,40 @@ TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_SubGraph* SubGr
 	return ActiveSubGraphs.FindRef(SubGraphNode);
 }
 
-void UFlowAsset::TriggerCustomEvent(UFlowNode_SubGraph* Node, const FName& EventName) const
+void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName) const
 {
 	const TWeakObjectPtr<UFlowAsset> FlowInstance = ActiveSubGraphs.FindRef(Node);
 	if (FlowInstance.IsValid())
 	{
-		for (UFlowNode_CustomInput* CustomInput : FlowInstance->CustomInputNodes)
+		FlowInstance->TriggerCustomInput(EventName);
+	}
+}
+
+void UFlowAsset::TriggerCustomInput(const FName& EventName)
+{
+	for (UFlowNode_CustomInput* CustomInput : CustomInputNodes)
+	{
+		if (CustomInput->EventName == EventName)
 		{
-			if (CustomInput->EventName == EventName)
-			{
-				FlowInstance->RecordedNodes.Add(CustomInput);
-				CustomInput->TriggerFirstOutput(true);
-			}
+			RecordedNodes.Add(CustomInput);
+			CustomInput->ExecuteInput(EventName);
 		}
 	}
 }
 
-void UFlowAsset::TriggerCustomOutput(const FName& EventName) const
+void UFlowAsset::TriggerCustomOutput(const FName& EventName)
 {
-	NodeOwningThisAssetInstance->TriggerOutput(EventName);
+	if (NodeOwningThisAssetInstance.IsValid()) // it's a SubGraph
+	{
+		NodeOwningThisAssetInstance->TriggerOutput(EventName);
+	}
+	else // it's a Root Flow, so the intention here might be to call event on the Flow Component
+	{
+		if (UFlowComponent* FlowComponent = Cast<UFlowComponent>(GetOwner()))
+		{
+			FlowComponent->OnTriggerRootFlowOutputEventDispatcher(this, EventName);
+		}
+	}
 }
 
 void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName)
@@ -525,7 +670,7 @@ FFlowAssetSaveData UFlowAsset::SaveInstance(TArray<FFlowAssetSaveData>& SavedFlo
 
 	// iterate nodes
 	TArray<UFlowNode*> NodesInExecutionOrder;
-	GetNodesInExecutionOrder<UFlowNode>(NodesInExecutionOrder);
+	GetNodesInExecutionOrder<UFlowNode>(GetDefaultEntryNode(), NodesInExecutionOrder);
 	for (UFlowNode* Node : NodesInExecutionOrder)
 	{
 		if (Node && Node->ActivationState == EFlowNodeState::Active)

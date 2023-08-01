@@ -5,6 +5,7 @@
 
 #include "FlowAsset.h"
 
+#include "EdGraph/EdGraph.h"
 #include "GraphDiffControl.h"
 #include "SBlueprintDiff.h"
 
@@ -14,14 +15,22 @@
 /// FFlowAssetDiffControl
 
 FFlowAssetDiffControl::FFlowAssetDiffControl(const UFlowAsset* InOldFlowAsset, const UFlowAsset* InNewFlowAsset, FOnDiffEntryFocused InSelectionCallback)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 2
+	: TDetailsDiffControl(InOldFlowAsset, InNewFlowAsset, InSelectionCallback)
+#else
 	: FDetailsDiffControl(InOldFlowAsset, InNewFlowAsset, InSelectionCallback, false)
+#endif
 {
 }
 
 // TDetailsDiffControl::GenerateTreeEntries + "NoDifferences" entry + category label
 void FFlowAssetDiffControl::GenerateTreeEntries(TArray<TSharedPtr<FBlueprintDifferenceTreeEntry>>& OutTreeEntries, TArray<TSharedPtr<FBlueprintDifferenceTreeEntry>>& OutRealDifferences)
 {
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 2
+	TDetailsDiffControl::GenerateTreeEntries(OutTreeEntries, OutRealDifferences);
+#else
 	FDetailsDiffControl::GenerateTreeEntries(OutTreeEntries, OutRealDifferences);
+#endif
 
 	const bool bHasDifferences = Children.Num() != 0;
 	if (!bHasDifferences)
@@ -160,6 +169,7 @@ void FFlowGraphToDiff::BuildDiffSourceArray()
 	FoundDiffs->Empty();
 	FGraphDiffControl::DiffGraphs(GraphOld, GraphNew, *FoundDiffs);
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 3
 	struct SortDiff
 	{
 		bool operator ()(const FDiffSingleResult& A, const FDiffSingleResult& B) const
@@ -169,6 +179,9 @@ void FFlowGraphToDiff::BuildDiffSourceArray()
 	};
 
 	Sort(FoundDiffs->GetData(), FoundDiffs->Num(), SortDiff());
+#else
+	Algo::SortBy(*FoundDiffs, &FDiffSingleResult::Diff);
+#endif	
 
 	DiffListSource.Empty();
 	for (const FDiffSingleResult& Diff : *FoundDiffs)

@@ -100,6 +100,7 @@ public:
 
 	// FAssetEditorToolkit
 	virtual void InitToolMenuContext(FToolMenuContext& MenuContext) override;
+	virtual void PostRegenerateMenusAndToolbars() override;
 	// --
 
 	bool IsTabFocused(const FTabId& TabId) const;
@@ -133,6 +134,8 @@ protected:
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
 	virtual void SearchInAsset();
 #endif
+
+	void EditAssetDefaults_Clicked() const;
 
 	virtual void GoToParentInstance();
 	virtual bool CanGoToParentInstance();

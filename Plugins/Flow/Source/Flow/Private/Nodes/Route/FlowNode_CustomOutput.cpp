@@ -14,9 +14,37 @@ UFlowNode_CustomOutput::UFlowNode_CustomOutput(const FObjectInitializer& ObjectI
 
 void UFlowNode_CustomOutput::ExecuteInput(const FName& PinName)
 {
-	if (!EventName.IsNone() && GetFlowAsset()->GetCustomOutputs().Contains(EventName) && GetFlowAsset()->GetNodeOwningThisAssetInstance())
+	UFlowAsset* FlowAsset = GetFlowAsset();
+	check(IsValid(FlowAsset));
+
+	if (EventName.IsNone())
 	{
-		GetFlowAsset()->TriggerCustomOutput(EventName);
+		LogWarning(FString::Printf(TEXT("Attempted to trigger a CustomOutput (Node %s, Asset %s), with no EventName"),
+		                           *GetName(),
+		                           *FlowAsset->GetPathName()));
+	}
+	else if (!FlowAsset->GetCustomOutputs().Contains(EventName))
+	{
+		FString CustomOutputsString;
+		for (const FName& OutputName : FlowAsset->GetCustomOutputs())
+		{
+			if (!CustomOutputsString.IsEmpty())
+			{
+				CustomOutputsString += TEXT(", ");
+			}
+
+			CustomOutputsString += OutputName.ToString();
+		}
+
+		LogWarning(FString::Printf(TEXT("Attempted to trigger a CustomOutput (Node %s, Asset %s), with EventName %s, which is not a listed CustomOutput { %s }"),
+		                           *GetName(),
+		                           *FlowAsset->GetPathName(),
+		                           *EventName.ToString(),
+		                           *CustomOutputsString));
+	}
+	else
+	{
+		FlowAsset->TriggerCustomOutput(EventName);
 	}
 }
 

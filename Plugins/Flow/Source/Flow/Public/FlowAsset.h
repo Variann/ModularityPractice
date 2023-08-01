@@ -48,6 +48,7 @@ class FLOW_API UFlowAsset : public UObject
 	friend class UFlowSubsystem;
 
 	friend class FFlowAssetDetails;
+	friend class FFlowNode_SubGraphDetails;
 	friend class UFlowGraphSchema;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flow Asset")
@@ -71,6 +72,11 @@ class FLOW_API UFlowAsset : public UObject
 	// --
 
 	virtual EDataValidationResult ValidateAsset(FFlowMessageLog& MessageLog);
+
+	// Returns whether the node class is allowed in this flow asset
+	bool IsNodeClassAllowed(const UClass* FlowNodeClass) const;
+
+	static FString ValidationError_NodeClassNotAllowed;
 #endif
 
 	// IFlowGraphInterface
@@ -99,6 +105,9 @@ protected:
 	TArray<TSubclassOf<UFlowNode>> AllowedNodeClasses;
 	TArray<TSubclassOf<UFlowNode>> DeniedNodeClasses;
 
+	TArray<TSubclassOf<UFlowNode>> AllowedInSubgraphNodeClasses;
+	TArray<TSubclassOf<UFlowNode>> DeniedInSubgraphNodeClasses;
+	
 	bool bStartNodePlacedAsGhostNode;
 
 private:
@@ -150,15 +159,33 @@ public:
 
 	virtual UFlowNode* GetDefaultEntryNode() const;
 
+#if WITH_EDITOR
+protected:
+	void AddCustomInput(const FName& EventName);
+	void RemoveCustomInput(const FName& EventName);
+
+	void AddCustomOutput(const FName& EventName);
+	void RemoveCustomOutput(const FName& EventName);
+#endif
+
+public:
+	const TArray<FName>& GetCustomInputs() const { return CustomInputs; }
+	const TArray<FName>& GetCustomOutputs() const { return CustomOutputs; }
+
+	UFlowNode_CustomInput* TryFindCustomInputNodeByEventName(const FName& EventName) const;
+
+	UFUNCTION(BlueprintPure, Category = "FlowAsset", meta = (DeterminesOutputType = "FlowNodeClass"))
+	TArray<UFlowNode*> GetNodesInExecutionOrder(UFlowNode* FirstIteratedNode, const TSubclassOf<UFlowNode> FlowNodeClass);
+
 	template <class T>
-	void GetNodesInExecutionOrder(TArray<T*>& OutNodes)
+	void GetNodesInExecutionOrder(UFlowNode* FirstIteratedNode, TArray<T*>& OutNodes)
 	{
 		static_assert(TPointerIsConvertibleFromTo<T, const UFlowNode>::Value, "'T' template parameter to GetNodesInExecutionOrder must be derived from UFlowNode");
 
-		if (UFlowNode* FoundStartNode = GetDefaultEntryNode())
+		if (FirstIteratedNode)
 		{
 			TSet<TObjectKey<UFlowNode>> IteratedNodes;
-			GetNodesInExecutionOrder_Recursive(FoundStartNode, IteratedNodes, OutNodes);
+			GetNodesInExecutionOrder_Recursive(FirstIteratedNode, IteratedNodes, OutNodes);
 		}
 	}
 
@@ -181,16 +208,6 @@ protected:
 			}
 		}
 	}
-
-public:	
-	const TArray<FName>& GetCustomInputs() const { return CustomInputs; }
-	const TArray<FName>& GetCustomOutputs() const { return CustomOutputs; }
-
-protected:
-#if WITH_EDITOR
-	void AddCustomInput(const FName& InName);
-	void RemoveCustomInput(const FName& InName);
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 // Instances of the template asset
@@ -287,19 +304,27 @@ public:
 		return Owner.IsValid() ? Cast<T>(Owner) : nullptr;
 	}
 
-	virtual void PreloadNodes();
+	// Returns the Owner as an Actor, or if Owner is a Component, return its Owner as an Actor
+	UFUNCTION(BlueprintPure, Category = "Flow")
+	AActor* TryFindActorOwner() const;
+
+	// Opportunity to preload content of project-specific nodes
+	virtual void PreloadNodes() {}
 
 	virtual void PreStartFlow();
 	virtual void StartFlow();
 
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
+	bool HasStartedFlow() const;
+	void TriggerCustomInput(const FName& EventName);
+
 	// Get Flow Asset instance created by the given SubGraph node
 	TWeakObjectPtr<UFlowAsset> GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const;
 
-private:
-	void TriggerCustomEvent(UFlowNode_SubGraph* Node, const FName& EventName) const;
-	void TriggerCustomOutput(const FName& EventName) const;
+protected:
+	void TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName) const;
+	void TriggerCustomOutput(const FName& EventName);
 
 	void TriggerInput(const FGuid& NodeGuid, const FName& PinName);
 
@@ -326,8 +351,22 @@ public:
 	const TArray<UFlowNode*>& GetRecordedNodes() const { return RecordedNodes; }
 
 //////////////////////////////////////////////////////////////////////////
+// Expected Owner Class support (for use with CallOwnerFunction nodes)
+
+public:
+	UClass* GetExpectedOwnerClass() const { return ExpectedOwnerClass; }
+
+protected:
+	// Expects to be owned (at runtime) by an object with this class (or one of its subclasses)
+	// NOTE - If the class is an AActor, and the flow asset is owned by a component,
+	//        it will consider the component's owner for the AActor
+	UPROPERTY(EditAnywhere, Category = "Flow", meta = (MustImplement = "/Script.Flow.FlowOwnerInterface"))
+	TSubclassOf<UObject> ExpectedOwnerClass;
+
+//////////////////////////////////////////////////////////////////////////
 // SaveGame support
 
+public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
 	FFlowAssetSaveData SaveInstance(TArray<FFlowAssetSaveData>& SavedFlowInstances);
 

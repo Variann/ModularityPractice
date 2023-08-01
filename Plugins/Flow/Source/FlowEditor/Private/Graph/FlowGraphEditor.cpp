@@ -36,7 +36,6 @@ void SFlowGraphEditor::Construct(const FArguments& InArgs, const TSharedPtr<FFlo
 	Arguments._GraphToEdit = FlowAsset->GetGraph();
 	Arguments._GraphEvents = InArgs._GraphEvents;
 	Arguments._AutoExpandActionMenu = true;
-
 	Arguments._GraphEvents.OnSelectionChanged = FOnSelectionChanged::CreateSP(this, &SFlowGraphEditor::OnSelectedNodesChanged);
 	Arguments._GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &SFlowGraphEditor::OnNodeDoubleClicked);
 	Arguments._GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &SFlowGraphEditor::OnNodeTitleCommitted);
@@ -742,7 +741,7 @@ void SFlowGraphEditor::OnAddBreakpoint() const
 {
 	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		SelectedNode->NodeBreakpoint.AddBreakpoint();
+		SelectedNode->NodeBreakpoint.AllowTrait();
 	}
 }
 
@@ -752,8 +751,7 @@ void SFlowGraphEditor::OnAddPinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			GraphNode->PinBreakpoints.Add(Pin, FFlowBreakpoint());
-			GraphNode->PinBreakpoints[Pin].AddBreakpoint();
+			GraphNode->PinBreakpoints.Add(Pin, FFlowPinTrait(true));
 		}
 	}
 }
@@ -762,7 +760,7 @@ bool SFlowGraphEditor::CanAddBreakpoint() const
 {
 	for (const UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		return !SelectedNode->NodeBreakpoint.HasBreakpoint();
+		return !SelectedNode->NodeBreakpoint.IsAllowed();
 	}
 
 	return false;
@@ -774,7 +772,7 @@ bool SFlowGraphEditor::CanAddPinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			return !GraphNode->PinBreakpoints.Contains(Pin) || !GraphNode->PinBreakpoints[Pin].HasBreakpoint();
+			return !GraphNode->PinBreakpoints.Contains(Pin) || !GraphNode->PinBreakpoints[Pin].IsAllowed();
 		}
 	}
 
@@ -785,7 +783,7 @@ void SFlowGraphEditor::OnRemoveBreakpoint() const
 {
 	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		SelectedNode->NodeBreakpoint.RemoveBreakpoint();
+		SelectedNode->NodeBreakpoint.DisallowTrait();
 	}
 }
 
@@ -804,7 +802,7 @@ bool SFlowGraphEditor::CanRemoveBreakpoint() const
 {
 	for (const UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		return SelectedNode->NodeBreakpoint.HasBreakpoint();
+		return SelectedNode->NodeBreakpoint.IsAllowed();
 	}
 
 	return false;
@@ -827,7 +825,7 @@ void SFlowGraphEditor::OnEnableBreakpoint() const
 {
 	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		SelectedNode->NodeBreakpoint.EnableBreakpoint();
+		SelectedNode->NodeBreakpoint.EnableTrait();
 	}
 }
 
@@ -837,7 +835,7 @@ void SFlowGraphEditor::OnEnablePinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			GraphNode->PinBreakpoints[Pin].EnableBreakpoint();
+			GraphNode->PinBreakpoints[Pin].EnableTrait();
 		}
 	}
 }
@@ -854,7 +852,7 @@ bool SFlowGraphEditor::CanEnableBreakpoint()
 
 	for (const UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		return SelectedNode->NodeBreakpoint.CanEnableBreakpoint();
+		return SelectedNode->NodeBreakpoint.CanEnable();
 	}
 
 	return false;
@@ -866,7 +864,7 @@ bool SFlowGraphEditor::CanEnablePinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			return GraphNode->PinBreakpoints.Contains(Pin) && GraphNode->PinBreakpoints[Pin].CanEnableBreakpoint();
+			return GraphNode->PinBreakpoints.Contains(Pin) && GraphNode->PinBreakpoints[Pin].CanEnable();
 		}
 	}
 
@@ -877,7 +875,7 @@ void SFlowGraphEditor::OnDisableBreakpoint() const
 {
 	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		SelectedNode->NodeBreakpoint.DisableBreakpoint();
+		SelectedNode->NodeBreakpoint.DisableTrait();
 	}
 }
 
@@ -887,7 +885,7 @@ void SFlowGraphEditor::OnDisablePinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			GraphNode->PinBreakpoints[Pin].DisableBreakpoint();
+			GraphNode->PinBreakpoints[Pin].DisableTrait();
 		}
 	}
 }
@@ -896,7 +894,7 @@ bool SFlowGraphEditor::CanDisableBreakpoint() const
 {
 	for (const UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		return SelectedNode->NodeBreakpoint.IsBreakpointEnabled();
+		return SelectedNode->NodeBreakpoint.IsEnabled();
 	}
 
 	return false;
@@ -908,7 +906,7 @@ bool SFlowGraphEditor::CanDisablePinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			return GraphNode->PinBreakpoints.Contains(Pin) && GraphNode->PinBreakpoints[Pin].IsBreakpointEnabled();
+			return GraphNode->PinBreakpoints.Contains(Pin) && GraphNode->PinBreakpoints[Pin].IsEnabled();
 		}
 	}
 
@@ -919,7 +917,7 @@ void SFlowGraphEditor::OnToggleBreakpoint() const
 {
 	for (UFlowGraphNode* SelectedNode : GetSelectedFlowNodes())
 	{
-		SelectedNode->NodeBreakpoint.ToggleBreakpoint();
+		SelectedNode->NodeBreakpoint.ToggleTrait();
 	}
 }
 
@@ -929,8 +927,8 @@ void SFlowGraphEditor::OnTogglePinBreakpoint()
 	{
 		if (UFlowGraphNode* GraphNode = Cast<UFlowGraphNode>(Pin->GetOwningNode()))
 		{
-			GraphNode->PinBreakpoints.Add(Pin, FFlowBreakpoint());
-			GraphNode->PinBreakpoints[Pin].ToggleBreakpoint();
+			GraphNode->PinBreakpoints.Add(Pin, FFlowPinTrait());
+			GraphNode->PinBreakpoints[Pin].ToggleTrait();
 		}
 	}
 }

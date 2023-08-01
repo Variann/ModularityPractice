@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Engine/StreamableManager.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -50,8 +49,6 @@ private:
 	UPROPERTY()
 	TMap<UFlowNode_SubGraph*, UFlowAsset*> InstancedSubFlows;
 
-	FStreamableManager Streamable;
-
 #if WITH_EDITOR
 public:
 	/* Called after creating the first instance of given Flow Asset */
@@ -71,6 +68,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
+	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
 	virtual void AbortActiveFlows();
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */

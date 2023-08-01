@@ -5,9 +5,9 @@
 #include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
 
-#define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( StyleSet->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
-#define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( StyleSet->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define BORDER_BRUSH( RelativePath, ... ) FSlateBorderBrush( StyleSet->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( StyleSet->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
+#define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( StyleSet->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define IMAGE_BRUSH_SVG( RelativePath, ... ) FSlateVectorImageBrush(StyleSet->RootToContentDir(RelativePath, TEXT(".svg")), __VA_ARGS__)
 
 TSharedPtr<FSlateStyleSet> FFlowEditorStyle::StyleSet = nullptr;
@@ -33,8 +33,10 @@ void FFlowEditorStyle::Initialize()
 
 	StyleSet->Set("FlowToolbar.RefreshAsset", new IMAGE_BRUSH_SVG( "Starship/Common/Apply", Icon20));
 	StyleSet->Set("FlowToolbar.ValidateAsset", new IMAGE_BRUSH_SVG( "Starship/Common/Debug", Icon20));
-	
+
 	StyleSet->Set("FlowToolbar.SearchInAsset", new IMAGE_BRUSH_SVG( "Starship/Common/Search", Icon20));
+	StyleSet->Set("FlowToolbar.EditAssetDefaults", new IMAGE_BRUSH_SVG("Starship/Common/Details", Icon20));
+
 	StyleSet->Set("FlowToolbar.GoToParentInstance", new IMAGE_BRUSH("Icons/icon_DebugStepOut_40x", Icon40));
 
 	StyleSet->Set("FlowGraph.BreakpointEnabled", new IMAGE_BRUSH("Old/Kismet2/Breakpoint_Valid", FVector2D(24.0f, 24.0f)));
@@ -65,6 +67,7 @@ void FFlowEditorStyle::Shutdown()
 	StyleSet.Reset();
 }
 
-#undef IMAGE_BRUSH
-#undef BOX_BRUSH
 #undef BORDER_BRUSH
+#undef BOX_BRUSH
+#undef IMAGE_BRUSH
+#undef IMAGE_BRUSH_SVG

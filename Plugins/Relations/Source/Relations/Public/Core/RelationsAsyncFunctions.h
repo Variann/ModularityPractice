@@ -33,6 +33,7 @@ class RELATIONS_API URelations_AddExperience : public UBlueprintAsyncActionBase
 	UPROPERTY()
 	float ExperienceToGrant;
 
+	//Needed for loading soft reference.
 	FStreamableManager StreamableManager;
 	TSharedPtr<FStreamableHandle> Handle;
 

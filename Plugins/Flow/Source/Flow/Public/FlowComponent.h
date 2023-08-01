@@ -7,6 +7,7 @@
 
 #include "FlowSave.h"
 #include "FlowTypes.h"
+#include "FlowOwnerInterface.h"
 #include "FlowComponent.generated.h"
 
 class UFlowAsset;
@@ -41,7 +42,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentDynamicNotify, class 
 * Base component of Flow System - makes possible to communicate between Actor, Flow Subsystem and Flow Graphs
 */
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOW_API UFlowComponent : public UActorComponent
+class FLOW_API UFlowComponent : public UActorComponent, public IFlowOwnerInterface
 {
 	GENERATED_UCLASS_BODY()
 
@@ -204,8 +205,23 @@ public:
 	UFlowAsset* GetRootFlowInstance() const;
 
 //////////////////////////////////////////////////////////////////////////
+// UFlowComponent overrideable events
+
+public:
+	// Called when a Root flow asset triggers a CustomOutput
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnTriggerRootFlowOutputEvent")
+	void BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+
+	virtual void OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName) {}
+
+	// UFlowAsset-only access
+	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName);
+	// ---
+
+//////////////////////////////////////////////////////////////////////////
 // SaveGame
 
+public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
 	virtual void SaveRootFlow(TArray<FFlowAssetSaveData>& SavedFlowInstances);
 

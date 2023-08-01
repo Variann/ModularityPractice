@@ -14,23 +14,18 @@
 #include "Graph/Widgets/SFlowPalette.h"
 
 #include "FlowAsset.h"
-#include "Nodes/FlowNode.h"
 
-#include "EdGraphUtilities.h"
 #include "EdGraph/EdGraphNode.h"
 #include "Editor.h"
+#include "EditorClassUtils.h"
 #include "GraphEditor.h"
-#include "GraphEditorActions.h"
-#include "HAL/PlatformApplicationMisc.h"
 #include "IDetailsView.h"
 #include "IMessageLogListing.h"
 #include "Kismet2/DebuggerCommands.h"
-#include "LevelEditor.h"
 #include "MessageLogModule.h"
 #include "Misc/UObjectToken.h"
 #include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
-#include "SNodePanel.h"
 #include "ToolMenus.h"
 #include "Widgets/Docking/SDockTab.h"
 
@@ -167,6 +162,30 @@ void FFlowAssetEditor::InitToolMenuContext(FToolMenuContext& MenuContext)
 	UFlowAssetEditorContext* Context = NewObject<UFlowAssetEditorContext>();
 	Context->FlowAssetEditor = SharedThis(this);
 	MenuContext.AddObject(Context);
+}
+
+void FFlowAssetEditor::PostRegenerateMenusAndToolbars()
+{
+	// Provide a hyperlink to view our class
+	const TSharedRef<SHorizontalBox> MenuOverlayBox = SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		[
+			SNew(STextBlock)
+			.ColorAndOpacity(FSlateColor::UseSubduedForeground())
+			.ShadowOffset(FVector2D::UnitVector)
+			.Text(LOCTEXT("FlowAssetEditor_AssetType", "Asset Type: "))
+		]
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.VAlign(VAlign_Center)
+		.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+		[
+			FEditorClassUtils::GetSourceLink(FlowAsset->GetClass())
+		];
+
+	SetMenuOverlay(MenuOverlayBox);
 }
 
 bool FFlowAssetEditor::IsTabFocused(const FTabId& TabId) const
@@ -364,6 +383,10 @@ void FFlowAssetEditor::BindToolbarCommands()
 								FCanExecuteAction());
 #endif
 
+	ToolkitCommands->MapAction(ToolbarCommands.EditAssetDefaults,
+							FExecuteAction::CreateSP(this, &FFlowAssetEditor::EditAssetDefaults_Clicked),
+							FCanExecuteAction());
+
 	// Engine's Play commands
 	ToolkitCommands->Append(FPlayWorldCommands::GlobalPlayWorldActions.ToSharedRef());
 
@@ -408,6 +431,11 @@ void FFlowAssetEditor::SearchInAsset()
 	SearchBrowser->FocusForUse();
 }
 #endif
+
+void FFlowAssetEditor::EditAssetDefaults_Clicked() const
+{
+	DetailsView->SetObject(FlowAsset);
+}
 
 void FFlowAssetEditor::GoToParentInstance()
 {
@@ -510,6 +538,10 @@ void FFlowAssetEditor::JumpToInnerObject(UObject* InnerObject)
 	if (const UFlowNode* FlowNode = Cast<UFlowNode>(InnerObject))
 	{
 		GraphEditor->JumpToNode(FlowNode->GetGraphNode(), true);
+	}
+	else if (const UEdGraphNode* GraphNode = Cast<UEdGraphNode>(InnerObject))
+	{
+		GraphEditor->JumpToNode(GraphNode, true);
 	}
 }
 #endif
