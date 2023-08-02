@@ -6,10 +6,6 @@ class FS_FactCustomization : public IPropertyTypeCustomization
 {
 public:
 	
-	/**It is just a convenient helpers which will be used
-	 * to register our customization. When the propertyEditor module
-	 * find our FMyStruct property, it will use this static method
-	 * to instantiate our customization object.*/
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance();
 
 	// BEGIN IPropertyTypeCustomization interface
