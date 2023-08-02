@@ -24,7 +24,8 @@ public class TagFactsEditor : ModuleRules
                 "UnrealEd",
                 "PropertyEditor", 
                 "TagFacts",
-                "GameplayTags"
+                "GameplayTags",
+                "Blutility"
             }
         );
     }
