@@ -18,7 +18,7 @@
 		{
 			"Name": "LayeredUI",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PreDefault"
 		}
 	]
 }
