@@ -6,8 +6,6 @@
 
 IMPLEMENT_GAME_MODULE(FLayeredUIEditorModule, TagFactsEditor)
 
-#define LOCTEXT_NAMESPACE "FLayeredUIEditorModule"
-
 void FLayeredUIEditorModule::StartupModule()
 {
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -24,5 +22,3 @@ void FLayeredUIEditorModule::ShutdownModule()
 {
     
 }
-
-#undef LOCTEXT_NAMESPACE
