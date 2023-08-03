@@ -56,6 +56,9 @@ struct FLayeredWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool HideCursor = false;
 
-	void ResetStruct();
+	bool operator==(const FLayeredWidget& Argument) const
+	{
+		return Argument.Widget == Widget;
+	}
 };
 
