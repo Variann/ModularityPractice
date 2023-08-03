@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
-#include "Core/DA_SettingsLayeredUI.h"
+#include "..\..\Private\Data\CoreLayeredUIData.cpp"
 #include "Engine/DeveloperSettings.h"
 #include "DS_LayeredUIGameSettings.generated.h"
 
@@ -22,6 +21,6 @@ public:
 	
 	/**The map used to figure out what ZOrder to assign a widget when adding
 	 * it to the screen.*/
-	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "UI Data", ForceInlineRow))
+	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow))
 	TMap<FGameplayTag, int32> LayerMap;
 };
