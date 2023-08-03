@@ -6,6 +6,10 @@
 #include <Config/DS_LayeredUIGameSettings.h>
 
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Data/I_WidgetCommunication.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 bool ULayeredUI_Subsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
@@ -45,10 +49,106 @@ TArray<FLayeredWidget> ULayeredUI_Subsystem::GetLayeredWidgets()
 void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget,
                                             int32 OrderOverride)
 {
+	LayeredWidget = FLayeredWidget();
+	
+	if(!UKismetSystemLibrary::DoesImplementInterface(Widget, UI_WidgetCommunication::StaticClass()))
+	{
+		UKismetSystemLibrary::PrintString(this, "Widget does not implement I_WidgetInterface");
+		return;
+	}
+
+	for(auto& CurrentLayer : LayeredWidgets)
+	{
+		if(CurrentLayer.Widget->GetClass() == Widget->GetClass())
+		{
+			if(!II_WidgetCommunication::Execute_AllowMultipleInstances(Widget))
+			{
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%p does not allow multiple instances"), Widget->GetClass()));
+				return;
+			}
+		}
+
+		if(CurrentLayer.Widget == Widget)
+		{
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%p Widget instance is already on the screen."), Widget->GetClass()));
+			return;
+		}
+	}
+
+	//Widget has passed verification, start adding it to the screen.
+	TMap<FGameplayTag, int32> LayerMap = GetLayerMap();
+	const int32* ZOrder = LayerMap.Find(Layer);
+	if(ZOrder)
+	{
+		bool HideCursor = II_WidgetCommunication::Execute_HideCursor(Widget);
+		FLayeredWidget NewLayeredWidget;
+		NewLayeredWidget.Widget = Widget;
+		NewLayeredWidget.Layer = Layer;
+		NewLayeredWidget.ZOrder = *ZOrder;
+		NewLayeredWidget.HideCursor = HideCursor;
+
+		II_WidgetCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
+		LayeredWidgets.Add(NewLayeredWidget);
+
+		Widget->AddToViewport(*ZOrder);
+		UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
+		LayeredWidget = NewLayeredWidget;
+		return;
+	}
+	else
+	{
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Tag %ls has not been added to the project settings layer map."), *Layer.ToString()));
+	}
 }
 
-void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget Widget, FLayeredWidget& NewFocus)
+void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayeredWidget& NewFocus)
 {
+	NewFocus = FLayeredWidget();
+	
+	if(!IsValid(Widget.Widget))
+	{
+		return;
+	}
+
+	if(!LayeredWidgets.RemoveSingle(Widget))
+	{
+		return;
+	}
+
+	Widget.Widget->RemoveFromParent();
+	Widget.Widget->SetIsEnabled(false);
+
+	FLayeredWidget NextWidget;
+	/**Find the next widget to focus.
+	 * A reverse loop is used because we want the most recent widget added to the screen.
+	 * The latest widget is always added to the end of the array.
+	 * This will also help with managing the focus and input priority on the correct
+	 * widget, as Unreal always adds the latest widget on top of other widgets, even
+	 * if they are on the same ZOrder to avoid Z-fighting*/
+	for(int32 CurrentWidget = LayeredWidgets.Num(); CurrentWidget >= 0; CurrentWidget--)
+	{
+		if(IsValid(LayeredWidgets[CurrentWidget].Widget) && LayeredWidgets[CurrentWidget].ZOrder > NextWidget.ZOrder)
+		{
+			NextWidget = LayeredWidgets[CurrentWidget];
+		}
+	}
+
+	if(IsValid(NextWidget.Widget))
+	{
+		if(NextWidget.Widget->IsFocusable())
+		{
+			NextWidget.Widget->SetFocus();
+		}
+		else
+		{
+			UWidgetBlueprintLibrary::SetFocusToGameViewport();
+		}
+
+		NewFocus = NextWidget;
+		return;
+	}
+
+	Widget.ResetStruct();
 }
 
 void ULayeredUI_Subsystem::FindFirstWidgetOnLayer(FGameplayTag Layer, FLayeredWidget& Widget)

@@ -41,7 +41,7 @@ public:
 	void AddWidgetToLayer(UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget, int32 OrderOverride = -1);
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable)
-	void RemoveWidgetFromLayer(FLayeredWidget Widget, FLayeredWidget& NewFocus);
+	void RemoveWidgetFromLayer(UPARAM(ref) FLayeredWidget& Widget, FLayeredWidget& NewFocus);
 	
 	UFUNCTION(Category="LayeredUI", BlueprintCallable)
 	void FindFirstWidgetOnLayer(FGameplayTag Layer, FLayeredWidget& Widget);
