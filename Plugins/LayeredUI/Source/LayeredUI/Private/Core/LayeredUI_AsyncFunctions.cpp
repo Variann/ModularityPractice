@@ -29,8 +29,8 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 		LoadedWidget = Cast<UUserWidget>(Handle->GetLoadedAsset());
 		if(LoadedWidget)
 		{
-			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(WidgetOwner, LoadedWidget->GetClass()));
-
+			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), LoadedWidget->GetClass()));
+			
 			ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
 			if(!LayeredUI_Subsystem)
 			{
