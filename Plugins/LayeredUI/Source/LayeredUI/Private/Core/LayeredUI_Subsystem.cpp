@@ -56,7 +56,7 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 		UKismetSystemLibrary::PrintString(this, "Widget does not implement I_WidgetInterface");
 		return;
 	}
-
+	
 	for(auto& CurrentLayer : LayeredWidgets)
 	{
 		if(CurrentLayer.Widget->GetClass() == Widget->GetClass())
@@ -67,14 +67,14 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 				return;
 			}
 		}
-
+	
 		if(CurrentLayer.Widget == Widget)
 		{
 			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%p Widget instance is already on the screen."), Widget->GetClass()));
 			return;
 		}
 	}
-
+	
 	//Widget has passed verification, start adding it to the screen.
 	TMap<FGameplayTag, int32> LayerMap = GetLayerMap();
 	const int32* ZOrder = LayerMap.Find(Layer);
@@ -86,10 +86,10 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 		NewLayeredWidget.Layer = Layer;
 		NewLayeredWidget.ZOrder = *ZOrder;
 		NewLayeredWidget.HideCursor = HideCursor;
-
+	
 		II_WidgetCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
 		LayeredWidgets.Add(NewLayeredWidget);
-
+	
 		Widget->AddToViewport(*ZOrder);
 		UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
 		LayeredWidget = NewLayeredWidget;
@@ -109,15 +109,15 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 	{
 		return;
 	}
-
+	
 	if(!LayeredWidgets.RemoveSingle(Widget))
 	{
 		return;
 	}
-
+	
 	Widget.Widget->RemoveFromParent();
 	Widget.Widget->SetIsEnabled(false);
-
+	
 	FLayeredWidget NextWidget;
 	/**Find the next widget to focus.
 	 * A reverse loop is used because we want the most recent widget added to the screen.
@@ -132,7 +132,7 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 			NextWidget = LayeredWidgets[CurrentWidget];
 		}
 	}
-
+	
 	if(IsValid(NextWidget.Widget))
 	{
 		if(NextWidget.Widget->IsFocusable())
@@ -143,12 +143,12 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 		{
 			UWidgetBlueprintLibrary::SetFocusToGameViewport();
 		}
-
+	
 		NewFocus = NextWidget;
 		return;
 	}
-
-	Widget.ResetStruct();
+	
+	Widget = FLayeredWidget();
 }
 
 void ULayeredUI_Subsystem::FindFirstWidgetOnLayer(FGameplayTag Layer, FLayeredWidget& Widget)
