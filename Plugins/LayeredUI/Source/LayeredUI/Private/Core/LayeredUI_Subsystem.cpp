@@ -130,7 +130,7 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 	 * This will also help with managing the focus and input priority on the correct
 	 * widget, as Unreal always adds the latest widget on top of other widgets, even
 	 * if they are on the same ZOrder to avoid Z-fighting*/
-	for(int32 CurrentWidget = LayeredWidgets.Num(); CurrentWidget >= 0; CurrentWidget--)
+	for(int32 CurrentWidget = LayeredWidgets.Num() - 1; CurrentWidget >= 0; CurrentWidget--)
 	{
 		if(IsValid(LayeredWidgets[CurrentWidget].Widget) && LayeredWidgets[CurrentWidget].ZOrder > NextWidget.ZOrder)
 		{
