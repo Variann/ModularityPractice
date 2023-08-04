@@ -26,10 +26,9 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 	Handle = StreamableManager.RequestAsyncLoad(WidgetToLoad.ToSoftObjectPath(), [this]()
 	{
 		FLayeredWidget NewLayeredWidget;
-		LoadedWidget = Cast<UUserWidget>(Handle->GetLoadedAsset());
-		if(LoadedWidget)
+		if(IsValid(WidgetToLoad.Get()))
 		{
-			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), LoadedWidget->GetClass()));
+			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), WidgetToLoad.Get()));
 			
 			ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
 			if(!LayeredUI_Subsystem)

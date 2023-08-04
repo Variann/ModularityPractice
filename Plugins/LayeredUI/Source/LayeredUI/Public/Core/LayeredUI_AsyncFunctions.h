@@ -28,8 +28,6 @@ class LAYEREDUI_API ULayeredUI_AddWidgetToLayer : public UBlueprintAsyncActionBa
 
 	UPROPERTY()
 	TSoftClassPtr<UUserWidget> WidgetToLoad;
-	UPROPERTY()
-	UUserWidget* LoadedWidget;
 	
 	//Needed for loading soft reference.
 	FStreamableManager StreamableManager;
