@@ -98,6 +98,7 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 		Widget->AddToViewport(*ZOrder);
 		UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
 		LayeredWidget = NewLayeredWidget;
+		WidgetAdded.Broadcast(NewLayeredWidget);
 		return;
 	}
 	else
@@ -157,7 +158,8 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 		NewFocus = NextWidget;
 		return;
 	}
-	
+
+	WidgetRemoved.Broadcast(Widget);
 	Widget = FLayeredWidget();
 }
 

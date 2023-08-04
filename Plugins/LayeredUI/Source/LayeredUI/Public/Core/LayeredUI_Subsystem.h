@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Components/Widget.h"
 #include "Data/CoreLayeredUIData.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "LayeredUI_Subsystem.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWidgetAdded, FLayeredWidget, WidgetLayer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWidgetRemoved, FLayeredWidget, WidgetLayer);
 
 UCLASS()
 class LAYEREDUI_API ULayeredUI_Subsystem : public ULocalPlayerSubsystem
@@ -21,7 +23,13 @@ private:
 	UPROPERTY()
 	TArray<FLayeredWidget> LayeredWidgets;
 
-public: 
+public:
+
+	UPROPERTY(Category = "LayeredUI", BlueprintAssignable)
+	FWidgetAdded WidgetAdded;
+
+	UPROPERTY(Category = "LayeredUI", BlueprintAssignable)
+	FWidgetRemoved WidgetRemoved;
 
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
