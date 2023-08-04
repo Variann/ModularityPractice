@@ -51,20 +51,17 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 {
 	LayeredWidget = FLayeredWidget();
 	
-	if(!UKismetSystemLibrary::DoesImplementInterface(Widget, UI_WidgetCommunication::StaticClass()))
-	{
-		UKismetSystemLibrary::PrintString(this, "Widget does not implement I_WidgetInterface");
-		return;
-	}
-	
 	for(auto& CurrentLayer : LayeredWidgets)
 	{
 		if(CurrentLayer.Widget->GetClass() == Widget->GetClass())
 		{
-			if(!II_WidgetCommunication::Execute_AllowMultipleInstances(Widget))
+			if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_WidgetCommunication::StaticClass()))
 			{
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%p does not allow multiple instances"), Widget->GetClass()));
-				return;
+				if(!II_WidgetCommunication::Execute_AllowMultipleInstances(Widget))
+				{
+					UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%ls does not allow multiple instances"), *Widget->GetClass()->GetName()));
+					return;
+				}
 			}
 		}
 	
@@ -80,14 +77,22 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 	const int32* ZOrder = LayerMap.Find(Layer);
 	if(ZOrder)
 	{
-		bool HideCursor = II_WidgetCommunication::Execute_HideCursor(Widget);
+		bool HideCursor = false;
+		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_WidgetCommunication::StaticClass()))
+		{
+			HideCursor = II_WidgetCommunication::Execute_HideCursor(Widget);
+		}
 		FLayeredWidget NewLayeredWidget;
 		NewLayeredWidget.Widget = Widget;
 		NewLayeredWidget.Layer = Layer;
 		NewLayeredWidget.ZOrder = *ZOrder;
 		NewLayeredWidget.HideCursor = HideCursor;
-	
-		II_WidgetCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
+
+		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_WidgetCommunication::StaticClass()))
+		{
+			II_WidgetCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
+		}
+		
 		LayeredWidgets.Add(NewLayeredWidget);
 	
 		Widget->AddToViewport(*ZOrder);
@@ -142,6 +147,11 @@ void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayere
 		else
 		{
 			UWidgetBlueprintLibrary::SetFocusToGameViewport();
+		}
+
+		if(UKismetSystemLibrary::DoesImplementInterface(NextWidget.Widget, UI_WidgetCommunication::StaticClass()))
+		{
+			UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!II_WidgetCommunication::Execute_HideCursor(NextWidget.Widget));
 		}
 	
 		NewFocus = NextWidget;
