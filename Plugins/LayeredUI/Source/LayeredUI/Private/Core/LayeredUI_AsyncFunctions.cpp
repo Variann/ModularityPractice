@@ -51,5 +51,9 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 			Success.Broadcast(NewLayeredWidget);
 			RemoveFromRoot();
 		}
+		else
+		{
+			RemoveFromRoot();
+		}
 	});
 }
