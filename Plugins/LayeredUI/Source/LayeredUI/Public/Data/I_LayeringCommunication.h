@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "CoreLayeredUIData.h"
 #include "UObject/Interface.h"
-#include "I_WidgetCommunication.generated.h"
+#include "I_LayeringCommunication.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE()
-class UI_WidgetCommunication : public UInterface
+class UI_LayeringCommunication : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class LAYEREDUI_API II_WidgetCommunication
+class LAYEREDUI_API II_LayeringCommunication
 {
 	GENERATED_BODY()
 
@@ -31,9 +31,6 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
 	bool AllowMultipleInstances();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
-	void UpdateWidget();
 
 	//-------------------------
 	/*Some widgets are not part of the CommonUI framework for various reasons, these two interface
