@@ -10,7 +10,6 @@ IMPLEMENT_GAME_MODULE(FTagFactsEditorModule, TagFactsEditor)
 
 void FTagFactsEditorModule::StartupModule()
 {
-
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
 	//Register the FS_Fact struct customization

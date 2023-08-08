@@ -20,7 +20,7 @@ void URelations_AddExperience::Activate()
 {
 	Super::Activate();
 
-	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToString(), [this]()
+	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToSoftObjectPath(), [this]()
 	{
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
 
@@ -72,7 +72,7 @@ void URelations_GetRelationship::Activate()
 {
 	Super::Activate();
 
-	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToString(), [this]()
+	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToSoftObjectPath(), [this]()
 	{
 		FS_Relationship Relationship;
 
