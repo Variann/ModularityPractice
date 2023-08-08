@@ -16,5 +16,5 @@ class FLOWEXTENSION_API UFL_DialogueHelpers : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 	UFUNCTION(Category = "Flow Extension|DialogueHelpers", BlueprintCallable, BlueprintPure)
-	static bool DoesDialogueMeetCondition(FS_DialogueOption DialogueOption);
+	static bool DoesDialogueMeetCondition(FDialogueOption DialogueOption);
 };

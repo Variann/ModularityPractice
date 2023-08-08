@@ -3,7 +3,7 @@
 
 #include "Dialogue/FL_DialogueHelpers.h"
 
-bool UFL_DialogueHelpers::DoesDialogueMeetCondition(FS_DialogueOption DialogueOption)
+bool UFL_DialogueHelpers::DoesDialogueMeetCondition(FDialogueOption DialogueOption)
 {
 	if(DialogueOption.Conditions.IsEmpty())
 	{

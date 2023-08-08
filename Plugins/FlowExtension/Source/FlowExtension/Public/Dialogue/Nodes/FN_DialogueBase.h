@@ -22,10 +22,10 @@ protected:
 	UDA_DialogueCharacter* Character = nullptr;
 	
 	UPROPERTY(EditAnywhere, Category=Dialogue)
-	FS_Script Script;
+	FScript Script;
 
 	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_DialogueOption> DialogueOptions;
+	TArray<FDialogueOption> DialogueOptions;
 
 	/**After a dialogue option has been chosen, how long should we wait
 	 * until we trigger the next node.
@@ -57,10 +57,10 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FS_Script GetScript();
+	FScript GetScript();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TArray<FS_DialogueOption> GetDialogueOptions();
+	TArray<FDialogueOption> GetDialogueOptions();
 
 	UFUNCTION(BlueprintNativeEvent)
 	UTexture2D* GetSpeakerPortrait();

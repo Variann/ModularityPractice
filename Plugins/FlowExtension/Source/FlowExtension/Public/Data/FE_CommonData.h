@@ -31,29 +31,29 @@ enum EConditionHandling
 	AllConditions
 };
 
-USTRUCT(BlueprintType)
-struct FS_FlowPin
-{
-	GENERATED_BODY()
-
-	// A logical name, used during execution of pin
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
-	FName PinName;
-
-	// An optional Display Name, you can use it to override PinName without the need to update graph connections
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
-	FText PinFriendlyName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
-	FString PinToolTip;
-};
+// USTRUCT(BlueprintType)
+// struct FS_FlowPin
+// {
+// 	GENERATED_BODY()
+//
+// 	// A logical name, used during execution of pin
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
+// 	FName PinName;
+//
+// 	// An optional Display Name, you can use it to override PinName without the need to update graph connections
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
+// 	FText PinFriendlyName;
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FlowPin")
+// 	FString PinToolTip;
+// };
 
 
 //--------------//
 //	 Dialogue	//
 
 USTRUCT(BlueprintType)
-struct FS_DialogueSettings
+struct FDialogueSettings
 {
 	GENERATED_BODY()
 
@@ -68,14 +68,14 @@ struct FS_DialogueSettings
 };
 
 USTRUCT(BlueprintType)
-struct FS_DialogueOption
+struct FDialogueOption
 {
 	GENERATED_BODY()
 	
 	/**The actual dialogue that occurs when the player presses
 	 * the dialogue button.*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FS_DialogueSettings DialogueSettings;
+	FDialogueSettings DialogueSettings;
 
 	/**When we process the conditions, we can control if only a single condition
 	 * has to return true or if all of them have to return true.*/
@@ -95,7 +95,7 @@ struct FS_DialogueOption
 };
 
 USTRUCT(BlueprintType)
-struct FS_Script
+struct FScript
 {
 	GENERATED_BODY()
 	
@@ -126,7 +126,7 @@ struct FS_Reward
 //Being left inside a struct in case someone
 //needs to add more basic data to this.
 USTRUCT(BlueprintType)
-struct FS_TaskRequirement
+struct FTaskRequirement
 {
 	GENERATED_BODY()
 
@@ -149,7 +149,7 @@ struct FS_TaskFailCondition
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapTask.
 USTRUCT(BlueprintType)
-struct FS_QuestTask
+struct FQuestTask
 {
 	GENERATED_BODY()
 
@@ -167,7 +167,7 @@ struct FS_QuestTask
 
 	//Requirements for progressing this task.
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_TaskRequirement> Requirements;
+	TArray<FTaskRequirement> Requirements;
 
 	/**What scenarios will fail this task?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
@@ -183,7 +183,7 @@ struct FS_QuestTask
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapTask.
 USTRUCT(BlueprintType)
-struct FS_TaskWrapper
+struct FTaskWrapper
 {
 	GENERATED_BODY()
 	
@@ -203,7 +203,7 @@ struct FS_TaskWrapper
 	float ProgressRequired;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_TaskRequirement> Requirements;
+	TArray<FTaskRequirement> Requirements;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_TaskFailCondition> FailConditions;
@@ -240,7 +240,7 @@ struct FS_TaskWrapper
 //Being left inside a struct in case someone
 //needs to add more basic data to this.
 USTRUCT(BlueprintType)
-struct FS_QuestRequirement
+struct FQuestRequirement
 {
 	GENERATED_BODY()
 
@@ -263,7 +263,7 @@ struct FS_QuestFailCondition
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapQuest.
 USTRUCT(BlueprintType)
-struct FS_Quest
+struct FQuest
 {
 	GENERATED_BODY()
 
@@ -278,11 +278,11 @@ struct FS_Quest
 	FText QuestText;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_QuestTask> Tasks;
+	TArray<FQuestTask> Tasks;
 
 	/**Requirements to accept the quest.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_QuestRequirement> Requirements;
+	TArray<FQuestRequirement> Requirements;
 
 	/**What scenarios will fail this quest?*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
@@ -295,7 +295,7 @@ struct FS_Quest
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapQuest.
 USTRUCT(BlueprintType)
-struct FS_QuestWrapper
+struct FQuestWrapper
 {
 	GENERATED_BODY()
 
@@ -317,10 +317,10 @@ struct FS_QuestWrapper
 	FText QuestName;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_TaskWrapper> Tasks;
+	TArray<FTaskWrapper> Tasks;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_QuestRequirement> Requirements;
+	TArray<FQuestRequirement> Requirements;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_QuestFailCondition> FailConditions;
@@ -342,7 +342,7 @@ struct FS_QuestWrapper
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<UObject*> Listeners;
 
-	bool operator==(const FS_QuestWrapper& Argument) const
+	bool operator==(const FQuestWrapper& Argument) const
 	{
 		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
 		{
@@ -352,7 +352,7 @@ struct FS_QuestWrapper
 		return QuestID == Argument.QuestID;
 	}
 
-	bool operator!=(const FS_QuestWrapper& Argument) const
+	bool operator!=(const FQuestWrapper& Argument) const
 	{
 		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
 		{

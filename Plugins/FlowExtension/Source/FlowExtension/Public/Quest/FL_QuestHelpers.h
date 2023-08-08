@@ -29,8 +29,8 @@ public:
 	 *
 	 * @QuestNode This is optional.*/
 	UFUNCTION(BlueprintCallable)
-	static FS_QuestWrapper WrapQuest(FS_Quest QuestInformation, UFN_QuestBase* QuestNode);
+	static FQuestWrapper WrapQuest(FQuest QuestInformation, UFN_QuestBase* QuestNode);
 
 	UFUNCTION(BlueprintCallable)
-	static FS_TaskWrapper WrapTask(FS_QuestTask TaskInformation);
+	static FTaskWrapper WrapTask(FQuestTask TaskInformation);
 };

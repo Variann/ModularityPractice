@@ -28,29 +28,29 @@ class FLOWEXTENSION_API II_QuestUpdates
 public:
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
-	void QuestStateUpdated(FS_QuestWrapper Quest, EQuestState NewState);
+	void QuestStateUpdated(FQuestWrapper Quest, EQuestState NewState);
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
-	void QuestDropped(FS_QuestWrapper Quest);
+	void QuestDropped(FQuestWrapper Quest);
 
 	UFUNCTION(Category = "Quest System", BlueprintNativeEvent, BlueprintCallable)
-	void QuestFailed(FS_QuestWrapper Quest);
+	void QuestFailed(FQuestWrapper Quest);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
-	void TaskProgressed(FS_TaskWrapper Task, float ProgressMade, UObject* Instigator);
+	void TaskProgressed(FTaskWrapper Task, float ProgressMade, UObject* Instigator);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintImplementableEvent, BlueprintCallable)
-	bool PreventTaskProgress(FS_TaskWrapper Task);
+	bool PreventTaskProgress(FTaskWrapper Task);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
-	void TaskDropped(FS_TaskWrapper Task);
+	void TaskDropped(FTaskWrapper Task);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
-	void TaskFailed(FS_TaskWrapper Task);
+	void TaskFailed(FTaskWrapper Task);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
-	void TaskAddedToQuest(FS_TaskWrapper Task, FS_QuestWrapper Quest);
+	void TaskAddedToQuest(FTaskWrapper Task, FQuestWrapper Quest);
 
 	UFUNCTION(Category = "Quest System|Task", BlueprintNativeEvent, BlueprintCallable)
-	void TaskRemovedFromQuest(FS_TaskWrapper Task, FS_QuestWrapper Quest);
+	void TaskRemovedFromQuest(FTaskWrapper Task, FQuestWrapper Quest);
 };

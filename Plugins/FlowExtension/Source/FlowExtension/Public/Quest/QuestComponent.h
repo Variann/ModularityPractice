@@ -8,18 +8,18 @@
 #include "QuestComponent.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FS_QuestWrapper, Quest, TEnumAsByte<EQuestState>, NewState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestDropped, FS_QuestWrapper, Quest);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestFailed, FS_QuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FQuestWrapper, Quest, TEnumAsByte<EQuestState>, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestDropped, FQuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestFailed, FQuestWrapper, Quest);
 
 /**@Task the task that was progressed.
  * @ProgressMade the delta of the current and the added progress. This can be negative.
  * @Instigator The object that progressed the quest.*/
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTaskProgressed, FS_TaskWrapper, Task, float, ProgressMade, UObject*, Instigator);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskDropped, FS_TaskWrapper, Task);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFailed, FS_TaskWrapper, Task);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskAddedToQuest, FS_TaskWrapper, Task, FS_QuestWrapper, Quest);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FS_TaskWrapper, Task, FS_QuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTaskProgressed, FTaskWrapper, Task, float, ProgressMade, UObject*, Instigator);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskDropped, FTaskWrapper, Task);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTaskFailed, FTaskWrapper, Task);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskAddedToQuest, FTaskWrapper, Task, FQuestWrapper, Quest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FTaskWrapper, Task, FQuestWrapper, Quest);
 
 
 UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
@@ -30,13 +30,13 @@ class FLOWEXTENSION_API UQuestComponent : public UActorComponent, public II_Ques
 public:
 
  UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FS_QuestWrapper> ActiveQuests;
+ TArray<FQuestWrapper> ActiveQuests;
 
  UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FS_QuestWrapper> CompletedQuests;
+ TArray<FQuestWrapper> CompletedQuests;
 
  UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FS_QuestWrapper> FailedQuests;
+ TArray<FQuestWrapper> FailedQuests;
 
  //Delegates
 
@@ -73,7 +73,7 @@ public:
  void AddListenerToQuest(FGameplayTag Quest, UObject* Listener);
 
  UFUNCTION(Category = "Quest", BlueprintPure, meta = (DisplayName = "Get Quest Wrapper (Active)"))
- FS_QuestWrapper GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex);
+ FQuestWrapper GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex);
 
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
@@ -95,10 +95,10 @@ public:
   * @SkipCompletionCheck Typically you want CanCompleteQuest to be called,
   * but sometimes you want to forcibly complete the quest.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- void CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCheck);
+ void CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck);
  
  UFUNCTION(Category = "Quest", BlueprintPure, BlueprintNativeEvent)
- bool CanCompleteQuest(FS_QuestWrapper Quest);
+ bool CanCompleteQuest(FQuestWrapper Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasCompletedQuest(FGameplayTag Quest);
@@ -113,7 +113,7 @@ public:
  TEnumAsByte<EQuestState> GetQuestState(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool DropQuest(FS_QuestWrapper Quest);
+ bool DropQuest(FQuestWrapper Quest);
 
  /**Attempt to fail the quest, only returns false if the quest is
   * not in progress.
@@ -122,7 +122,7 @@ public:
   * and if we should notify its listeners and broadcast the
   * failure delegate.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool FailQuest(FS_QuestWrapper Quest, bool FailTasks);
+ bool FailQuest(FQuestWrapper Quest, bool FailTasks);
 
  //------------------
 
@@ -133,10 +133,10 @@ public:
  /**Search the active quests for the task.
   * @ArrayIndex can return -1 if the quest was not found.*/
  UFUNCTION(Category = "Quest", BlueprintPure)
- FS_QuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
+ FQuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- TArray<FS_TaskWrapper> GetTasksForQuest_Active(FGameplayTag Quest);
+ TArray<FTaskWrapper> GetTasksForQuest_Active(FGameplayTag Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
  void AddListenerToTask(FGameplayTag Task, UObject* Listener);
@@ -155,7 +155,7 @@ public:
   * ask the boss if they are dead or not, if the boss isn't dead,
   * you can prevent the task from being progressed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool CanTaskBeProgressed(FS_TaskWrapper Task);
+ bool CanTaskBeProgressed(FTaskWrapper Task);
 
  /**Small optimization, CanTaskBeProgressed already looks up
   * the task, overriding that function at a blueprint level means
@@ -181,7 +181,7 @@ public:
   * quest have been completed, the quest will still get labelled as
   * completed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool AddTaskToQuest(FS_QuestTask Task, FGameplayTag Quest);
+ bool AddTaskToQuest(FQuestTask Task, FGameplayTag Quest);
 
  /**Attempt to remove a task from a quest.
   * If there's no tasks left, the quest will be dropped.*/

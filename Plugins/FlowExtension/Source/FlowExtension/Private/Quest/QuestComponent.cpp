@@ -21,7 +21,7 @@ void UQuestComponent::AddListenerToQuest(FGameplayTag Quest, UObject* Listener)
 	ActiveQuests[QuestIndex].Listeners.AddUnique(Listener);
 }
 
-FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex)
+FQuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex)
 {
 	ArrayIndex = GetQuestIndex_Active(Quest);
 
@@ -30,7 +30,7 @@ FS_QuestWrapper UQuestComponent::GetQuestWrapper_Active(FGameplayTag Quest, int3
 		return ActiveQuests[ArrayIndex];
 	}
 
-	return FS_QuestWrapper();
+	return FQuestWrapper();
 }
 
 bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
@@ -49,13 +49,13 @@ bool UQuestComponent::AcceptQuest(UFN_QuestBase* Quest)
 
 	//Wrap the quest into a struct that is more easily
 	//serialized and manageable.
-	FS_QuestWrapper QuestWrapper = UFL_QuestHelpers::WrapQuest(Quest->QuestInformation, Quest);
+	FQuestWrapper QuestWrapper = UFL_QuestHelpers::WrapQuest(Quest->QuestInformation, Quest);
 
 	//Wrap the tasks into a struct that is more easily
 	//serialized and manageable.
 	for(auto& CurrentTask : Quest->QuestInformation.Tasks)
 	{
-		FS_TaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(CurrentTask);
+		FTaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(CurrentTask);
 		
 		QuestWrapper.Tasks.Add(TaskWrapper);
 	}
@@ -99,7 +99,7 @@ int32 UQuestComponent::GetQuestIndex_Active(FGameplayTag Quest)
 	return -1;
 }
 
-void UQuestComponent::CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCheck)
+void UQuestComponent::CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck)
 {
 	const int32 QuestIndex = GetQuestIndex_Active(Quest.QuestID);
 
@@ -139,7 +139,7 @@ void UQuestComponent::CompleteQuest(FS_QuestWrapper Quest, bool SkipCompletionCh
 	}
 }
 
-bool UQuestComponent::CanCompleteQuest_Implementation(FS_QuestWrapper Quest)
+bool UQuestComponent::CanCompleteQuest_Implementation(FQuestWrapper Quest)
 {
 	if(!Quest.QuestID.IsValid())
 	{
@@ -229,7 +229,7 @@ TEnumAsByte<EQuestState> UQuestComponent::GetQuestState(FGameplayTag Quest)
 	return Inactive;
 }
 
-bool UQuestComponent::DropQuest(FS_QuestWrapper Quest)
+bool UQuestComponent::DropQuest(FQuestWrapper Quest)
 {
 	if(Quest.State != InProgress)
 	{
@@ -277,7 +277,7 @@ bool UQuestComponent::DropQuest(FS_QuestWrapper Quest)
 	return false;
 }
 
-bool UQuestComponent::FailQuest(FS_QuestWrapper Quest, bool FailTasks)
+bool UQuestComponent::FailQuest(FQuestWrapper Quest, bool FailTasks)
 {
 	if(Quest.State != InProgress)
 	{
@@ -331,7 +331,7 @@ bool UQuestComponent::FailQuest(FS_QuestWrapper Quest, bool FailTasks)
 	return false;
 }
 
-FS_QuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex)
+FQuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex)
 {
 	ArrayIndex = -1;
 	for(int32 CurrentIndex = 0; CurrentIndex < ActiveQuests.Num(); CurrentIndex++)
@@ -346,12 +346,12 @@ FS_QuestWrapper UQuestComponent::GetQuestForTask_Active(FGameplayTag Task, int32
 		}
 	}
 
-	return FS_QuestWrapper();
+	return FQuestWrapper();
 }
 
-TArray<FS_TaskWrapper> UQuestComponent::GetTasksForQuest_Active(FGameplayTag Quest)
+TArray<FTaskWrapper> UQuestComponent::GetTasksForQuest_Active(FGameplayTag Quest)
 {
-	TArray<FS_TaskWrapper> FoundTasks;
+	TArray<FTaskWrapper> FoundTasks;
 	const int32 QuestIndex = GetQuestIndex_Active(Quest);
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
@@ -456,7 +456,7 @@ bool UQuestComponent::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 	return false;
 }
 
-bool UQuestComponent::CanTaskBeProgressed(FS_TaskWrapper Task)
+bool UQuestComponent::CanTaskBeProgressed(FTaskWrapper Task)
 {
 	int32 QuestIndex;
 	GetQuestForTask_Active(Task.TaskID, QuestIndex);
@@ -509,7 +509,7 @@ bool UQuestComponent::FailTask(FGameplayTag Task, bool FailQuest)
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
 	{
-		FS_QuestWrapper& Quest = ActiveQuests[QuestIndex];
+		FQuestWrapper& Quest = ActiveQuests[QuestIndex];
 
 		for(auto& CurrentTask : Quest.Tasks)
 		{
@@ -557,13 +557,13 @@ bool UQuestComponent::FailTask(FGameplayTag Task, bool FailQuest)
 	return false;
 }
 
-bool UQuestComponent::AddTaskToQuest(FS_QuestTask Task, FGameplayTag Quest)
+bool UQuestComponent::AddTaskToQuest(FQuestTask Task, FGameplayTag Quest)
 {
 	const int32 QuestIndex = GetQuestIndex_Active(Quest);
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
 	{
-		const FS_TaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(Task);
+		const FTaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(Task);
 
 		ActiveQuests[QuestIndex].Tasks.Add(TaskWrapper);
 
@@ -592,12 +592,12 @@ bool UQuestComponent::RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest)
 
 	if(ActiveQuests.IsValidIndex(QuestIndex))
 	{
-		FS_QuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
+		FQuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
 		for(int32 CurrentIndex = 0; CurrentIndex < QuestWrapper.Tasks.Num(); CurrentIndex++)
 		{
 			if(QuestWrapper.Tasks[CurrentIndex].TaskID == Task)
 			{
-				const FS_TaskWrapper TaskWrapper = QuestWrapper.Tasks[CurrentIndex];
+				const FTaskWrapper TaskWrapper = QuestWrapper.Tasks[CurrentIndex];
 				QuestWrapper.Tasks.RemoveAt(CurrentIndex);
 
 				TaskRemovedFromQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);

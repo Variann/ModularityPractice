@@ -92,12 +92,12 @@ void UFN_DialogueBase::Stop() const
 {
 }
 
-FS_Script UFN_DialogueBase::GetScript()
+FScript UFN_DialogueBase::GetScript()
 {
 	return Script;
 }
 
-TArray<FS_DialogueOption> UFN_DialogueBase::GetDialogueOptions()
+TArray<FDialogueOption> UFN_DialogueBase::GetDialogueOptions()
 {
 	return DialogueOptions;
 }

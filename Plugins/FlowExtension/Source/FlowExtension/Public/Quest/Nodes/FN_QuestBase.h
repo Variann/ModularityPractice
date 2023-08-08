@@ -18,7 +18,7 @@ class FLOWEXTENSION_API UFN_QuestBase : public UFlowNode, public II_QuestUpdates
 public:
 
 	UPROPERTY(Category= "Quest", EditAnywhere, BlueprintReadOnly)
-	FS_Quest QuestInformation;
+	FQuest QuestInformation;
 
 #if WITH_EDITOR
 	virtual EDataValidationResult ValidateNode() override;

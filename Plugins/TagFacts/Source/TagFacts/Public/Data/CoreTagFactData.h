@@ -46,7 +46,7 @@ FORCEINLINE uint32 GetTypeHash(const FS_Fact& Thing)
 
 
 USTRUCT(BlueprintType)
-struct FS_FactCheck
+struct FFactCheck
 {
 	GENERATED_BODY()
 

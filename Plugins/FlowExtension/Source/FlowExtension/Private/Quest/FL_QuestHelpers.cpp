@@ -46,9 +46,9 @@ TArray<UFlowNode*> UFL_QuestHelpers::GetFlowNodes(UFlowAsset* FlowAsset)
 	return FoundNodes;
 }
 
-FS_QuestWrapper UFL_QuestHelpers::WrapQuest(FS_Quest QuestInformation, UFN_QuestBase* QuestNode)
+FQuestWrapper UFL_QuestHelpers::WrapQuest(FQuest QuestInformation, UFN_QuestBase* QuestNode)
 {
-	FS_QuestWrapper QuestWrapper;
+	FQuestWrapper QuestWrapper;
 
 	if(IsValid(QuestNode))
 	{
@@ -66,9 +66,9 @@ FS_QuestWrapper UFL_QuestHelpers::WrapQuest(FS_Quest QuestInformation, UFN_Quest
 	return QuestWrapper;
 }
 
-FS_TaskWrapper UFL_QuestHelpers::WrapTask(FS_QuestTask TaskInformation)
+FTaskWrapper UFL_QuestHelpers::WrapTask(FQuestTask TaskInformation)
 {
-	FS_TaskWrapper TaskWrapper;
+	FTaskWrapper TaskWrapper;
 	
 	TaskWrapper.TaskID = TaskInformation.TaskID;
 	TaskWrapper.TaskName = TaskInformation.TaskName;
