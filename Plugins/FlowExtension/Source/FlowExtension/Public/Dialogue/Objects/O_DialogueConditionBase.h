@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, BlueprintType, meta=(ShowWorldContextPin), AutoExpandCategories = ("Default"), EditInlineNew)
+UCLASS(Abstract, Blueprintable, BlueprintType, AutoExpandCategories = ("Default"), EditInlineNew)
 class FLOWEXTENSION_API UO_DialogueConditionBase : public UObject
 {
 	GENERATED_BODY()
@@ -22,4 +22,6 @@ public:
 
 	UFUNCTION(Category = "Dialogue", BlueprintCallable, BlueprintPure, BlueprintNativeEvent)
 	bool IsConditionMet();
+
+	virtual UWorld* GetWorld() const override;
 };
