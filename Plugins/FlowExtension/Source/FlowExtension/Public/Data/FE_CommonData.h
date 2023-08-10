@@ -36,29 +36,9 @@ enum EConditionHandling
 //	 Dialogue	//
 
 USTRUCT(BlueprintType)
-struct FDialogueSettings
+struct FDialogueConditionSettings
 {
 	GENERATED_BODY()
-
-	/**The text displayed to the player to choose this option.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText ButtonText = FText();
-
-	/**The actual dialogue that occurs when the player presses
-	 * the dialogue button.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText DialogueText = FText();
-};
-
-USTRUCT(BlueprintType)
-struct FDialogueOption
-{
-	GENERATED_BODY()
-	
-	/**The actual dialogue that occurs when the player presses
-	 * the dialogue button.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FDialogueSettings DialogueSettings;
 
 	/**When we process the conditions, we can control if only a single condition
 	 * has to return true or if all of them have to return true.*/
@@ -75,6 +55,24 @@ struct FDialogueOption
 	 * be met?*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Dialogue Option")
 	TArray<UO_DialogueConditionBase*> Conditions;
+};
+
+USTRUCT(BlueprintType)
+struct FDialogueOption
+{
+	GENERATED_BODY()
+
+	/**The text displayed to the player to choose this option.*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
+	FText ButtonText = FText();
+
+	/**The actual dialogue that occurs when the player presses
+	 * the dialogue button.*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
+	FText DialogueText = FText();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
+	FDialogueConditionSettings ConditionSettings;
 };
 
 USTRUCT(BlueprintType)

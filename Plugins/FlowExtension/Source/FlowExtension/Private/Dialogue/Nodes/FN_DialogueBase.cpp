@@ -48,13 +48,13 @@ EDataValidationResult UFN_DialogueBase::ValidateNode()
 	{
 		for(auto& CurrentOption : DialogueOptions)
 		{
-			if(CurrentOption.DialogueSettings.ButtonText.IsEmpty())
+			if(CurrentOption.ButtonText.IsEmpty())
 			{
 				ValidationLog.Error<UFlowNode>(TEXT("Dialogue option has no button text"), this);
 				FailedValidation = true;
 			}
 
-			if(CurrentOption.DialogueSettings.DialogueText.IsEmpty())
+			if(CurrentOption.DialogueText.IsEmpty())
 			{
 				ValidationLog.Error<UFlowNode>(TEXT("Dialogue has no dialogue text"), this);
 				FailedValidation = true;
@@ -81,9 +81,9 @@ void UFN_DialogueBase::RefreshOutputs()
 
 	for (auto& Dialogue : DialogueOptions)
 	{
-		FText PinText = Dialogue.DialogueSettings.ButtonText;
+		FText PinText = Dialogue.ButtonText;
 		// Dialogue.DialogueSettings.
-		OutputPins.Add(FFlowPin(PinText.ToString(), FText(), Dialogue.DialogueSettings.DialogueText.ToString()));
+		OutputPins.Add(FFlowPin(PinText.ToString(), FText(), Dialogue.DialogueText.ToString()));
 	}
 }
 #endif

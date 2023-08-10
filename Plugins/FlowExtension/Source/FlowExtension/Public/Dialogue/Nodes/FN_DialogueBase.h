@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category=Dialogue)
 	FScript Script;
 
-	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Dialogue", EditAnywhere, BlueprintReadOnly, meta = (TitleProperty = "ButtonText"))
 	TArray<FDialogueOption> DialogueOptions;
 
 	/**After a dialogue option has been chosen, how long should we wait
