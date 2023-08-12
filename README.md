@@ -19,7 +19,8 @@ What this provides:
    	- Can also be repurposed for an achievement system.
 
 ---
- - LayeredUI, inspired by Lyra's UI layering system using CommonUI, but isn't... Well to put it bluntly, my version is not sh*t.
+ - LayeredUI, inspired by Lyra's UI layering, but takes a different approach.
+ 	- Allows you to layer widgets on the screen using tags instead of the usual AddToViewport function.
 
 ---
  - ObjectTags, a simple layer for widgets, actors and objects where gameplay tags are added, with delegates going off notifying if a tag has been added or removed.
