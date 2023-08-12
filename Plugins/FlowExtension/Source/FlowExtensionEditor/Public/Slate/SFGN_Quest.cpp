@@ -22,6 +22,7 @@ void SFGN_Quest::UpdateGraphNode()
 
 	CenterContentArea->AddSlot()
 	.VAlign(VAlign_Top)
+	.Padding(0, 10, 0, 0)
 	[
 		SNew(STextBlock)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 18))
@@ -55,11 +56,11 @@ void SFGN_Quest::UpdateGraphNode()
 		{
 			if(CurrentTask.IsOptional)
 			{
-				TaskDisplayName = FText::Format(LOCTEXT("QuestNodeCustomization", "- {TaskName} / {AmountRequired} (Optional)"), CurrentTask.TaskName, CurrentTask.ProgressRequired);
+				TaskDisplayName = FText::Format(LOCTEXT("QuestNodeCustomization", "{TaskName} / {AmountRequired} (Optional)"), CurrentTask.TaskName, CurrentTask.ProgressRequired);
 			}
 			else
 			{
-				TaskDisplayName = FText::Format(LOCTEXT("QuestNodeCustomization", "- {TaskName} / {AmountRequired}"), CurrentTask.TaskName, CurrentTask.ProgressRequired);
+				TaskDisplayName = FText::Format(LOCTEXT("QuestNodeCustomization", "{TaskName} / {AmountRequired}"), CurrentTask.TaskName, CurrentTask.ProgressRequired);
 			}
 		}
 		
@@ -69,15 +70,32 @@ void SFGN_Quest::UpdateGraphNode()
 		.Padding(0, 5)
 		.VAlign(VAlign_Top)
 		[
-		SNew(SBox)
-		.VAlign(VAlign_Top)
-		.MaxDesiredWidth(200)
-		[
-			SNew(STextBlock)
-			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
-			.AutoWrapText(true)
-			.Text(TaskDisplayName)
-		]
+			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Left)
+			.AutoWidth()
+			.VAlign(VAlign_Center)
+			.Padding(0, 0, 7, 0)
+			[
+				SNew(SImage)
+				.Image(FAppStyle::GetBrush(TEXT("Icons.BulletPoint")))
+				.DesiredSizeOverride(FVector2D(12.f, 12.f))
+				// .Image(FSlateIcon(FAppStyle::GetAppStyleSetName(), "Icons.BulletPoint"))
+
+			]
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Left)
+			[
+				SNew(SBox)
+				.VAlign(VAlign_Top)
+				.MaxDesiredWidth(200)
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+					.AutoWrapText(true)
+					.Text(TaskDisplayName)
+				]
+			]
 		];
 	}
 }
