@@ -3,6 +3,8 @@
 
 #include "Quest/Nodes/FN_ProgressTask.h"
 
+#include "Kismet/KismetStringLibrary.h"
+
 UFN_ProgressTask::UFN_ProgressTask(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -15,7 +17,10 @@ FString UFN_ProgressTask::GetNodeDescription() const
 {
 	if(Task.IsValid())
 	{
-		return Task.ToString();
+		FString ShortenedString;
+		FString LeftString;
+		UKismetStringLibrary::Split(Task.ToString(), ".", LeftString, ShortenedString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+		return ShortenedString;
 	}
 	
 	return Super::GetNodeDescription();
