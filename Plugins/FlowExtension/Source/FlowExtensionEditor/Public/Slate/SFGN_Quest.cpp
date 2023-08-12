@@ -20,11 +20,13 @@ void SFGN_Quest::UpdateGraphNode()
 		}
 	}
 
+	TSharedPtr<STextBlock> Title;
+
 	CenterContentArea->AddSlot()
 	.VAlign(VAlign_Top)
 	.Padding(0, 10, 0, 0)
 	[
-		SNew(STextBlock)
+	SAssignNew(Title, STextBlock)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 18))
 		.Text(QuestInformation.QuestName)
 	];
@@ -36,7 +38,7 @@ void SFGN_Quest::UpdateGraphNode()
 	[
 		SNew(SBox)
 		.VAlign(VAlign_Top)
-		.MaxDesiredWidth(200)
+		.MaxDesiredWidth(Title->GetDesiredSize().X)
 		[
 			SNew(STextBlock)
 			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
@@ -72,23 +74,19 @@ void SFGN_Quest::UpdateGraphNode()
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
 			.AutoWidth()
+			.HAlign(HAlign_Left)
 			.VAlign(VAlign_Center)
 			.Padding(0, 0, 7, 0)
 			[
 				SNew(SImage)
 				.Image(FAppStyle::GetBrush(TEXT("Icons.BulletPoint")))
 				.DesiredSizeOverride(FVector2D(12.f, 12.f))
-				// .Image(FSlateIcon(FAppStyle::GetAppStyleSetName(), "Icons.BulletPoint"))
-
 			]
 			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
 			[
 				SNew(SBox)
-				.VAlign(VAlign_Top)
-				.MaxDesiredWidth(200)
+				.MaxDesiredWidth(Title->GetDesiredSize().X)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
