@@ -18,7 +18,7 @@ class FLOWEXTENSION_API UFN_ProgressTask : public UFlowNode
 	FGameplayTag Task;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	float Progress = 0;
+	float ProgressToAdd = 0;
 
 
 #if WITH_EDITOR

@@ -36,7 +36,7 @@ EDataValidationResult UFN_ProgressTask::ValidateNode()
 		FailedValidation = true;
 	}
 
-	if(Progress == 0)
+	if(ProgressToAdd == 0)
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("Missing Task"), this);
 		FailedValidation = true;
