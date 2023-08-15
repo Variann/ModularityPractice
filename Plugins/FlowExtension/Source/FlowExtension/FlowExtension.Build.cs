@@ -45,6 +45,11 @@ public class FlowExtension : ModuleRules
 			}
 			);
 		
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.Add("FlowEditor");
+		}
+		
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]

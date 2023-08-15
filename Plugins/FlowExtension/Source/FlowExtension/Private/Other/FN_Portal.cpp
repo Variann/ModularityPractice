@@ -4,6 +4,8 @@
 #include "Other/FN_Portal.h"
 
 #include "FlowAsset.h"
+#include "Graph/FlowGraphEditor.h"
+#include "Graph/FlowGraphUtils.h"
 
 UFN_Portal::UFN_Portal(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -98,6 +100,24 @@ EDataValidationResult UFN_Portal::ValidateNode()
 	}
 	
 	return EDataValidationResult::Valid;
+}
+
+void UFN_Portal::FocusExitPortal()
+{
+	const UFlowAsset* FlowAsset = GetFlowAsset();
+	if(PortalDirection == Entrance)
+	{
+		if(FlowAsset)
+		{
+			if(const UFN_Portal* ExitPortal = Cast<UFN_Portal>(FlowAsset->GetNode(PortalGUIDToTrigger)))
+			{
+				if(const TSharedPtr<SFlowGraphEditor> FlowGraphEditor = FFlowGraphUtils::GetFlowGraphEditor(GetGraphNode()->GetGraph()))
+				{
+					FlowGraphEditor->JumpToNode(ExitPortal->GetGraphNode());
+				}
+			}
+		}
+	}
 }
 
 #endif

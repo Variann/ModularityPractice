@@ -18,19 +18,19 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Category = "Portal Settings", EditAnywhere)
 	TEnumAsByte<EPortalDirection> PortalDirection = Entrance;
 
 	//General description of what this portal is meant for.
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
+	UPROPERTY(Category = "Portal Settings", EditAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
 	FName PortalID;
 
 	//GUID of the exit node
-	UPROPERTY(VisibleAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
+	UPROPERTY(Category = "Portal Settings", VisibleAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
 	FGuid PortalGUID;
 
 	//What exit node should this entrance node trigger?
-	UPROPERTY(EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
+	UPROPERTY(Category = "Portal Settings", EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
 	FGuid PortalGUIDToTrigger;
 
 #if WITH_EDITOR
@@ -44,6 +44,9 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	virtual FString GetNodeDescription() const override { return PortalID.ToString(); }
 
 	virtual EDataValidationResult ValidateNode() override;
+
+	UFUNCTION(Category = "Portal Settings", CallInEditor)
+	void FocusExitPortal();
 
 #endif
 	
