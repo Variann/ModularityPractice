@@ -4,8 +4,10 @@
 #include "Other/FN_Portal.h"
 
 #include "FlowAsset.h"
+#include "Framework/Notifications/NotificationManager.h"
 #include "Graph/FlowGraphEditor.h"
 #include "Graph/FlowGraphUtils.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 UFN_Portal::UFN_Portal(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
@@ -29,6 +31,35 @@ void UFN_Portal::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	//Update the PortalID so the node description is correct.
 	if(PortalDirection == Exit)
 	{
+		//Make sure no other Exit portals have the same ID
+		if(PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFN_Portal, PortalID) && !PortalID.IsNone())
+		{
+			UFlowAsset* FlowAsset = GetFlowAsset();
+
+			for(auto& CurrentNode : FlowAsset->GetNodes())
+			{
+				if(UFN_Portal* OtherPortal = Cast<UFN_Portal>(CurrentNode.Value))
+				{
+					if(OtherPortal->PortalID == PortalID && OtherPortal != this)
+					{
+						//reset the name
+						PortalID = "";
+
+						//Spit out a warning on the bottom right
+						FText InfoText = FText::FromString("PortalID already in use.");
+						FNotificationInfo Info(InfoText);
+						Info.bUseThrobber = false;
+						Info.FadeOutDuration = 0.5f;
+						Info.ExpireDuration = 5.0f;
+						if (TSharedPtr<SNotificationItem> Notification = FSlateNotificationManager::Get().AddNotification(Info))
+						{
+							Notification->SetCompletionState(SNotificationItem::CS_Fail);
+						}
+					}
+				}
+			}
+		}
+		
 		RefreshConnectedPortals();
 	}
 	else
