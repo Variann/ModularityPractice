@@ -23,40 +23,46 @@ void URelations_AddExperience::Activate()
 	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToSoftObjectPath(), [this]()
 	{
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
-
-		if(LoadedEntity)
+		
+		//Send job to any available thread
+		AsyncTask(ENamedThreads::AnyThread, [=]()
 		{
-			UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
-			if(!GameInstance)
+			bool JobSuccessful = false;
+			if(LoadedEntity)
 			{
-				Fail.Broadcast();
-				RemoveFromRoot();
-				return;
-			}
+				UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
+				if(!GameInstance)
+				{
+					return;
+				}
 			
-			URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
-			if(!RelationsSubSystem)
+				URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
+				if(!RelationsSubSystem)
+				{
+					return;
+				}
+
+				if(RelationsSubSystem->AddExperienceToEntity_Internal(LoadedEntity, ExperienceToGrant))
+				{
+					JobSuccessful = true;
+				}
+			}
+
+			//Job done, go back to the game thread
+			AsyncTask(ENamedThreads::GameThread, [=]()
 			{
-				Fail.Broadcast();
+				if(JobSuccessful)
+				{
+					Success.Broadcast();
+				}
+				else
+				{
+					Fail.Broadcast();
+				}
+				
 				RemoveFromRoot();
-				return;
-			}
-
-			if(RelationsSubSystem->AddExperienceToEntity_Internal(LoadedEntity, ExperienceToGrant))
-			{
-				Success.Broadcast();
-			}
-			else
-			{
-				Fail.Broadcast();
-			}
-		}
-		else
-		{
-			Fail.Broadcast();
-		}
-
-		RemoveFromRoot();
+			});
+		});
 	});
 }
 
