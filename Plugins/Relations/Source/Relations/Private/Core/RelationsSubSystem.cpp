@@ -26,24 +26,37 @@ void URelationsSubSystem::AddExperienceToEntity(UDA_RelationData* Entity, float 
 
 bool URelationsSubSystem::AddExperienceToEntity_Internal(UDA_RelationData* Entity, float Experience)
 {
-	if(FS_Relationship* FoundRelationship =Relationships.Find(FS_Relationship({Entity})))
-	{
-		FoundRelationship->CurrentXP = UKismetMathLibrary::Clamp(FoundRelationship->CurrentXP + Experience, Entity->GetMinimumExperience(), Entity->GetMaximumExperience());
-		return true;
-	}
-	
+	float OldExperience = 0;
+	float NewExperience = 0;
 	if(!Entity->ExperienceAndLevelCurve.GetRichCurve()->Keys.IsValidIndex(0))
 	{
 		UKismetSystemLibrary::PrintString(this, TEXT("Level curve has no keys. Can't add relationship."));
 		return false;
 	}
-		
-	FS_Relationship NewRelationship;
-	NewRelationship.Entity = Entity;
-	NewRelationship.CurrentXP = Entity->DefaultExperience;
-	NewRelationship.CurrentXP = NewRelationship.CurrentXP + Experience;
-		
-	Relationships.Add(NewRelationship);
+	
+	//Find the relationship and update it.
+	if(FS_Relationship* FoundRelationship = Relationships.Find(FS_Relationship({Entity})))
+	{
+		OldExperience = FoundRelationship->CurrentXP;
+		FoundRelationship->CurrentXP = UKismetMathLibrary::Clamp(FoundRelationship->CurrentXP + Experience, Entity->GetMinimumExperience(), Entity->GetMaximumExperience());
+		NewExperience = FoundRelationship->CurrentXP;
+	}
+	else
+	{
+		FS_Relationship NewRelationship;
+		NewRelationship.Entity = Entity;
+		NewRelationship.CurrentXP = Entity->DefaultExperience;
+		NewRelationship.CurrentXP = NewRelationship.CurrentXP + Experience;
+		NewExperience = NewRelationship.CurrentXP;
+		Relationships.Add(NewRelationship);
+	}
+
+	//Might be called from a separate thread, make sure to broadcast on game thread so blueprint VM stays happy.
+	AsyncTask(ENamedThreads::GameThread, [=]()
+	{
+		EntityExperienceUpdated.Broadcast(Entity, OldExperience, NewExperience);
+	});
+	
 	return true;
 }
 

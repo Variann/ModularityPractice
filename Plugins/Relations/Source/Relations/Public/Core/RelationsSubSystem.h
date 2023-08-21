@@ -7,7 +7,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "RelationsSubSystem.generated.h"
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FEntityExperienceUpdated, UDA_RelationData*, Entity, float, NewExperience, float, OldExperience);
 
 UCLASS()
 class RELATIONS_API URelationsSubSystem : public UGameInstanceSubsystem
@@ -16,8 +16,11 @@ class RELATIONS_API URelationsSubSystem : public UGameInstanceSubsystem
 
 public:
 
-	UPROPERTY(SaveGame, BlueprintReadOnly)
+	UPROPERTY(Category = "Relations", SaveGame, BlueprintReadOnly)
 	TSet<FS_Relationship> Relationships;
+
+	UPROPERTY(Category = "Relations", BlueprintAssignable, BlueprintCallable)
+	FEntityExperienceUpdated EntityExperienceUpdated;
 
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
