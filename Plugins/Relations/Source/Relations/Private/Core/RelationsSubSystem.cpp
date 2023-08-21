@@ -54,7 +54,7 @@ bool URelationsSubSystem::AddExperienceToEntity_Internal(UDA_RelationData* Entit
 	//Might be called from a separate thread, make sure to broadcast on game thread so blueprint VM stays happy.
 	AsyncTask(ENamedThreads::GameThread, [=]()
 	{
-		EntityExperienceUpdated.Broadcast(Entity, OldExperience, NewExperience);
+		EntityExperienceUpdated.Broadcast(Entity, NewExperience, OldExperience);
 	});
 	
 	return true;
