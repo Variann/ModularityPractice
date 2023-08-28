@@ -24,8 +24,8 @@ void URelations_AddExperience::Activate()
 	{
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
 		
-		//Send job to any available thread
-		AsyncTask(ENamedThreads::AnyThread, [=]()
+		//Send job to any background thread
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
 		{
 			bool JobSuccessful = false;
 			if(LoadedEntity)
@@ -80,42 +80,61 @@ void URelations_GetRelationship::Activate()
 
 	Handle = StreamableManager.RequestAsyncLoad(EntityToLoad.ToSoftObjectPath(), [this]()
 	{
-		FS_Relationship Relationship;
-
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
-		if(LoadedEntity)
+
+		//Send job to any background thread
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
 		{
-			UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
-			if(!GameInstance)
+			bool JobSuccessful = false;
+			FS_Relationship Relationship;
+			if(LoadedEntity)
 			{
-				NotFound.Broadcast(Relationship);
-				RemoveFromRoot();
-				return;
-			}
+				UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(GetOuter());
+				if(!GameInstance)
+				{
+					//Blueprints might be listening to Fail, make sure to broadcast on game thread.
+					AsyncTask(ENamedThreads::GameThread, [this, Relationship]()
+					{
+						NotFound.Broadcast(Relationship);
+						RemoveFromRoot();
+					});
 			
-			URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
-			if(!RelationsSubSystem)
+					return;
+				}
+			
+				URelationsSubSystem* RelationsSubSystem = GameInstance->GetSubsystem<URelationsSubSystem>();
+				if(!RelationsSubSystem)
+				{
+					//Blueprints might be listening to Fail, make sure to broadcast on game thread.
+					AsyncTask(ENamedThreads::GameThread, [this, Relationship]()
+					{
+						NotFound.Broadcast(Relationship);
+						RemoveFromRoot();
+					});
+					return;
+				}
+
+				Relationship = RelationsSubSystem->GetRelationshipForEntity(LoadedEntity);
+				if(Relationship.Entity)
+				{
+					JobSuccessful = true;
+				}
+			}
+
+			//Job done, go back to the game thread
+			AsyncTask(ENamedThreads::GameThread, [this, Relationship, JobSuccessful]()
 			{
-				NotFound.Broadcast(Relationship);
+				if(JobSuccessful)
+				{
+					Found.Broadcast(Relationship);
+				}
+				else
+				{
+					NotFound.Broadcast(Relationship);
+				}
+				
 				RemoveFromRoot();
-				return;
-			}
-
-			Relationship = RelationsSubSystem->GetRelationshipForEntity(LoadedEntity);
-			if(Relationship.Entity)
-			{
-				Found.Broadcast(Relationship);
-			}
-			else
-			{
-				NotFound.Broadcast(Relationship);
-			}
-		}
-		else
-		{
-			NotFound.Broadcast(Relationship);
-		}
-
-		RemoveFromRoot();
+			});
+		});
 	});
 }
