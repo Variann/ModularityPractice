@@ -87,19 +87,23 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 		NewLayeredWidget.Layer = Layer;
 		NewLayeredWidget.ZOrder = *ZOrder;
 		NewLayeredWidget.HideCursor = HideCursor;
-
-		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
-		{
-			II_LayeringCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
-		}
-		
-		LayeredWidgets.Add(NewLayeredWidget);
-	
-		Widget->AddToViewport(*ZOrder);
-		UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
 		LayeredWidget = NewLayeredWidget;
-		WidgetAdded.Broadcast(NewLayeredWidget);
-		return;
+
+		//Might be called on different thread, engine crashes if we try to add the widget
+		//to viewport outside of the game thread.
+		AsyncTask(ENamedThreads::GameThread, [=]()
+		{
+			if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
+			{
+				II_LayeringCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
+			}
+		
+			LayeredWidgets.Add(NewLayeredWidget);
+	
+			Widget->AddToViewport(*ZOrder);
+			UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
+			WidgetAdded.Broadcast(NewLayeredWidget);
+		});
 	}
 	else
 	{

@@ -25,35 +25,48 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 
 	Handle = StreamableManager.RequestAsyncLoad(WidgetToLoad.ToSoftObjectPath(), [this]()
 	{
-		FLayeredWidget NewLayeredWidget;
-		if(IsValid(WidgetToLoad.Get()))
+		//Send job to background thread.
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
 		{
-			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), WidgetToLoad.Get()));
-			
-			ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
-			if(!LayeredUI_Subsystem)
+			FLayeredWidget NewLayeredWidget;
+			bool JobSuccessful = false;
+			if(IsValid(WidgetToLoad.Get()))
 			{
-				Fail.Broadcast(NewLayeredWidget);
-				RemoveFromRoot();
-				return;
+				UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), WidgetToLoad.Get()));
+			
+				ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+				if(!LayeredUI_Subsystem)
+				{
+					//Blueprints might be listening to Fail, make sure to broadcast on game thread.
+					AsyncTask(ENamedThreads::GameThread, [this, NewLayeredWidget]()
+					{
+						Fail.Broadcast(NewLayeredWidget);
+						RemoveFromRoot();
+					});
+					
+					return;
+				}
+			
+				LayeredUI_Subsystem->AddWidgetToLayer(CreatedWidget ,LayerDestination, NewLayeredWidget, DesiredOrderOverride);
+				if(IsValid(NewLayeredWidget.Widget))
+				{
+					JobSuccessful = true;
+				}
 			}
 			
-			LayeredUI_Subsystem->AddWidgetToLayer(CreatedWidget ,LayerDestination, NewLayeredWidget, DesiredOrderOverride);
-
-			if(!IsValid(NewLayeredWidget.Widget))
+			AsyncTask(ENamedThreads::GameThread, [this, NewLayeredWidget, JobSuccessful]()
 			{
-				Fail.Broadcast(NewLayeredWidget);
-				RemoveFromRoot();
-				return;
-			}
-
-			Success.Broadcast(NewLayeredWidget);
-			RemoveFromRoot();
-		}
-		else
-		{
-			Fail.Broadcast(NewLayeredWidget);
-			RemoveFromRoot();
-		}
+				if(JobSuccessful)
+				{
+					Success.Broadcast(NewLayeredWidget);
+					RemoveFromRoot();
+				}
+				else
+				{
+					Fail.Broadcast(NewLayeredWidget);
+					RemoveFromRoot();
+				}
+			});
+		});
 	});
 }
