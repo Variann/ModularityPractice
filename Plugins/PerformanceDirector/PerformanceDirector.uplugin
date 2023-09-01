@@ -1,0 +1,23 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "PerformanceDirector",
+	"Description": "Help manage performance and the importance of actors.",
+	"Category": "Other",
+	"CreatedBy": "Varian Daemon",
+	"CreatedByURL": "https://github.com/Variann/ModularityPractice",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "PerformanceDirector",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
