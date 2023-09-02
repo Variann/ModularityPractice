@@ -47,7 +47,7 @@ void UAC_PerformanceDirector::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UAC_PerformanceDirector::StartTracking()
 {
-	if(TimerHandle.IsValid())
+	if(!TimerHandle.IsValid())
 	{
 		GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, this, &UAC_PerformanceDirector::StartTrackingTimer, UpdateInterval, true, 0);
 	}
@@ -65,7 +65,6 @@ void UAC_PerformanceDirector::StopTracking(bool bResetImportance)
 	}
 	
 	TimerHandle.Invalidate();
-	CurrentImportance = DefaultImportance;
 }
 
 TEnumAsByte<EPerformanceImportance> UAC_PerformanceDirector::GetCurrentImportance(bool EvaluateImportance)
