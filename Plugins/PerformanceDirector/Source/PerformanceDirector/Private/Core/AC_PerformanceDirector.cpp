@@ -11,10 +11,12 @@
 // Sets default values for this component's properties
 UAC_PerformanceDirector::UAC_PerformanceDirector()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 	bAutoActivate = false;
+	
+	//This component can be run on server or client,
+	//but it's not meant to be replicated.
+	SetIsReplicated(false);
 }
 
 
@@ -92,17 +94,24 @@ void UAC_PerformanceDirector::SetImportance(TEnumAsByte<EPerformanceImportance> 
 		CurrentImportance = NewImportance;
 
 		II_PerformanceDirector::Execute_ImportanceUpdated(GetOwner(), OldImportance, NewImportance);
+		ImportanceUpdated.Broadcast(OldImportance, NewImportance);
 	}
 }
 
 void UAC_PerformanceDirector::ResetImportance()
 {
-	CurrentImportance = DefaultImportance;
+	SetImportance(DefaultImportance);
 }
 
-void UAC_PerformanceDirector::SetUpdateInterval(float NewUpdateInterval)
+void UAC_PerformanceDirector::SetUpdateInterval(float NewUpdateInterval, bool UpdateTracker)
 {
 	UpdateInterval = NewUpdateInterval;
+
+	if(UpdateTracker)
+	{
+		StopTracking(false);
+		StartTracking();
+	}
 }
 
 void UAC_PerformanceDirector::StartTrackingTimer()

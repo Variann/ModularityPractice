@@ -109,8 +109,6 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FImportanceUpdated ImportanceUpdated;
 
-	TQueue<EPerformanceImportance> ThreadTaskQueue;
-
 protected:
 
 	EPerformanceImportance CurrentImportance = Normal;
@@ -135,15 +133,19 @@ public:
 
 	UFUNCTION(Category = "Performance Director", BlueprintCallable)
 	TEnumAsByte<EPerformanceImportance> GetCurrentImportance(bool EvaluateImportance);
-
+	
 	UFUNCTION(Category = "Performance Director", BlueprintCallable)
 	void SetImportance(TEnumAsByte<EPerformanceImportance> NewImportance);
 
+	/**Set current importance back to the default.*/
 	UFUNCTION(Category = "Performance Director", BlueprintCallable)
 	void ResetImportance();
-	
+
+	/**Update the UpdateInterval.
+	 * @UpdateTracker If true, we will stop whatever timer is currently active
+	 * and then recreate it with the new update interval.*/
 	UFUNCTION(Category = "Performance Director", BlueprintCallable)
-	void SetUpdateInterval(float NewUpdateInterval);
+	void SetUpdateInterval(float NewUpdateInterval, bool UpdateTracker = true);
 
 	void StartTrackingTimer();
 };
