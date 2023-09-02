@@ -6,12 +6,12 @@
 #include "Core/I_PerformanceDirector.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-TEnumAsByte<EPerformanceImportance> UFL_PerformanceDirector::GetActorsImportance(AActor* Actor)
+TEnumAsByte<EPerformanceImportance> UFL_PerformanceDirector::GetActorsImportance(AActor* Actor, bool EvaluateImportance)
 {
 	UAC_PerformanceDirector* PerformanceDirector;
 
 	//Interface retrieval is faster. If that fails, go through the actors components.
-	if(Actor->Implements<II_PerformanceDirector>())
+	if(Actor->GetClass()->ImplementsInterface(UI_PerformanceDirector::StaticClass()))
 	{
 		PerformanceDirector = II_PerformanceDirector::Execute_GetPerformanceDirector(Actor);
 		if(!IsValid(PerformanceDirector))
@@ -29,6 +29,11 @@ TEnumAsByte<EPerformanceImportance> UFL_PerformanceDirector::GetActorsImportance
 			return Normal;
 		}
 	}
+
+	if(PerformanceDirector)
+	{
+		return PerformanceDirector->GetCurrentImportance(EvaluateImportance);
+	}
 	
-	return PerformanceDirector->GetCurrentImportance();
+	return Unknown;
 }

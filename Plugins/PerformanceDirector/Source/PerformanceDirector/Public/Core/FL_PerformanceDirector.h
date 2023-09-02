@@ -15,6 +15,8 @@ class PERFORMANCEDIRECTOR_API UFL_PerformanceDirector : public UBlueprintFunctio
 {
 	GENERATED_BODY()
 
+public:
+
 	UFUNCTION(Category = "Performance Director", BlueprintCallable)
-	static TEnumAsByte<EPerformanceImportance> GetActorsImportance(AActor* Actor);
+	static TEnumAsByte<EPerformanceImportance> GetActorsImportance(AActor* Actor, bool EvaluateImportance);
 };
