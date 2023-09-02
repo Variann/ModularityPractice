@@ -14,9 +14,6 @@ class UI_PerformanceDirector : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class PERFORMANCEDIRECTOR_API II_PerformanceDirector
 {
 	GENERATED_BODY()
@@ -27,10 +24,15 @@ public:
 	UFUNCTION(Category = "Performance Director", BlueprintCallable, BlueprintImplementableEvent)
 	UAC_PerformanceDirector* GetPerformanceDirector();
 
-	/**Figure out the current importance of this actor.*/
+	/**Figure out the current importance of this actor.
+	 *
+	 * IMPORTANT: This interface function might be getting called
+	 * from a different thread. Everything you do inside this MUST
+	 * be thread safe!*/
 	UFUNCTION(Category = "Performance Director", BlueprintCallable, BlueprintImplementableEvent)
-	TEnumAsByte<EPerformanceImportance> EvaluateImportance();
+	EPerformanceImportance EvaluateImportance();
 
+	/**Importance has changed, this is always ran on the game thread.*/
 	UFUNCTION(Category = "Performance Director", BlueprintCallable, BlueprintImplementableEvent)
-	void ImportanceUpdated();
+	void ImportanceUpdated(EPerformanceImportance OldImportance, EPerformanceImportance NewImportance);
 };
