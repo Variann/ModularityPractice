@@ -31,5 +31,5 @@ What this provides:
   	 - Can be repurposed for a leveling system. 
 
 ---
- - Puppeteer, this brings a procedural generation to level sequencer, allowing you to quickly animate characters, similar system used by Witcher 3 and Assassin's Creed Odyssey.
-	- This is still in the concept phase and won't be worked on in a while as it is not relevant to the game I'm currently working on, but it is something I want to make in the future.
+ - PerformanceDirector, brings similar use cases to the internal plugin "Significance Manager" but brings it into a component and simplifies implementation.
+ 	- Can greatly improve performance in scenes with a lot of actors. See Wiki for more information.
