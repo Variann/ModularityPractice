@@ -16,19 +16,45 @@
 UENUM(Blueprintable)
 enum EPerformanceImportance
 {
-	//Used for when the game thread needs to know NOW what the importance
-	//is, but the other thread has not finished the calculation.
-	//This should never be used for DefaultImportance.
+	/**Multithreading can have moments where an actor is destroyed
+	 * or the component is destroyed while the other thread is still
+	 * active. This can lead to moments where no importance can be
+	 * retrieved, but we do not want to risk sending a false update.
+	 *
+	 * This should never be used for DefaultImportance. This is only
+	 * used as a failsafe and should have no logic connected to it.*/
 	Unknown,
-	//Hero objects typically should have no limits applied to them.
+	/**Hero objects typically should have no limits applied to them.
+	 * This could be the players vehicle, weapon, etc.*/
 	Hero,
+	/**Importance is critical, very few limits, if any, should be
+	 * applied. This actor is more important than most other actors.*/
 	Critical,
+	/**General importance is high, start removing some limitations.*/
 	High,
-	//Actor should not try to modify its code or general behavior.
-	//Actor should behave as by default.
+	/**Actor should not try to modify its code or general behavior.
+	* Actor should behave as by default.
+	* In general, your actor should try to be optimized by default.*/
 	Normal,
+	/**Actor might be visible, but is a moderate distance away.
+	 * This would usually mean disabling collision and lowering
+	 * tick rate.*/
+	ImportantBackground,
+	/**Actor might be behind a nearby wall or has line of sight
+	 * of the player, but can have some minor limitations applied,
+	 * such as disabling skeletal mesh updates.*/
 	Background,
-	Low
+	/**Actor is somewhat relevant, but is far away enough that
+	 * most limitations can be applied.*/
+	LowBackground,
+	/**Actor has nearly no importance anymore. This could be moments
+	 * where you might want to consider completely removing meshes,
+	 * disabling shadows, disabling tick and generally lowering
+	 * the importance update interval.*/
+	Low,
+	/**Completely disable everything, actor should run no gameplay
+	 * logic and be virtually non-existent on the profiler.*/
+	Irrelevant
 };
 
 UENUM(BlueprintType)
