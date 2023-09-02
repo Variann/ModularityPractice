@@ -8,6 +8,11 @@
 
 TEnumAsByte<EPerformanceImportance> UFL_PerformanceDirector::GetActorsImportance(AActor* Actor, bool EvaluateImportance)
 {
+	if(!IsValid(Actor))
+	{
+		return Unknown;
+	}
+	
 	UAC_PerformanceDirector* PerformanceDirector;
 
 	//Interface retrieval is faster. If that fails, go through the actors components.
