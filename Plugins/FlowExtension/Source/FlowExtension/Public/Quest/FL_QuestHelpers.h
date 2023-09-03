@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Quest/DataAssets/DA_Quest.h"
 #include "Data/FE_CommonData.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Nodes/FlowNode.h"
@@ -20,7 +21,7 @@ class FLOWEXTENSION_API UFL_QuestHelpers : public UBlueprintFunctionLibrary
 public:
 
 	UFUNCTION(BlueprintCallable)
-	static UFlowNode* GetQuestNode(UFlowAsset* Graph, FGameplayTag QuestID);
+	static UFlowNode* GetQuestNode(UFlowAsset* Graph, const TSoftObjectPtr<UDA_Quest> Quest);
 
 	UFUNCTION(BlueprintCallable)
 	static TArray<UFlowNode*> GetFlowNodes(UFlowAsset* FlowAsset);
@@ -29,7 +30,7 @@ public:
 	 *
 	 * @QuestNode This is optional.*/
 	UFUNCTION(BlueprintCallable)
-	static FQuestWrapper WrapQuest(FQuest QuestInformation, UFN_QuestBase* QuestNode);
+	static FQuestWrapper WrapQuest(UDA_Quest* QuestAsset);
 
 	UFUNCTION(BlueprintCallable)
 	static FTaskWrapper WrapTask(FQuestTask TaskInformation);

@@ -7,7 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Quest/Nodes/FN_QuestBase.h"
 
-UFlowNode* UFL_QuestHelpers::GetQuestNode(UFlowAsset* Graph, FGameplayTag QuestID)
+UFlowNode* UFL_QuestHelpers::GetQuestNode(UFlowAsset* Graph, const TSoftObjectPtr<UDA_Quest> Quest)
 {
 	if(!Graph->IsValidLowLevel())
 	{
@@ -19,7 +19,7 @@ UFlowNode* UFL_QuestHelpers::GetQuestNode(UFlowAsset* Graph, FGameplayTag QuestI
 		UFN_QuestBase* QuestNode = Cast<UFN_QuestBase>(CurrentNode);
 		if(QuestNode)
 		{
-			if(QuestNode->QuestInformation.QuestID == QuestID)
+			if(QuestNode->QuestAsset == Quest)
 			{
 				return QuestNode;
 			}
@@ -46,21 +46,19 @@ TArray<UFlowNode*> UFL_QuestHelpers::GetFlowNodes(UFlowAsset* FlowAsset)
 	return FoundNodes;
 }
 
-FQuestWrapper UFL_QuestHelpers::WrapQuest(FQuest QuestInformation, UFN_QuestBase* QuestNode)
+FQuestWrapper UFL_QuestHelpers::WrapQuest(UDA_Quest* QuestAsset)
 {
-	FQuestWrapper QuestWrapper;
+	FQuestWrapper QuestWrapper = FQuestWrapper();
 
-	if(IsValid(QuestNode))
+	if(!IsValid(QuestAsset))
 	{
-		QuestWrapper.Graph = QuestNode->GetFlowAsset();
-		QuestWrapper.ParentNode = QuestNode;
+		return QuestWrapper;
 	}
 	
-	QuestWrapper.QuestID = QuestInformation.QuestID;
-	QuestWrapper.QuestName = QuestInformation.QuestName;
-	QuestWrapper.Requirements = QuestInformation.Requirements;
-	QuestWrapper.FailConditions = QuestInformation.FailConditions;
-	QuestWrapper.Rewards = QuestInformation.Rewards;
+	QuestWrapper.QuestAsset = QuestAsset;
+	QuestWrapper.Requirements = QuestAsset->Requirements;
+	QuestWrapper.FailConditions = QuestAsset->FailConditions;
+	QuestWrapper.Rewards = QuestAsset->Rewards;
 	QuestWrapper.State = InProgress;
 
 	return QuestWrapper;

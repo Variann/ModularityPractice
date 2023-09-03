@@ -10,14 +10,26 @@ void SFGN_Quest::UpdateGraphNode()
 {
 	SFlowGraphNode::UpdateGraphNode();
 
-	FQuest QuestInformation;
+	UDA_Quest* QuestInformation = nullptr;
 	
 	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
 	{
 		UFN_QuestBase* QuestNode = Cast<UFN_QuestBase>(FlowNode);
 		{
-			QuestInformation = QuestNode->QuestInformation;
+			if(!QuestNode->QuestAsset.IsValid())
+			{
+				QuestNode->QuestAsset = QuestNode->QuestAsset.LoadSynchronous();
+			}
+			
+			QuestInformation = QuestNode->QuestAsset.Get();
 		}
+	}
+
+	//In case we haven't filled in QuestAsset yet,
+	//just get the default object so we don't crash.
+	if(!QuestInformation)
+	{
+		QuestInformation = Cast<UDA_Quest>(UDA_Quest::StaticClass()->GetDefaultObject());
 	}
 
 	TSharedPtr<STextBlock> Title;
@@ -28,7 +40,7 @@ void SFGN_Quest::UpdateGraphNode()
 	[
 	SAssignNew(Title, STextBlock)
 		.Font(FCoreStyle::GetDefaultFontStyle("Bold", 18))
-		.Text(QuestInformation.QuestName)
+		.Text(QuestInformation->QuestName)
 	];
 
 	CenterContentArea->AddSlot()
@@ -43,11 +55,11 @@ void SFGN_Quest::UpdateGraphNode()
 			SNew(STextBlock)
 			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
 			.AutoWrapText(true)
-			.Text(QuestInformation.QuestText)
+			.Text(QuestInformation->QuestText)
 		]
 	];
 	
-	for(auto& CurrentTask : QuestInformation.Tasks)
+	for(auto& CurrentTask : QuestInformation->Tasks)
 	{
 		FText TaskDisplayName;
 		if(CurrentTask.TaskName.IsEmpty())
@@ -100,16 +112,6 @@ void SFGN_Quest::UpdateGraphNode()
 
 TSharedRef<SWidget> SFGN_Quest::CreateNodeContentArea()
 {
-	FQuest QuestInformation;
-	
-	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
-	{
-		UFN_QuestBase* QuestNode = Cast<UFN_QuestBase>(FlowNode);
-		{
-			QuestInformation = QuestNode->QuestInformation;
-		}
-	}
-	
 	return SNew(SBorder)
 	.BorderImage(FAppStyle::GetBrush("NoBorder"))
 	.HAlign(HAlign_Fill)

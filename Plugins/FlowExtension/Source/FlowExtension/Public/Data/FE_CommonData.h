@@ -8,6 +8,7 @@
 #include "UObject/Object.h"
 #include "FE_CommonData.generated.h"
 
+class UDA_Quest;
 class UFlowNode;
 class UFlowAsset;
 class UWidget;
@@ -243,35 +244,35 @@ struct FS_QuestFailCondition
 
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapQuest.
-USTRUCT(BlueprintType)
-struct FQuest
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag QuestID;
-
-    /**Name of the quest presented to the player*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	FText QuestName;
-	
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	FText QuestText;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FQuestTask> Tasks;
-
-	/**Requirements to accept the quest.*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FQuestRequirement> Requirements;
-
-	/**What scenarios will fail this quest?*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_QuestFailCondition> FailConditions;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_Reward> Rewards;
-};
+// USTRUCT(BlueprintType)
+// struct FQuest
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+// 	FGameplayTag QuestID;
+//
+//     /**Name of the quest presented to the player*/
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	FText QuestName;
+// 	
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	FText QuestText;
+//
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	TArray<FQuestTask> Tasks;
+//
+// 	/**Requirements to accept the quest.*/
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	TArray<FQuestRequirement> Requirements;
+//
+// 	/**What scenarios will fail this quest?*/
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	TArray<FS_QuestFailCondition> FailConditions;
+//
+// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+// 	TArray<FS_Reward> Rewards;
+// };
 
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapQuest.
@@ -280,22 +281,8 @@ struct FQuestWrapper
 {
 	GENERATED_BODY()
 
-	/**The graph that made the quest
-	 * Might not be valid if the graph has been destroyed.*/
-	UPROPERTY(Category = "Quest", BlueprintReadOnly)
-	UFlowAsset* Graph = nullptr;
-
-	/**The node in the graph that started the quest
-	 * Might not be valid if the owning graph has been destroyed.*/
-	UPROPERTY(Category = "Quest", BlueprintReadOnly)
-	UFlowNode* ParentNode = nullptr;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-	FGameplayTag QuestID;
-
-    /**Name of the quest presented to the player*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	FText QuestName;
+	TSoftObjectPtr<UDA_Quest> QuestAsset = nullptr;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FTaskWrapper> Tasks;
@@ -325,22 +312,22 @@ struct FQuestWrapper
 
 	bool operator==(const FQuestWrapper& Argument) const
 	{
-		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
+		if(!QuestAsset.IsValid() || !Argument.QuestAsset.IsValid())
 		{
 			return false;
 		}
 
-		return QuestID == Argument.QuestID;
+		return QuestAsset == Argument.QuestAsset;
 	}
 
 	bool operator!=(const FQuestWrapper& Argument) const
 	{
-		if(!QuestID.IsValid() || !Argument.QuestID.IsValid())
+		if(!QuestAsset.IsValid() || !Argument.QuestAsset.IsValid())
 		{
 			return false;
 		}
 
-		return QuestID != Argument.QuestID;
+		return QuestAsset != Argument.QuestAsset;
 	}
 };
 

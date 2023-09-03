@@ -14,19 +14,27 @@ UFN_QuestBase::UFN_QuestBase(const FObjectInitializer& ObjectInitializer)
 EDataValidationResult UFN_QuestBase::ValidateNode()
 {
 	bool FailedValidation = false;
-	if(!QuestInformation.QuestID.IsValid())
+	QuestPtr = QuestAsset.LoadSynchronous();
+
+	if(!QuestAsset.IsValid())
+	{
+		ValidationLog.Error<UFlowNode>(TEXT("Missing Quest Asset"), this);
+		FailedValidation = true;
+	}
+	
+	if(!QuestPtr->QuestID.IsValid())
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("Missing QuestID"), this);
 		FailedValidation = true;
 	}
 
-	if(QuestInformation.Tasks.IsEmpty())
+	if(QuestPtr->Tasks.IsEmpty())
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("Quest has no tasks"), this);
 		FailedValidation = true;
 	}
-
-	for(auto& CurrentTask : QuestInformation.Tasks)
+	
+	for(auto& CurrentTask : QuestPtr->Tasks)
 	{
 		if(CurrentTask.ProgressRequired <= 0)
 		{
@@ -35,7 +43,7 @@ EDataValidationResult UFN_QuestBase::ValidateNode()
 		}
 	}
 
-	if(QuestInformation.QuestText.IsEmpty())
+	if(QuestPtr->QuestText.IsEmpty())
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("No quest text"), this);
 		FailedValidation = true;
@@ -45,6 +53,10 @@ EDataValidationResult UFN_QuestBase::ValidateNode()
 	{
 		return EDataValidationResult::Invalid;
 	}
+
+	/**Remember to wipe the reference so it doesn't permanently
+	 * stay in memory.*/
+	QuestPtr = nullptr;
 	
 	return EDataValidationResult::Valid;
 }

@@ -70,25 +70,25 @@ public:
  // Quest
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
- void AddListenerToQuest(FGameplayTag Quest, UObject* Listener);
+ void AddListenerToQuest(TSoftObjectPtr<UDA_Quest> Quest, UObject* Listener);
 
  UFUNCTION(Category = "Quest", BlueprintPure, meta = (DisplayName = "Get Quest Wrapper (Active)"))
- FQuestWrapper GetQuestWrapper_Active(FGameplayTag Quest, int32& ArrayIndex);
+ FQuestWrapper GetQuestWrapper_Active(TSoftObjectPtr<UDA_Quest> Quest, int32& ArrayIndex);
 
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
   * if it returns false it means the player has already
   * completed it or has it.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool AcceptQuest(UFN_QuestBase* Quest);
+ bool AcceptQuest(UDA_Quest* Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure, BlueprintNativeEvent)
- bool CanAcceptQuest(FGameplayTag Quest);
+ bool CanAcceptQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  /**Get the index of the quest from the active quests array.
   * Can return -1 if the quest is not found.*/
  UFUNCTION(Category = "Quest", BlueprintPure)
- int32 GetQuestIndex_Active(FGameplayTag Quest);
+ int32 GetQuestIndex_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  /**Complete the quest.
   *
@@ -101,16 +101,16 @@ public:
  bool CanCompleteQuest(FQuestWrapper Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- bool HasCompletedQuest(FGameplayTag Quest);
+ bool HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- bool IsQuestActive(FGameplayTag Quest);
+ bool IsQuestActive(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- bool HasFailedQuest(FGameplayTag Quest);
+ bool HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- TEnumAsByte<EQuestState> GetQuestState(FGameplayTag Quest);
+ TEnumAsByte<EQuestState> GetQuestState(TSoftObjectPtr<UDA_Quest> Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool DropQuest(FQuestWrapper Quest);
@@ -136,7 +136,7 @@ public:
  FQuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- TArray<FTaskWrapper> GetTasksForQuest_Active(FGameplayTag Quest);
+ TArray<FTaskWrapper> GetTasksForQuest_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
  void AddListenerToTask(FGameplayTag Task, UObject* Listener);
@@ -181,12 +181,12 @@ public:
   * quest have been completed, the quest will still get labelled as
   * completed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool AddTaskToQuest(FQuestTask Task, FGameplayTag Quest);
+ bool AddTaskToQuest(FQuestTask Task, TSoftObjectPtr<UDA_Quest> Quest);
 
  /**Attempt to remove a task from a quest.
   * If there's no tasks left, the quest will be dropped.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool RemoveTaskFromQuest(FGameplayTag Task, FGameplayTag Quest);
+ bool RemoveTaskFromQuest(FGameplayTag Task, TSoftObjectPtr<UDA_Quest> Quest);
 
  //------------------
  
