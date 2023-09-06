@@ -244,38 +244,6 @@ struct FS_QuestFailCondition
 
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapQuest.
-// USTRUCT(BlueprintType)
-// struct FQuest
-// {
-// 	GENERATED_BODY()
-//
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
-// 	FGameplayTag QuestID;
-//
-//     /**Name of the quest presented to the player*/
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	FText QuestName;
-// 	
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	FText QuestText;
-//
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	TArray<FQuestTask> Tasks;
-//
-// 	/**Requirements to accept the quest.*/
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	TArray<FQuestRequirement> Requirements;
-//
-// 	/**What scenarios will fail this quest?*/
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	TArray<FS_QuestFailCondition> FailConditions;
-//
-// 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-// 	TArray<FS_Reward> Rewards;
-// };
-
-//If you add any data into this struct, remember to go into
-//FL_QuestHelpers and update WrapQuest.
 USTRUCT(BlueprintType)
 struct FQuestWrapper
 {
