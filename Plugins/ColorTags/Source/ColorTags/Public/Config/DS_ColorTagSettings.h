@@ -20,5 +20,8 @@ class COLORTAGS_API UDS_ColorTagSettings : public UDeveloperSettings
 public:
 
 	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow))
-	TMap<FGameplayTag, FLinearColor> ColorAttributes;
+	TMap<FGameplayTag, FLinearColor> ColorTags;
+
+	UFUNCTION(Category = "Color Attributes", BlueprintPure, BlueprintCallable)
+	static FLinearColor GetColorByTag(FGameplayTag Tag, bool& ColorFound);
 };

@@ -7,3 +7,18 @@ UDS_ColorTagSettings::UDS_ColorTagSettings()
 {
 	SectionName = "Color Tag Settings";
 }
+
+FLinearColor UDS_ColorTagSettings::GetColorByTag(FGameplayTag Tag, bool& ColorFound)
+{
+	if(const UDS_ColorTagSettings* ColorAttributeSettings = GetDefault<UDS_ColorTagSettings>())
+	{
+		if(const FLinearColor* FoundColor = ColorAttributeSettings->ColorTags.Find(Tag))
+		{
+			ColorFound = true;
+			return *FoundColor;
+		}
+	}
+
+	ColorFound = false;
+	return FLinearColor();
+}
