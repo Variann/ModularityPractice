@@ -33,3 +33,7 @@ What this provides:
 ---
  - PerformanceDirector, brings similar use cases to the internal plugin "Significance Manager" but brings it into a component and simplifies implementation.
  	- Can greatly improve performance in scenes with a lot of actors. See Wiki for more information.
+
+---
+ - ColorTags, allows you to have a centralized location for common colors throughout your project by adding additional config settings.
+   - Improves mod support as people can now just modify a .ini file to configure common colors, such as item rarity colors or UI colors to their liking.
