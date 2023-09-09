@@ -66,7 +66,7 @@ void UAC_PerformanceDirector::StopTracking(bool bResetImportance)
 		ResetImportance();
 	}
 	
-	TimerHandle.Invalidate();
+	GetOwner()->GetWorldTimerManager().ClearTimer(TimerHandle);
 }
 
 TEnumAsByte<EPerformanceImportance> UAC_PerformanceDirector::GetCurrentImportance(bool EvaluateImportance)
@@ -109,8 +109,11 @@ void UAC_PerformanceDirector::SetUpdateInterval(float NewUpdateInterval, bool Up
 
 	if(UpdateTracker)
 	{
-		StopTracking(false);
-		StartTracking();
+		if(UGameplayStatics::GetGameInstance(this))
+		{
+			StopTracking(false);
+			StartTracking();
+		}
 	}
 }
 
