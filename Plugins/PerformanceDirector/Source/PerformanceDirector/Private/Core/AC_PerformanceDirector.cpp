@@ -5,6 +5,7 @@
 
 #include "Core/FL_PerformanceDirector.h"
 #include "Core/I_PerformanceDirector.h"
+#include "HAL/ThreadManager.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -141,20 +142,29 @@ void UAC_PerformanceDirector::StartTrackingTimer()
 			NamedThread = ENamedThreads::AnyThread;
 		}
 
+		//Used for debugging tools, can be removed in packaged games.
+		float CurrentTime = GetOwner()->GetGameTimeSinceCreation();
+
 		//Async tasks seem to crash less if you use TWeakObjectPtr.
 		TWeakObjectPtr<UAC_PerformanceDirector> Director = this;
-		AsyncTask(NamedThread, [Director]()
+		AsyncTask(NamedThread, [Director, CurrentTime]()
 		{
 			if(Director.Get())
 			{
 				TEnumAsByte<EPerformanceImportance> LatestImportance = UFL_PerformanceDirector::GetActorsImportance(Director.Get()->GetOwner(), true);
-				AsyncTask(ENamedThreads::GameThread, [Director, LatestImportance]()
+				
+				uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
+				Director->LastEvaluationThread = FThreadManager::Get().GetThreadName(ThreadId);
+				AsyncTask(ENamedThreads::GameThread, [Director, LatestImportance, CurrentTime]()
 				{
 					if(Director.Get())
 					{
 						if(Director.Get()->CurrentImportance != LatestImportance)
 						{
 							Director.Get()->SetImportance(LatestImportance);
+							
+							//Used for debugging tools, can be removed in packaged games.
+							Director->LastEvaluationTime = CurrentTime - Director->GetOwner()->GetGameTimeSinceCreation();
 						}
 						Director.Get()->bIsTracking = false;
 					}

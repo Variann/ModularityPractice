@@ -106,6 +106,19 @@ public:
 	UPROPERTY(Category = "Settings", BlueprintReadOnly, EditAnywhere)
 	float UpdateInterval = 0.1;
 
+#if WITH_EDITORONLY_DATA
+	
+	/**How long did the last background thread evaluation task take?
+	 * Only used for debugging.*/
+	UPROPERTY(Category = "Settings", BlueprintReadOnly)
+	float LastEvaluationTime = 0;
+
+	/**What thread did the last evaluation task run on?*/
+	UPROPERTY(Category = "Settings", BlueprintReadOnly)
+	FString LastEvaluationThread;
+
+#endif
+
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FImportanceUpdated ImportanceUpdated;
 
