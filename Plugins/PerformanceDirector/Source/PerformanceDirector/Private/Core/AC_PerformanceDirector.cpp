@@ -164,7 +164,7 @@ void UAC_PerformanceDirector::StartTrackingTimer()
 							Director.Get()->SetImportance(LatestImportance);
 							
 							//Used for debugging tools, can be removed in packaged games.
-							Director->LastEvaluationTime = CurrentTime - Director->GetOwner()->GetGameTimeSinceCreation();
+							Director->LastEvaluationTime = Director->GetOwner()->GetGameTimeSinceCreation() - CurrentTime;
 						}
 						Director.Get()->bIsTracking = false;
 					}
