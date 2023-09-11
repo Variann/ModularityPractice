@@ -12,7 +12,8 @@
 // Sets default values for this component's properties
 UAC_PerformanceDirector::UAC_PerformanceDirector()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = false;
 	
 	//This component can be run on server or client,
@@ -50,8 +51,25 @@ void UAC_PerformanceDirector::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UAC_PerformanceDirector::StartTracking()
 {
+	if(UpdateInterval < 0)
+	{
+		UKismetSystemLibrary::PrintString(this, "Update interval is less than 0");
+		return;
+	}
+
+	if(UpdateInterval == 0)
+	{
+		if(!IsComponentTickEnabled())
+		{
+			GetOwner()->GetWorldTimerManager().ClearTimer(TimerHandle);
+			SetComponentTickEnabled(true);
+		}
+		return;
+	}
+	
 	if(!TimerHandle.IsValid())
 	{
+		SetComponentTickEnabled(false);
 		GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, this, &UAC_PerformanceDirector::StartTrackingTimer, UpdateInterval, true, 0);
 	}
 	else
@@ -66,7 +84,8 @@ void UAC_PerformanceDirector::StopTracking(bool bResetImportance)
 	{
 		ResetImportance();
 	}
-	
+
+	SetComponentTickEnabled(false);
 	GetOwner()->GetWorldTimerManager().ClearTimer(TimerHandle);
 }
 
@@ -177,4 +196,23 @@ void UAC_PerformanceDirector::StartTrackingTimer()
 			}
 		});
 	}
+}
+
+void UAC_PerformanceDirector::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	TEnumAsByte<EPerformanceImportance> LatestImportance = UFL_PerformanceDirector::GetActorsImportance(GetOwner(), true);
+	//Async tasks seem to crash less if you use TWeakObjectPtr.
+	if(CurrentImportance != LatestImportance)
+	{
+		SetImportance(LatestImportance);
+	}
+
+#if WITH_EDITOR
+	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
+	LastEvaluationThread = FThreadManager::Get().GetThreadName(ThreadId);
+#endif
+	
 }

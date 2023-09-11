@@ -161,4 +161,6 @@ public:
 	void SetUpdateInterval(float NewUpdateInterval, bool UpdateTracker = true);
 
 	void StartTrackingTimer();
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };
