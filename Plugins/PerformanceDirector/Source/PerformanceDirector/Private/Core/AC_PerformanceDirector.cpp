@@ -152,9 +152,12 @@ void UAC_PerformanceDirector::StartTrackingTimer()
 			if(Director.Get())
 			{
 				TEnumAsByte<EPerformanceImportance> LatestImportance = UFL_PerformanceDirector::GetActorsImportance(Director.Get()->GetOwner(), true);
-				
+
+				#if WITH_EDITOR
 				uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
 				Director->LastEvaluationThread = FThreadManager::Get().GetThreadName(ThreadId);
+				#endif
+				
 				AsyncTask(ENamedThreads::GameThread, [Director, LatestImportance, CurrentTime]()
 				{
 					if(Director.Get())
@@ -162,9 +165,11 @@ void UAC_PerformanceDirector::StartTrackingTimer()
 						if(Director.Get()->CurrentImportance != LatestImportance)
 						{
 							Director.Get()->SetImportance(LatestImportance);
-							
+
+							#if WITH_EDITOR
 							//Used for debugging tools, can be removed in packaged games.
 							Director->LastEvaluationTime = Director->GetOwner()->GetGameTimeSinceCreation() - CurrentTime;
+							#endif
 						}
 						Director.Get()->bIsTracking = false;
 					}

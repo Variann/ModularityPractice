@@ -5,8 +5,13 @@
 
 #include "FlowAsset.h"
 #include "Framework/Notifications/NotificationManager.h"
+
+//Need this for the focus button
+#if WITH_EDITOR
 #include "Graph/FlowGraphEditor.h"
 #include "Graph/FlowGraphUtils.h"
+#endif
+
 #include "Widgets/Notifications/SNotificationList.h"
 
 UFN_Portal::UFN_Portal(const FObjectInitializer& ObjectInitializer)
@@ -19,6 +24,21 @@ UFN_Portal::UFN_Portal(const FObjectInitializer& ObjectInitializer)
 	OutputPins.Empty();
 	InputPins.Empty();
 	RefreshPins();
+}
+
+void UFN_Portal::RefreshPins()
+{
+	OutputPins.Empty();
+	InputPins.Empty();
+	
+	if(PortalDirection == Entrance)
+	{
+		InputPins.Add(TEXT("In"));
+	}
+	else
+	{
+		OutputPins.Add(TEXT("Out"));
+	}
 }
 
 #if WITH_EDITOR
@@ -78,21 +98,6 @@ void UFN_Portal::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	
 	OnReconstructionRequested.ExecuteIfBound();
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-}
-
-void UFN_Portal::RefreshPins()
-{
-	OutputPins.Empty();
-	InputPins.Empty();
-	
-	if(PortalDirection == Entrance)
-	{
-		InputPins.Add(TEXT("In"));
-	}
-	else
-	{
-		OutputPins.Add(TEXT("Out"));
-	}
 }
 
 void UFN_Portal::RefreshConnectedPortals()

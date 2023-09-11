@@ -33,11 +33,11 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	UPROPERTY(Category = "Portal Settings", EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
 	FGuid PortalGUIDToTrigger;
 
+	void RefreshPins();
+	
 #if WITH_EDITOR
 	
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-
-	void RefreshPins();
 
 	void RefreshConnectedPortals();
 

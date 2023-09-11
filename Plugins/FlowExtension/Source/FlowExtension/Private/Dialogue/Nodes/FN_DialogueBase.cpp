@@ -104,10 +104,12 @@ TArray<FDialogueOption> UFN_DialogueBase::GetDialogueOptions()
 
 UTexture2D* UFN_DialogueBase::GetSpeakerPortrait_Implementation()
 {
+#if WITH_EDITOR
 	if(IsValid(Character))
 	{
 		return Character->FlowNodePortrait;
 	}
+#endif
 	return nullptr;
 }
 
@@ -133,10 +135,12 @@ FText UFN_DialogueBase::GetSpeakerName_Implementation()
 
 FLinearColor UFN_DialogueBase::GetSpeakerColor_Implementation()
 {
+#if WITH_EDITOR
 	if(IsValid(Character))
 	{
 		return Character->NodeColor;
 	}
+#endif
 	
 	return FLinearColor();
 }

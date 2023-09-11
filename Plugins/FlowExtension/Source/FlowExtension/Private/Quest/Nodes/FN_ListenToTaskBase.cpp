@@ -16,6 +16,7 @@ UFN_ListenToTaskBase::UFN_ListenToTaskBase(const FObjectInitializer& ObjectIniti
 	OutputPins.Add(FFlowPin(TEXT("Failed")));
 }
 
+#if WITH_EDITOR
 FString UFN_ListenToTaskBase::GetNodeDescription() const
 {
 	if(TaskToListenTo.IsValid())
@@ -36,3 +37,4 @@ EDataValidationResult UFN_ListenToTaskBase::ValidateNode()
 
 	return EDataValidationResult::Valid;
 }
+#endif

@@ -62,7 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<FDialogueOption> GetDialogueOptions();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, meta = (DevelopmentOnly))
 	UTexture2D* GetSpeakerPortrait();
 
 	UFUNCTION(BlueprintNativeEvent)
@@ -71,6 +71,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	FText GetSpeakerName();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, meta = (DevelopmentOnly))
 	FLinearColor GetSpeakerColor();
 };

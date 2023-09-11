@@ -11,6 +11,7 @@ UFN_QuestBase::UFN_QuestBase(const FObjectInitializer& ObjectInitializer)
 #endif
 }
 
+#if WITH_EDITOR
 EDataValidationResult UFN_QuestBase::ValidateNode()
 {
 	bool FailedValidation = false;
@@ -60,3 +61,4 @@ EDataValidationResult UFN_QuestBase::ValidateNode()
 	
 	return EDataValidationResult::Valid;
 }
+#endif

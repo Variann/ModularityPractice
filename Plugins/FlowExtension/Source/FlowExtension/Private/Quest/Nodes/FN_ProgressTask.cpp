@@ -13,6 +13,7 @@ UFN_ProgressTask::UFN_ProgressTask(const FObjectInitializer& ObjectInitializer)
 #endif
 }
 
+#if WITH_EDITOR
 FString UFN_ProgressTask::GetNodeDescription() const
 {
 	if(Task.IsValid())
@@ -48,3 +49,4 @@ EDataValidationResult UFN_ProgressTask::ValidateNode()
 	}
 	return EDataValidationResult::Valid;
 }
+#endif

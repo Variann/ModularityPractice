@@ -72,6 +72,8 @@ FRandomOutputWithWeight UFN_RandomOutputWithWeights::ExecuteRandomOutput()
 	return FinalOutput;
 }
 
+#if WITH_EDITOR
+
 void UFN_RandomOutputWithWeights::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	RefreshOutputs();
@@ -102,6 +104,8 @@ void UFN_RandomOutputWithWeights::RefreshOutputs()
 		OutputPins.Add(FFlowPin(OutputPin.OutputPinName.ToString(), FText(), FString()));
 	}
 }
+
+#endif
 
 void UFN_RandomOutputWithWeights::ExecuteInput(const FName& PinName)
 {
