@@ -280,21 +280,11 @@ struct FQuestWrapper
 
 	bool operator==(const FQuestWrapper& Argument) const
 	{
-		if(!QuestAsset.IsValid() || !Argument.QuestAsset.IsValid())
-		{
-			return false;
-		}
-
 		return QuestAsset == Argument.QuestAsset;
 	}
 
 	bool operator!=(const FQuestWrapper& Argument) const
 	{
-		if(!QuestAsset.IsValid() || !Argument.QuestAsset.IsValid())
-		{
-			return false;
-		}
-
 		return QuestAsset != Argument.QuestAsset;
 	}
 };
