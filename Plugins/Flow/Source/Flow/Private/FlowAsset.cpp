@@ -623,8 +623,7 @@ void UFlowAsset::FinishNode(UFlowNode* Node)
 			}
 			else
 			{
-				GetFlowSubsystem()->FinishRootFlow(GetOwner(), TemplateAsset, EFlowFinishPolicy::Keep);
-				// FinishFlow(EFlowFinishPolicy::Keep);
+				FinishFlow(EFlowFinishPolicy::Keep);
 			}
 		}
 	}
