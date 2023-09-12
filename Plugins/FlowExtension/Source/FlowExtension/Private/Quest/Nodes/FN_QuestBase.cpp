@@ -9,6 +9,9 @@ UFN_QuestBase::UFN_QuestBase(const FObjectInitializer& ObjectInitializer)
 #if WITH_EDITOR
 	Category = TEXT("Quest");
 #endif
+
+	OutputPins = {FFlowPin(TEXT("Out")), FFlowPin(TEXT("Accepted")), FFlowPin(TEXT("Completed"))
+	, FFlowPin(TEXT("Failed")), FFlowPin(TEXT("Abandoned")), FFlowPin(TEXT("Failed Requirements"))};
 }
 
 #if WITH_EDITOR
