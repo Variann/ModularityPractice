@@ -25,7 +25,7 @@ void URelations_AddExperience::Activate()
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
 		
 		//Send job to any background thread
-		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [this]()
 		{
 			bool JobSuccessful = false;
 			if(LoadedEntity)
@@ -49,7 +49,7 @@ void URelations_AddExperience::Activate()
 			}
 
 			//Job done, go back to the game thread
-			AsyncTask(ENamedThreads::GameThread, [=]()
+			AsyncTask(ENamedThreads::GameThread, [JobSuccessful, this]()
 			{
 				if(JobSuccessful)
 				{
@@ -83,7 +83,7 @@ void URelations_GetRelationship::Activate()
 		LoadedEntity = Cast<UDA_RelationData>(Handle->GetLoadedAsset());
 
 		//Send job to any background thread
-		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [this]()
 		{
 			bool JobSuccessful = false;
 			FS_Relationship Relationship;

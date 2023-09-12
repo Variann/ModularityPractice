@@ -26,7 +26,7 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 	Handle = StreamableManager.RequestAsyncLoad(WidgetToLoad.ToSoftObjectPath(), [this]()
 	{
 		//Send job to background thread.
-		AsyncTask(ENamedThreads::BackgroundThreadPriority, [=]()
+		AsyncTask(ENamedThreads::BackgroundThreadPriority, [this]()
 		{
 			FLayeredWidget NewLayeredWidget;
 			bool JobSuccessful = false;

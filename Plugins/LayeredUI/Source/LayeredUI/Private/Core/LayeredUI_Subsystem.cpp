@@ -91,7 +91,7 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 
 		//Might be called on different thread, engine crashes if we try to add the widget
 		//to viewport outside of the game thread.
-		AsyncTask(ENamedThreads::GameThread, [=]()
+		AsyncTask(ENamedThreads::GameThread, [Widget, NewLayeredWidget, ZOrder, HideCursor, this]()
 		{
 			if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
 			{
