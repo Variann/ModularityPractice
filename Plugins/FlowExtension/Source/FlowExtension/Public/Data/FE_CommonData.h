@@ -160,6 +160,10 @@ struct FQuestTask
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	bool IsOptional = false;
+	
+	/**Arbitrary data which can be added to a task, such as a timer, repeat count, etc.*/
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
+	TMap<FGameplayTag, float> Metadata;
 };
 
 //If you add any data into this struct, remember to go into

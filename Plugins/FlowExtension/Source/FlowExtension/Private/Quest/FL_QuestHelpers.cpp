@@ -60,6 +60,7 @@ FQuestWrapper UFL_QuestHelpers::WrapQuest(UDA_Quest* QuestAsset)
 	QuestWrapper.FailConditions = QuestAsset->FailConditions;
 	QuestWrapper.Rewards = QuestAsset->Rewards;
 	QuestWrapper.State = InProgress;
+	QuestWrapper.Metadata = QuestAsset->Metadata;
 
 	return QuestWrapper;
 }
@@ -76,6 +77,7 @@ FTaskWrapper UFL_QuestHelpers::WrapTask(FQuestTask TaskInformation)
 	TaskWrapper.State = InProgress;
 	TaskWrapper.ProgressRequired = TaskInformation.ProgressRequired;
 	TaskWrapper.IsOptional = TaskInformation.IsOptional;
+	TaskWrapper.Metadata = TaskInformation.Metadata;
 
 	return TaskWrapper;
 }

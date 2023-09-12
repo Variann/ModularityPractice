@@ -45,4 +45,8 @@ public:
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_Reward> Rewards;
+
+	/**Arbitrary data which can be added to a quest, such as a timer, repeat count, etc.*/
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
+	TMap<FGameplayTag, float> Metadata;
 };
