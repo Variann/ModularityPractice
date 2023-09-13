@@ -60,7 +60,7 @@ void UFN_Portal::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 			{
 				if(UFN_Portal* OtherPortal = Cast<UFN_Portal>(CurrentNode.Value))
 				{
-					if(OtherPortal->PortalID == PortalID && OtherPortal != this)
+					if(OtherPortal->PortalID == PortalID && OtherPortal != this && OtherPortal->PortalDirection == Exit)
 					{
 						//reset the name
 						PortalID = "";
@@ -86,12 +86,23 @@ void UFN_Portal::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	{
 		//This is a entrance, get the exit portal and use its PortalID
 		UFlowAsset* FlowAsset = GetFlowAsset();
+	
+		TArray<UFlowNode*> FoundNodes;
+		FlowAsset->PreloadNodes();
+		const TMap<FGuid, UFlowNode*>& AssetNodes = FlowAsset->GetNodes();
+		AssetNodes.GenerateValueArray(FoundNodes);
 
-		if(FlowAsset)
+		for(auto& CurrentNode : FoundNodes)
 		{
-			if(UFN_Portal* OtherPortal = Cast<UFN_Portal>(FlowAsset->GetNode(PortalGUIDToTrigger)))
+			UFN_Portal* OtherPortal = Cast<UFN_Portal>(CurrentNode);
+			if(OtherPortal)
 			{
-				PortalID = OtherPortal->PortalID;
+				if(OtherPortal->PortalDirection == Exit && OtherPortal->PortalID == PortalToTrigger)
+				{
+					PortalID = OtherPortal->PortalID;
+					PortalGUIDToTrigger = OtherPortal->PortalGUID;
+					break;
+				}
 			}
 		}
 	}
@@ -122,6 +133,7 @@ void UFN_Portal::RefreshConnectedPortals()
 			if(OtherPortal->PortalDirection == Entrance && OtherPortal->PortalGUIDToTrigger == PortalGUID)
 			{
 				OtherPortal->PortalID = PortalID;
+				OtherPortal->PortalToTrigger = PortalID;
 			}
 		}
 	}
@@ -171,4 +183,34 @@ void UFN_Portal::ExecuteInput(const FName& PinName)
 	{
 		OtherPortal->TriggerOutput(OtherPortal->OutputPins[0].PinName);
 	}
+}
+
+TArray<FName> UFN_Portal::GetAvailablePortals()
+{
+	TArray<FName> FoundPortals;
+	UFlowAsset* FlowAsset = GetFlowAsset();
+
+	if(!FlowAsset)
+	{
+		return FoundPortals;
+	}
+	
+	TArray<UFlowNode*> FoundNodes;
+	FlowAsset->PreloadNodes();
+	const TMap<FGuid, UFlowNode*>& AssetNodes = FlowAsset->GetNodes();
+	AssetNodes.GenerateValueArray(FoundNodes);
+
+	for(auto& CurrentNode : FoundNodes)
+	{
+		UFN_Portal* OtherPortal = Cast<UFN_Portal>(CurrentNode);
+		if(OtherPortal)
+		{
+			if(OtherPortal->PortalDirection == Exit)
+			{
+				FoundPortals.AddUnique(OtherPortal->PortalID);
+			}
+		}
+	}
+
+	return FoundPortals;
 }

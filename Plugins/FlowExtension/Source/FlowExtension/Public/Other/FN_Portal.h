@@ -26,11 +26,15 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 	FName PortalID;
 
 	//GUID of the exit node
-	UPROPERTY(Category = "Portal Settings", VisibleAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Exit", EditConditionHides))
+	UPROPERTY()
 	FGuid PortalGUID;
 
+	UPROPERTY(Category = "Portal Settings", EditAnywhere, meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides, GetOptions = "GetAvailablePortals"))
+	FName PortalToTrigger;
+
 	//What exit node should this entrance node trigger?
-	UPROPERTY(Category = "Portal Settings", EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
+	// UPROPERTY(Category = "Portal Settings", EditAnywhere, DisplayName = "Portal GUID to Trigger", meta = (EditCondition = "PortalDirection == EPortalDirection::Entrance", EditConditionHides))
+	UPROPERTY()
 	FGuid PortalGUIDToTrigger;
 
 	void RefreshPins();
@@ -51,4 +55,7 @@ class FLOWEXTENSION_API UFN_Portal : public UFlowNode
 #endif
 	
 	virtual void ExecuteInput(const FName& PinName) override;
+
+	UFUNCTION()
+	TArray<FName> GetAvailablePortals();
 };
