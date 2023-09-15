@@ -1,7 +1,0 @@
-[submodule "Plugins/ImGuiBlueprint"]
-	path = Plugins/ImGuiBlueprint
-	url = https://github.com/Variann/ImGuiBlueprint
-[submodule "Plugins/EditorScriptingToolsProject"]
-	path = Plugins/EditorScriptingToolsProject
-	url = https://github.com/Variann/UE4-EditorScriptingToolsPlugin
-
