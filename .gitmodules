@@ -1,0 +1,3 @@
+[submodule "Plugins/ImGuiBlueprint"]
+	path = Plugins/ImGuiBlueprint
+	url = https://github.com/Variann/ImGuiBlueprint
