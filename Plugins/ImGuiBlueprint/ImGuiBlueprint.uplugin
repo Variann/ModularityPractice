@@ -1,0 +1,46 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ImGuiBlueprint",
+	"Description": "Blueprint API for ImGui",
+	"Category": "Other",
+	"CreatedBy": "Vivian, The Enby Witch",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Plugins": [
+		{
+			"Name": "ImGui",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "ImGuiBlueprint",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"ImGui"
+			]
+		},
+		{
+			"Name": "ImGuiBlueprintEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "ImGuiBlueprintUncookedOnly",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"ImGuiBlueprint"
+			]
+		}
+	]
+}
