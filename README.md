@@ -37,3 +37,11 @@ What this provides:
 ---
  - ColorTags, allows you to have a centralized location for common colors throughout your project by adding additional config settings.
    - Improves mod support as people can now just modify a .ini file to configure common colors, such as item rarity colors or UI colors to their liking.
+  
+---
+# External plugins
+These are plugins that are not mine, but I utilize to bring my plugins to the next level.
+ - FlowGraph - https://github.com/MothCocoon/FlowGraph
+ - EditorScriptingTools - https://github.com/HoussineMehnik/UE4-EditorScriptingToolsPlugin
+ - UnrealImGui - https://github.com/IDI-Systems/UnrealImGui/
+ - ImGuiBlueprint - https://github.com/TheEnbyWitch/ImGuiBlueprint
