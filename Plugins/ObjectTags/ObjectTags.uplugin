@@ -1,15 +1,14 @@
-{
+﻿{
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "ObjectTags",
-	"Description": "Gives a foundation for reaction based code based on Gameplay Tags by adding tags to any UObject.",
+	"Description": "Base layer built on top of most core classes, adding GameplayTags and making them a more core component of the class.",
 	"Category": "Other",
 	"CreatedBy": "Varian",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"SupportURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
@@ -19,6 +18,12 @@
 			"Name": "ObjectTags",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GASCompanion",
+			"Enabled": true
 		}
 	]
 }

@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -25,7 +25,12 @@ public class ObjectTags : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				"Core", 
+				"CoreUObject", 
+				"Engine",
+				"GameplayTags", 
+				"GASCompanion",
+				"GameplayAbilities"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -34,10 +39,10 @@ public class ObjectTags : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
+                "UMG",
 				"Slate",
-				"SlateCore",
+				"SlateCore", 
+				"GameplayAbilities",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
