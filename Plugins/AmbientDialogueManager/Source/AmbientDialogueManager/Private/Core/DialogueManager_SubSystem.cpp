@@ -3,10 +3,14 @@
 
 #include "Core/DialogueManager_SubSystem.h"
 
+#include "Components/AudioComponent.h"
+#include "Core/AC_DialogueController.h"
+#include "Core/DA_AmbientDialogue.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-void UDialogueManager_SubSystem::AddDialogueToTrackedList(TSoftObjectPtr<USoundBase> DialogueToTrack)
+void UDialogueManager_SubSystem::AddDialogueToTrackedList(TSoftObjectPtr<UDA_AmbientDialogue> DialogueToTrack)
 {
 	if(TrackedDialogue.Contains(DialogueToTrack))
 	{
@@ -23,12 +27,28 @@ void UDialogueManager_SubSystem::AddDialogueToTrackedList(TSoftObjectPtr<USoundB
 	 * one option will be available, forcing it to choose that option.
 	 * Randomizing the clear time will help prevent the same order occuring
 	 * multiple times in a row.*/
-	float ClearTime = UKismetMathLibrary::RandomFloatInRange(120, 420);
+	float ClearTime = UKismetMathLibrary::RandomFloatInRange(DialogueToTrack.LoadSynchronous()->TimerRange.X, DialogueToTrack.LoadSynchronous()->TimerRange.Y);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, Delegate, ClearTime,false);
 	TrackedDialogue.Add(DialogueToTrack);
 }
 
-void UDialogueManager_SubSystem::DialogueTimer(TSoftObjectPtr<USoundBase> DialogueToClear)
+void UDialogueManager_SubSystem::DialogueTimer(TSoftObjectPtr<UDA_AmbientDialogue> DialogueToClear)
 {
 	TrackedDialogue.RemoveSingle(DialogueToClear);
+}
+
+void UDialogueManager_SubSystem::StopAllAmbientDialogues(UObject* WorldContext)
+{
+	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(WorldContext, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+
+	for(auto& CurrentDialogueComponent : DialogueManager->ActiveDialogues)
+	{
+		if(CurrentDialogueComponent)
+		{
+			if(CurrentDialogueComponent.Get()->CurrentDialogueAudio)
+			{
+				CurrentDialogueComponent.Get()->CurrentDialogueAudio.Get()->Stop();
+			}
+		}
+	}
 }

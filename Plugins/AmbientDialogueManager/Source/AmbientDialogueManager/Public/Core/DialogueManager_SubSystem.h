@@ -6,6 +6,8 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "DialogueManager_SubSystem.generated.h"
 
+class UDA_AmbientDialogue;
+class UAC_DialogueController;
 /**
  * 
  */
@@ -19,10 +21,16 @@ public:
 	/**Ambient dialogue that has been played, but we don't want the same
 	 * dialogue to repeat. If dialogue is in this list, it should not play.*/
 	UPROPERTY()
-	TArray<TSoftObjectPtr<USoundBase>> TrackedDialogue;
+	TArray<TSoftObjectPtr<UDA_AmbientDialogue>> TrackedDialogue;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UAC_DialogueController>> ActiveDialogues;
 	
-	void AddDialogueToTrackedList(TSoftObjectPtr<USoundBase> DialogueToTrack);
+	void AddDialogueToTrackedList(TSoftObjectPtr<UDA_AmbientDialogue> DialogueToTrack);
 
 	UFUNCTION()
-	void DialogueTimer(TSoftObjectPtr<USoundBase> DialogueToClear);
+	void DialogueTimer(TSoftObjectPtr<UDA_AmbientDialogue> DialogueToClear);
+
+	UFUNCTION(Category = "ADM")
+	static void StopAllAmbientDialogues(UObject* WorldContext);
 };

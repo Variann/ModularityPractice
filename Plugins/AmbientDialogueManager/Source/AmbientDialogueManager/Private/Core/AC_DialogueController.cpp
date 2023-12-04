@@ -4,6 +4,7 @@
 #include "Core/AC_DialogueController.h"
 
 #include "Components/AudioComponent.h"
+#include "Core/DA_AmbientDialogue.h"
 #include "Core/DialogueManager_SubSystem.h"
 #include "Engine/StreamableManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,38 +22,31 @@ UAC_DialogueController::UAC_DialogueController()
 }
 
 
-TArray<FAmbientDialogue> UAC_DialogueController::GetAllPlayableDialogues()
+TArray<UDA_AmbientDialogue*> UAC_DialogueController::GetAllPlayableDialogues()
 {
-	TArray<FAmbientDialogue> PlayableDialogues;
+	TArray<UDA_AmbientDialogue*> PlayableDialogues;
 	if(DialogueLoadingHandle.IsValid())
 	{
 		UKismetSystemLibrary::PrintString(this, "Tried playing dialogue while loading another dialogue");
 		return PlayableDialogues;
 	}
-	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+	const UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
 
 	for(auto& CurrentDialogue : AmbientDialogues)
 	{
-		//Dialogue file has been played recently, skip it.
-		if(DialogueManager->TrackedDialogue.Contains(CurrentDialogue.DialogueSound))
+		if(DialogueManager->TrackedDialogue.Contains(CurrentDialogue))
 		{
+			//Dialogue file has been played recently, skip it.
 			continue;
 		}
 		
-		bool RequirementFailed = false;
-		for(auto& CurrentRequirement : CurrentDialogue.Requirements)
+		if(!CurrentDialogue->AreRequirementsMet(GetOwner()))
 		{
-			if(!CurrentRequirement->IsConditionMet(GetOwner()))
-			{
-				RequirementFailed = true;
-				break;
-			}
+			//Requirements aren't met, skip it
+			continue;
 		}
 		
-		if(!RequirementFailed)
-		{
-			PlayableDialogues.Add(CurrentDialogue);
-		}
+		PlayableDialogues.Add(CurrentDialogue);
 	}
 	
 	return PlayableDialogues;
@@ -60,17 +54,17 @@ TArray<FAmbientDialogue> UAC_DialogueController::GetAllPlayableDialogues()
 
 void UAC_DialogueController::PlayRandomDialogue(bool AsyncLoad)
 {
-	TArray<FAmbientDialogue> PlayableDialogues = GetAllPlayableDialogues();
+	TArray<UDA_AmbientDialogue*> PlayableDialogues = GetAllPlayableDialogues();
 	if(!PlayableDialogues.IsValidIndex(0))
 	{
 		return;
 	}
 
-	FAmbientDialogue DialogueToPlay = PlayableDialogues[UKismetMathLibrary::RandomIntegerInRange(0, PlayableDialogues.Num() - 1)];
+	UDA_AmbientDialogue* DialogueToPlay = PlayableDialogues[UKismetMathLibrary::RandomIntegerInRange(0, PlayableDialogues.Num() - 1)];
 	PlayAmbientDialogue(DialogueToPlay, AsyncLoad);
 }
 
-void UAC_DialogueController::PlayAmbientDialogue(const FAmbientDialogue& Dialogue, bool Async)
+void UAC_DialogueController::PlayAmbientDialogue(UDA_AmbientDialogue* Dialogue, bool Async)
 {
 	if(DialogueLoadingHandle.IsValid())
 	{
@@ -95,7 +89,7 @@ void UAC_DialogueController::PlayAmbientDialogue(const FAmbientDialogue& Dialogu
 
 	if(Async)
 	{
-		DialogueLoadingHandle = StreamableManager.RequestAsyncLoad(Dialogue.DialogueSound.ToSoftObjectPath(), [this, Dialogue]()
+		DialogueLoadingHandle = StreamableManager.RequestAsyncLoad(Dialogue->DialogueSound.ToSoftObjectPath(), [this, Dialogue]()
 		{
 			PlaySound_Internal(Dialogue, CachedAttachToComponent.Get());
 			DialogueLoadingHandle = nullptr;
@@ -103,17 +97,16 @@ void UAC_DialogueController::PlayAmbientDialogue(const FAmbientDialogue& Dialogu
 	}
 	else
 	{
-		Dialogue.DialogueSound.LoadSynchronous();
+		Dialogue->DialogueSound.LoadSynchronous();
 		PlaySound_Internal(Dialogue, CachedAttachToComponent.Get());
 	}
 }
 
-void UAC_DialogueController::PlaySound_Internal(FAmbientDialogue Dialogue, USceneComponent* AttachToComponent)
+void UAC_DialogueController::PlaySound_Internal(UDA_AmbientDialogue* Dialogue, USceneComponent* AttachToComponent)
 {
 	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
 
-	//Check if the dialogue has been played too recently
-	if(DialogueManager->TrackedDialogue.Contains(Dialogue.DialogueSound.Get()))
+	if(!Dialogue->IsPlayable(GetOwner()))
 	{
 		return;
 	}
@@ -123,12 +116,21 @@ void UAC_DialogueController::PlaySound_Internal(FAmbientDialogue Dialogue, UScen
 		CurrentDialogueAudio->Stop();
 	}
 	
-	CurrentDialogueAudio = UGameplayStatics::SpawnSoundAttached(Dialogue.DialogueSound.Get(), AttachToComponent);
+	CurrentDialogueAudio = UGameplayStatics::SpawnSoundAttached(Dialogue->DialogueSound.Get(), AttachToComponent);
 	CurrentDialogueAudio->Stop(); //Spawn will auto play the sound and ignore our attenuation and any custom settings. Stop it and resume after applying.
-	CurrentDialogueAudio->AttenuationSettings = SoundAttenuation;
+	CurrentDialogueAudio->AttenuationSettings = Dialogue->SoundAttenuation;
 	CurrentDialogueAudio->bOverrideAttenuation = true;
 	CurrentDialogueAudio->bStopWhenOwnerDestroyed = true;
+	CurrentDialogueAudio->OnAudioFinished.AddDynamic(this, &UAC_DialogueController::DialogueFinished);
 	CurrentDialogueAudio->Play();
+	DialogueManager->ActiveDialogues.Add(this);
 	
-	DialogueManager->AddDialogueToTrackedList(Dialogue.DialogueSound);
+	DialogueManager->AddDialogueToTrackedList(Dialogue);
+}
+
+void UAC_DialogueController::DialogueFinished()
+{
+	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+	CurrentDialogueAudio = nullptr;
+	DialogueManager->ActiveDialogues.RemoveSingle(this);
 }
