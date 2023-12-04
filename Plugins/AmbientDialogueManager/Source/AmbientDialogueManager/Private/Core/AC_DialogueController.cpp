@@ -30,6 +30,13 @@ TArray<UDA_AmbientDialogue*> UAC_DialogueController::GetAllPlayableDialogues()
 		UKismetSystemLibrary::PrintString(this, "Tried playing dialogue while loading another dialogue");
 		return PlayableDialogues;
 	}
+
+	if(CurrentDialogueAudio)
+	{
+		//Busy playing dialogue
+		return PlayableDialogues;
+	}
+	
 	const UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
 
 	for(auto& CurrentDialogue : AmbientDialogues)
