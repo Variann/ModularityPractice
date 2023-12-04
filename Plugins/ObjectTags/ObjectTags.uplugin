@@ -19,11 +19,5 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
-	],
-	"Plugins": [
-		{
-			"Name": "GASCompanion",
-			"Enabled": true
-		}
 	]
 }
