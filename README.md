@@ -37,7 +37,12 @@ What this provides:
 ---
  - ColorTags, allows you to have a centralized location for common colors throughout your project by adding additional config settings.
    - Improves mod support as people can now just modify a .ini file to configure common colors, such as item rarity colors or UI colors to their liking.
-  
+
+---
+- Ambient Dialogue Manager manages ambient dialogue in open world games where multiple NPC's might want to play ambient dialogue audio.
+  - Balances audio for lower priority ambient dialogues.
+  - Ensures the same ambient dialogue isn't repeated by separate NPC's.
+
 ---
 # External plugins
 These are plugins that are not mine, but I utilize to bring my plugins to the next level.
