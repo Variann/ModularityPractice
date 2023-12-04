@@ -37,6 +37,17 @@ void UDialogueManager_SubSystem::DialogueTimer(TSoftObjectPtr<UDA_AmbientDialogu
 	TrackedDialogue.RemoveSingle(DialogueToClear);
 }
 
+void UDialogueManager_SubSystem::AdjustLowerPriorityVolumes(TEnumAsByte<EDialoguePriority> Priority)
+{
+	for(auto& CurrentDialogue : ActiveDialogues)
+	{
+		if(CurrentDialogue->CurrentPlayingDialogue->Priority <= Priority)
+		{
+			CurrentDialogue->StopDialogue();
+		}
+	}
+}
+
 void UDialogueManager_SubSystem::StopAllAmbientDialogues(UObject* WorldContext)
 {
 	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(WorldContext, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
@@ -45,10 +56,39 @@ void UDialogueManager_SubSystem::StopAllAmbientDialogues(UObject* WorldContext)
 	{
 		if(CurrentDialogueComponent)
 		{
-			if(CurrentDialogueComponent.Get()->CurrentDialogueAudio)
+			CurrentDialogueComponent.Get()->StopDialogue();
+		}
+	}
+}
+
+void UDialogueManager_SubSystem::RestoreAmbientDialoguesVolume(UObject* WorldContext)
+{
+	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(WorldContext, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+
+	for(auto& CurrentDialogueComponent : DialogueManager->ActiveDialogues)
+	{
+		if(CurrentDialogueComponent)
+		{
+			CurrentDialogueComponent.Get()->AudioComponent->AdjustVolume(0.5, 1);
+		}
+	}
+}
+
+TEnumAsByte<EDialoguePriority> UDialogueManager_SubSystem::GetHighestDialoguePriority(UObject* WorldContext)
+{
+	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(WorldContext, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+	TEnumAsByte<EDialoguePriority> HighestPriority = Background;
+	
+	for(auto& CurrentDialogueComponent : DialogueManager->ActiveDialogues)
+	{
+		if(CurrentDialogueComponent)
+		{
+			if(CurrentDialogueComponent.Get()->CurrentPlayingDialogue->Priority > HighestPriority)
 			{
-				CurrentDialogueComponent.Get()->CurrentDialogueAudio.Get()->Stop();
+				HighestPriority = CurrentDialogueComponent.Get()->CurrentPlayingDialogue->Priority;
 			}
 		}
 	}
+
+	return HighestPriority;
 }

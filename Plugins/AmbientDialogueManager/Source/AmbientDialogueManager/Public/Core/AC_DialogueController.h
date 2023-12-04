@@ -23,6 +23,9 @@ public:
 	UPROPERTY(Category = "ADM", BlueprintReadWrite, EditAnywhere)
 	TArray<UDA_AmbientDialogue*> AmbientDialogues;
 
+	UPROPERTY()
+	UDA_AmbientDialogue* CurrentPlayingDialogue = nullptr;
+
 	/**Find the first component on this actor that has this tag and attach
 	 * the sound.*/
 	UPROPERTY(Category = "ADM", BlueprintReadWrite, EditAnywhere)
@@ -35,7 +38,7 @@ public:
 	TObjectPtr<USceneComponent> CachedAttachToComponent = nullptr;
 
 	UPROPERTY()
-	TObjectPtr<UAudioComponent> CurrentDialogueAudio = nullptr;
+	TObjectPtr<UAudioComponent> AudioComponent = nullptr;
 
 	FStreamableManager StreamableManager;
 	TSharedPtr<FStreamableHandle> DialogueLoadingHandle;
@@ -49,6 +52,9 @@ public:
 
 	UFUNCTION(Category = "ADM", BlueprintCallable)
 	void PlayAmbientDialogue(UDA_AmbientDialogue* Dialogue, bool Async = true);
+
+	UFUNCTION(Category = "ADM", BlueprintCallable)
+	void StopDialogue();
 
 protected:
 	

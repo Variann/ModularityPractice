@@ -31,7 +31,7 @@ TArray<UDA_AmbientDialogue*> UAC_DialogueController::GetAllPlayableDialogues()
 		return PlayableDialogues;
 	}
 
-	if(CurrentDialogueAudio)
+	if(AudioComponent)
 	{
 		//Busy playing dialogue
 		return PlayableDialogues;
@@ -109,6 +109,30 @@ void UAC_DialogueController::PlayAmbientDialogue(UDA_AmbientDialogue* Dialogue, 
 	}
 }
 
+void UAC_DialogueController::StopDialogue()
+{
+	if(AudioComponent && CurrentPlayingDialogue)
+	{
+		switch (CurrentPlayingDialogue->PriorityOverrideEvent)
+		{
+		case LowerVolume:
+			{
+				AudioComponent->AdjustVolume(0.5, CurrentPlayingDialogue->VolumePercentageGoal);
+				break;
+			}
+		case EPriorityOverrideEvent::StopDialogue:
+			{
+				AudioComponent->Stop();
+				break;
+			}
+		default:
+			{
+				return;
+			}
+		}
+	}
+}
+
 void UAC_DialogueController::PlaySound_Internal(UDA_AmbientDialogue* Dialogue, USceneComponent* AttachToComponent)
 {
 	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
@@ -117,20 +141,19 @@ void UAC_DialogueController::PlaySound_Internal(UDA_AmbientDialogue* Dialogue, U
 	{
 		return;
 	}
+
+	DialogueManager->AdjustLowerPriorityVolumes(Dialogue->Priority);
+	TEnumAsByte<EDialoguePriority> HighestPriority = UDialogueManager_SubSystem::GetHighestDialoguePriority(GetOwner());
 	
-	if(CurrentDialogueAudio.Get())
-	{
-		CurrentDialogueAudio->Stop();
-	}
-	
-	CurrentDialogueAudio = UGameplayStatics::SpawnSoundAttached(Dialogue->DialogueSound.Get(), AttachToComponent);
-	CurrentDialogueAudio->Stop(); //Spawn will auto play the sound and ignore our attenuation and any custom settings. Stop it and resume after applying.
-	CurrentDialogueAudio->AttenuationSettings = Dialogue->SoundAttenuation;
-	CurrentDialogueAudio->bOverrideAttenuation = true;
-	CurrentDialogueAudio->bStopWhenOwnerDestroyed = true;
-	CurrentDialogueAudio->OnAudioFinished.AddDynamic(this, &UAC_DialogueController::DialogueFinished);
-	CurrentDialogueAudio->Play();
+	AudioComponent = UGameplayStatics::SpawnSoundAttached(Dialogue->DialogueSound.Get(), AttachToComponent);
+	AudioComponent->Stop(); //Spawn will auto play the sound and ignore our attenuation and any custom settings. Stop it and resume after applying.
+	AudioComponent->AttenuationSettings = Dialogue->SoundAttenuation;
+	AudioComponent->bStopWhenOwnerDestroyed = true;
+	AudioComponent->OnAudioFinished.AddDynamic(this, &UAC_DialogueController::DialogueFinished);
+	AudioComponent->Play();
+	AudioComponent->AdjustVolume(0, Dialogue->Priority < HighestPriority ? Dialogue->VolumePercentageGoal : 1);
 	DialogueManager->ActiveDialogues.Add(this);
+	CurrentPlayingDialogue = Dialogue;
 	
 	DialogueManager->AddDialogueToTrackedList(Dialogue);
 }
@@ -138,6 +161,8 @@ void UAC_DialogueController::PlaySound_Internal(UDA_AmbientDialogue* Dialogue, U
 void UAC_DialogueController::DialogueFinished()
 {
 	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
-	CurrentDialogueAudio = nullptr;
+	AudioComponent = nullptr;
+	CurrentPlayingDialogue = nullptr;
 	DialogueManager->ActiveDialogues.RemoveSingle(this);
+	DialogueManager->RestoreAmbientDialoguesVolume(GetOwner());
 }

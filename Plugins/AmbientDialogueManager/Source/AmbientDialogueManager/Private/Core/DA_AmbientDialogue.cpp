@@ -20,7 +20,7 @@ bool UDA_AmbientDialogue::IsPlayable(AActor* Actor)
 	
 	UAC_DialogueController* DialogueController = Cast<UAC_DialogueController>(Actor->GetComponentByClass(UAC_DialogueController::StaticClass()));
 
-	if(DialogueController->CurrentDialogueAudio)
+	if(DialogueController->AudioComponent)
 	{
 		//Actor is playing dialogue, can't play
 		return false;

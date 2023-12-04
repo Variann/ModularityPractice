@@ -6,6 +6,7 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "DialogueManager_SubSystem.generated.h"
 
+enum EDialoguePriority : int;
 class UDA_AmbientDialogue;
 class UAC_DialogueController;
 /**
@@ -31,6 +32,17 @@ public:
 	UFUNCTION()
 	void DialogueTimer(TSoftObjectPtr<UDA_AmbientDialogue> DialogueToClear);
 
-	UFUNCTION(Category = "ADM")
+	void AdjustLowerPriorityVolumes(TEnumAsByte<EDialoguePriority> Priority);
+
+	UFUNCTION(Category = "ADM", BlueprintCallable)
 	static void StopAllAmbientDialogues(UObject* WorldContext);
+
+	/**Restore all ambient dialogues who have had their volume reduced
+	 * due to either @StopAllAmbientDialogue being called or a higher
+	 * priority ambient dialogue being spoken.*/
+	UFUNCTION(Category = "ADM", BlueprintCallable)
+	static void RestoreAmbientDialoguesVolume(UObject* WorldContext);
+
+	UFUNCTION(Category = "ADM", BlueprintCallable)
+	static TEnumAsByte<EDialoguePriority> GetHighestDialoguePriority(UObject* WorldContext);
 };
