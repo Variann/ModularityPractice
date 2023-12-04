@@ -10,7 +10,7 @@
 
 bool UDA_AmbientDialogue::IsPlayable(AActor* Actor)
 {
-	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
+	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(Actor, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
 	
 	if(DialogueManager->TrackedDialogue.Contains(this))
 	{
