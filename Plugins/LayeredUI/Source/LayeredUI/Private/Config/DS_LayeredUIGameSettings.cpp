@@ -5,5 +5,6 @@
 
 UDS_LayeredUIGameSettings::UDS_LayeredUIGameSettings()
 {
-	SectionName = "Layered UI Game Settings";
+	SectionName = "Layered UI Settings";
+	CategoryName = "Plugins";
 }

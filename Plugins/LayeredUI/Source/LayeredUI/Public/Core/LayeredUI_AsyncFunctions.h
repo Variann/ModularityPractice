@@ -37,15 +37,12 @@ class LAYEREDUI_API ULayeredUI_AddWidgetToLayer : public UBlueprintAsyncActionBa
 	FGameplayTag LayerDestination;
 
 	UPROPERTY()
-	int32 DesiredOrderOverride;
-
-	UPROPERTY()
 	UObject* WidgetOwner;
 
 public:
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="Context"), DisplayName = "Add widget to Layer (Async)")
-	static ULayeredUI_AddWidgetToLayer* AddWidgetToLayer_Async(TSoftClassPtr<UUserWidget> Widget, FGameplayTag Layer, UObject* Context, int32 OrderOverride = -1);
+	static ULayeredUI_AddWidgetToLayer* AddWidgetToLayer_Async(TSoftClassPtr<UUserWidget> Widget, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer, UObject* Context);
 
 	virtual void Activate() override;
 };

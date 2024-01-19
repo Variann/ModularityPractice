@@ -8,13 +8,11 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
-ULayeredUI_AddWidgetToLayer* ULayeredUI_AddWidgetToLayer::AddWidgetToLayer_Async(TSoftClassPtr<UUserWidget> Widget,
-                                                                                 FGameplayTag Layer, UObject* Context, int32 OrderOverride)
+ULayeredUI_AddWidgetToLayer* ULayeredUI_AddWidgetToLayer::AddWidgetToLayer_Async(TSoftClassPtr<UUserWidget> Widget, FGameplayTag Layer, UObject* Context)
 {
 	ULayeredUI_AddWidgetToLayer* NewAsyncObject = NewObject<ULayeredUI_AddWidgetToLayer>(Context);
 	NewAsyncObject->WidgetToLoad = Widget;
 	NewAsyncObject->LayerDestination = Layer;
-	NewAsyncObject->DesiredOrderOverride = OrderOverride;
 	NewAsyncObject->WidgetOwner = Context;
 	return NewAsyncObject;
 }
@@ -26,47 +24,40 @@ void ULayeredUI_AddWidgetToLayer::Activate()
 	Handle = StreamableManager.RequestAsyncLoad(WidgetToLoad.ToSoftObjectPath(), [this]()
 	{
 		//Send job to background thread.
-		AsyncTask(ENamedThreads::BackgroundThreadPriority, [this]()
+		FLayeredWidget NewLayeredWidget;
+		bool JobSuccessful = false;
+		if(IsValid(WidgetToLoad.Get()))
 		{
-			FLayeredWidget NewLayeredWidget;
-			bool JobSuccessful = false;
-			if(IsValid(WidgetToLoad.Get()))
-			{
-				UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), WidgetToLoad.Get()));
+			UUserWidget* CreatedWidget = Cast<UUserWidget>(CreateWidget(UGameplayStatics::GetPlayerController(WidgetOwner, 0), WidgetToLoad.Get()));
 			
-				ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
-				if(!LayeredUI_Subsystem)
+			ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WidgetOwner, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+			if(!LayeredUI_Subsystem)
+			{
+				//Blueprints might be listening to Fail, make sure to broadcast on game thread.
+				AsyncTask(ENamedThreads::GameThread, [this, NewLayeredWidget]()
 				{
-					//Blueprints might be listening to Fail, make sure to broadcast on game thread.
-					AsyncTask(ENamedThreads::GameThread, [this, NewLayeredWidget]()
-					{
-						Fail.Broadcast(NewLayeredWidget);
-						RemoveFromRoot();
+					Fail.Broadcast(NewLayeredWidget);
+					RemoveFromRoot();
 					});
 					
 					return;
 				}
-			
-				LayeredUI_Subsystem->AddWidgetToLayer(CreatedWidget ,LayerDestination, NewLayeredWidget, DesiredOrderOverride);
-				if(IsValid(NewLayeredWidget.Widget))
-				{
-					JobSuccessful = true;
-				}
-			}
-			
-			AsyncTask(ENamedThreads::GameThread, [this, NewLayeredWidget, JobSuccessful]()
+			LayeredUI_Subsystem->AddWidgetToLayer_Internal(CreatedWidget ,LayerDestination, NewLayeredWidget);
+			if(IsValid(NewLayeredWidget.Widget))
 			{
-				if(JobSuccessful)
-				{
-					Success.Broadcast(NewLayeredWidget);
-					RemoveFromRoot();
-				}
-				else
-				{
-					Fail.Broadcast(NewLayeredWidget);
-					RemoveFromRoot();
-				}
-			});
-		});
+				JobSuccessful = true;
+			}
+		}
+
+		if(JobSuccessful)
+		{
+			Success.Broadcast(NewLayeredWidget);
+			RemoveFromRoot();
+		}
+		else
+		{
+			Fail.Broadcast(NewLayeredWidget);
+			RemoveFromRoot();
+		}
 	});
 }

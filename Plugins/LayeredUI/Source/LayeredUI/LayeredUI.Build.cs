@@ -27,7 +27,8 @@ public class LayeredUI : ModuleRules
 			{
 				"Core",
 				"DeveloperSettings",
-				"GameplayTags" 
+				"GameplayTags",
+				"CommonUI"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -40,7 +41,7 @@ public class LayeredUI : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"UMG",
+				"UMG"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

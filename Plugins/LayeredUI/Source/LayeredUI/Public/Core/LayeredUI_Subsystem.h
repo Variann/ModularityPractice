@@ -8,6 +8,9 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "LayeredUI_Subsystem.generated.h"
 
+class UWidget;
+class UPanelWidget;
+class UW_UI_Manager;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWidgetAdded, FLayeredWidget, WidgetLayer);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWidgetRemoved, FLayeredWidget, WidgetLayer);
 
@@ -23,13 +26,24 @@ private:
 	UPROPERTY()
 	TArray<FLayeredWidget> LayeredWidgets;
 
+	UPROPERTY()
+	TMap<FGameplayTag, TObjectPtr<UWidget>> ActiveSlots;
+
+	UPROPERTY()
+	UW_UI_Manager* UI_Manager = nullptr;
+
 public:
+
+	UPROPERTY(Category = "LayeredUI", BlueprintReadWrite)
+	UW_UI_Manager* UIManager;
 
 	UPROPERTY(Category = "LayeredUI", BlueprintAssignable)
 	FWidgetAdded WidgetAdded;
 
 	UPROPERTY(Category = "LayeredUI", BlueprintAssignable)
 	FWidgetRemoved WidgetRemoved;
+
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
@@ -45,12 +59,29 @@ public:
 	UFUNCTION(Category="LayeredUI", BlueprintCallable)
 	TArray<FLayeredWidget> GetLayeredWidgets();
 
-	UFUNCTION(Category="LayeredUI", BlueprintCallable)
-	void AddWidgetToLayer(UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget, int32 OrderOverride = -1);
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, BlueprintPure, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
+	static bool IsWidgetValid(const UObject* WorldContextObject, FLayeredWidget Widget);
 
-	UFUNCTION(Category="LayeredUI", BlueprintCallable)
-	void RemoveWidgetFromLayer(UPARAM(ref) FLayeredWidget& Widget, FLayeredWidget& NewFocus);
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
+	static void AddWidgetToLayer(const UObject* WorldContextObject, UUserWidget* Widget, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
+	void AddWidgetToLayer_Internal(UUserWidget* Widget, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
+
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
+	static void RemoveWidgetFromLayer(const UObject* WorldContextObject, UUserWidget* Widget);
+	void RemoveWidgetFromLayer_Internal(UUserWidget* Widget);
 	
-	UFUNCTION(Category="LayeredUI", BlueprintCallable)
-	void FindFirstWidgetOnLayer(FGameplayTag Layer, FLayeredWidget& Widget);
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
+	static void FindFirstWidgetOnLayer(const UObject* WorldContextObject, FGameplayTag Layer, UPARAM(meta=(Categories="UI.Layer"))FLayeredWidget& Widget);
+	void FindFirstWidgetOnLayer_Internal(FGameplayTag Layer, UPARAM(meta=(Categories="UI.Layer"))FLayeredWidget& Widget);
+
+	/**Register a panel widget as a slot, this will cause all future widgets we attempt
+	 * to add to the screen to rather be added as a child to the slot, instead
+	 * of being added to the viewport.
+	 * Note: The widget should only be a child of UPanelSlot or UCommonActivatableWidgetContainerBase.
+	 * Since CommonUI doesn't inherit from UPanelSlot and the only parent the two share is UWidget,
+	 * the parameter must be UWidget.*/
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
+	static void RegisterSlot(const UObject* WorldContextObject, UWidget* Slot, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer);
+
+	UWidget* GetSlotForLayer(FGameplayTag Layer);
 };

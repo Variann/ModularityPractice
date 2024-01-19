@@ -18,7 +18,7 @@ struct FWidgetLayer
 	//and not incorporate it into the widget layering system, to decide
 	//on their own ZOrder.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Delta = 100))
-	int32 ZOrder;
+	int32 ZOrder = 0;
 
 	bool operator==(const FWidgetLayer& Argument) const
 	{
@@ -37,7 +37,7 @@ struct FLayeredWidget
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* Widget = nullptr;
+	TObjectPtr<UUserWidget> Widget = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Categories = "UI.Layer"))
 	FGameplayTag Layer;
@@ -45,20 +45,19 @@ struct FLayeredWidget
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 ZOrder = -1;
 
-	//Used for finding out what is the latest widget on a layer.
-	//This is set by getting the length of an array of all the
-	//widgets in that layer.
-	//Higher the number, the more recent is the widget.
-	//NOTE this might be removed.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 LayerPriority = -1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool HideCursor = false;
-
 	bool operator==(const FLayeredWidget& Argument) const
 	{
 		return Argument.Widget == Widget;
+	}
+	
+	FORCEINLINE bool operator==(UUserWidget*& Argument) const
+	{
+		return Widget == Argument;
+	}
+
+	FORCEINLINE bool operator!=(UUserWidget*& Argument) const
+	{
+		return Widget != Argument;
 	}
 };
 

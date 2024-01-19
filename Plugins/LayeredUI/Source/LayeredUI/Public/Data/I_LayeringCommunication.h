@@ -7,6 +7,7 @@
 #include "UObject/Interface.h"
 #include "I_LayeringCommunication.generated.h"
 
+class UWidget;
 // This class does not need to be modified.
 UINTERFACE()
 class UI_LayeringCommunication : public UInterface
@@ -20,9 +21,6 @@ class LAYEREDUI_API II_LayeringCommunication
 
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Cursor")
-	bool HideCursor();
-
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Layering")
 	void SetWidgetLayerData(FLayeredWidget WidgetLayer);
 
@@ -31,6 +29,13 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
 	bool AllowMultipleInstances();
+
+	/**Whenever AddWidgetToLayer is called, it will first ask this function
+	 * to all widgets that are registered as slots. This can be vertical boxes,
+	 * canvas panels, anything that will accept a child and then attempt
+	 * to add the widget as a child for that widget.*/
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
+	UWidget* GetSlotForLayer(UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer);
 
 	//-------------------------
 	/*Some widgets are not part of the CommonUI framework for various reasons, these two interface

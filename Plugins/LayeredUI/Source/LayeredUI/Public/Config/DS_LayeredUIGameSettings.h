@@ -7,6 +7,7 @@
 #include "Engine/DeveloperSettings.h"
 #include "DS_LayeredUIGameSettings.generated.h"
 
+class UW_UI_Manager;
 /**
  * 
  */
@@ -21,6 +22,12 @@ public:
 	
 	/**The map used to figure out what ZOrder to assign a widget when adding
 	 * it to the screen.*/
-	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow))
+	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow, Categories="UI.Layer"))
 	TMap<FGameplayTag, int32> LayerMap;
+
+	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UW_UI_Manager> UIManagerClass;
+	
+	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly)
+	int32 UIManagerZOrder = 0;
 };

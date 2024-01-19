@@ -5,11 +5,32 @@
 
 #include <Config/DS_LayeredUIGameSettings.h>
 
+#include "CommonActivatableWidget.h"
 #include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
-#include "..\..\Public\Data\I_LayeringCommunication.h"
+#include "Data/I_LayeringCommunication.h"
+#include "Components/PanelWidget.h"
+#include "Core/W_UI_Manager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Widgets/CommonActivatableWidgetContainer.h"
+
+void ULayeredUI_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	if(const UDS_LayeredUIGameSettings* UIData = GetDefault<UDS_LayeredUIGameSettings>())
+	{
+		if(IsValid(UIData->UIManagerClass))
+		{
+			UW_UI_Manager* CreatedWidget = Cast<UW_UI_Manager>(CreateWidget(UGameplayStatics::GetPlayerController(this, 0), UIData->UIManagerClass));
+			if(CreatedWidget)
+			{
+				CreatedWidget->AddToViewport(UIData->UIManagerZOrder);
+				UIManager = CreatedWidget;
+			}
+		}
+	}
+}
 
 bool ULayeredUI_Subsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
@@ -46,8 +67,58 @@ TArray<FLayeredWidget> ULayeredUI_Subsystem::GetLayeredWidgets()
 	return LayeredWidgets;
 }
 
-void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget,
-                                            int32 OrderOverride)
+bool ULayeredUI_Subsystem::IsWidgetValid(const UObject* WorldContextObject, FLayeredWidget Widget)
+{
+	if(!IsValid(Widget.Widget))
+	{
+		return false;
+	}
+	
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return false;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return false;
+	}
+	
+	for(const auto& CurrentWidget : LayeredUI_Subsystem->GetLayeredWidgets())
+	{
+		if(CurrentWidget.Widget == Widget.Widget)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void ULayeredUI_Subsystem::AddWidgetToLayer(const UObject* WorldContextObject, UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget)
+{
+	LayeredWidget = FLayeredWidget();
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return;
+	}
+
+	if(!IsValid(Widget))
+	{
+		return;
+	}
+	
+	LayeredUI_Subsystem->AddWidgetToLayer_Internal(Widget, Layer, LayeredWidget);
+}
+
+void ULayeredUI_Subsystem::AddWidgetToLayer_Internal(UUserWidget* Widget, FGameplayTag Layer, FLayeredWidget& LayeredWidget)
 {
 	LayeredWidget = FLayeredWidget();
 	
@@ -71,39 +142,48 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 			return;
 		}
 	}
+
+	if(UWidget* Slot = GetSlotForLayer(Layer))
+	{
+		//If the slot and widget we're adding are compatible with CommonUI,
+		//use the CommonUI workflow
+		if(UCommonActivatableWidgetContainerBase* Stack = Cast<UCommonActivatableWidgetContainerBase>(Slot); IsValid(Stack)
+			&& Widget->GetClass()->IsChildOf(UCommonActivatableWidget::StaticClass()))
+		{
+			Stack->AddWidget(Widget->GetClass());
+			LayeredWidget.Widget = Widget;
+			return;
+		}
+
+		if(UPanelWidget* PanelSlot = Cast<UPanelWidget>(Slot))
+		{
+			PanelSlot->AddChild(Widget);
+			LayeredWidget.Widget = Widget;
+			return;
+		}
+	}
 	
 	//Widget has passed verification, start adding it to the screen.
 	TMap<FGameplayTag, int32> LayerMap = GetLayerMap();
 	const int32* ZOrder = LayerMap.Find(Layer);
 	if(ZOrder)
 	{
-		bool HideCursor = false;
-		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
-		{
-			HideCursor = II_LayeringCommunication::Execute_HideCursor(Widget);
-		}
 		FLayeredWidget NewLayeredWidget;
 		NewLayeredWidget.Widget = Widget;
 		NewLayeredWidget.Layer = Layer;
 		NewLayeredWidget.ZOrder = *ZOrder;
-		NewLayeredWidget.HideCursor = HideCursor;
 		LayeredWidget = NewLayeredWidget;
 
 		//Might be called on different thread, engine crashes if we try to add the widget
 		//to viewport outside of the game thread.
-		AsyncTask(ENamedThreads::GameThread, [Widget, NewLayeredWidget, ZOrder, HideCursor, this]()
+		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
 		{
-			if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
-			{
-				II_LayeringCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
-			}
+			II_LayeringCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
+		}
 		
-			LayeredWidgets.Add(NewLayeredWidget);
-	
-			Widget->AddToViewport(*ZOrder);
-			UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!HideCursor);
-			WidgetAdded.Broadcast(NewLayeredWidget);
-		});
+		LayeredWidgets.Add(NewLayeredWidget);
+		Widget->AddToViewport(*ZOrder);
+		WidgetAdded.Broadcast(NewLayeredWidget);
 	}
 	else
 	{
@@ -111,75 +191,143 @@ void ULayeredUI_Subsystem::AddWidgetToLayer(UUserWidget* Widget, FGameplayTag La
 	}
 }
 
-void ULayeredUI_Subsystem::RemoveWidgetFromLayer(FLayeredWidget& Widget, FLayeredWidget& NewFocus)
+void ULayeredUI_Subsystem::RemoveWidgetFromLayer(const UObject* WorldContextObject, UUserWidget* Widget)
 {
-	NewFocus = FLayeredWidget();
-	
-	if(!IsValid(Widget.Widget))
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
 	{
-		return;
-	}
-	
-	if(!LayeredWidgets.RemoveSingle(Widget))
-	{
-		return;
-	}
-	
-	Widget.Widget->RemoveFromParent();
-	Widget.Widget->SetIsEnabled(false);
-	
-	FLayeredWidget NextWidget;
-	/**Find the next widget to focus.
-	 * A reverse loop is used because we want the most recent widget added to the screen.
-	 * The latest widget is always added to the end of the array.
-	 * This will also help with managing the focus and input priority on the correct
-	 * widget, as Unreal always adds the latest widget on top of other widgets, even
-	 * if they are on the same ZOrder to avoid Z-fighting*/
-	for(int32 CurrentWidget = LayeredWidgets.Num() - 1; CurrentWidget >= 0; CurrentWidget--)
-	{
-		if(IsValid(LayeredWidgets[CurrentWidget].Widget) && LayeredWidgets[CurrentWidget].ZOrder > NextWidget.ZOrder)
-		{
-			NextWidget = LayeredWidgets[CurrentWidget];
-		}
-	}
-	
-	if(IsValid(NextWidget.Widget))
-	{
-		if(NextWidget.Widget->IsFocusable())
-		{
-			NextWidget.Widget->SetFocus();
-		}
-		else
-		{
-			UWidgetBlueprintLibrary::SetFocusToGameViewport();
-		}
-
-		if(UKismetSystemLibrary::DoesImplementInterface(NextWidget.Widget, UI_LayeringCommunication::StaticClass()))
-		{
-			UGameplayStatics::GetPlayerController(this , 0)->SetShowMouseCursor(!II_LayeringCommunication::Execute_HideCursor(NextWidget.Widget));
-		}
-	
-		NewFocus = NextWidget;
 		return;
 	}
 
-	WidgetRemoved.Broadcast(Widget);
-	Widget = FLayeredWidget();
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return;
+	}
+	
+	LayeredUI_Subsystem->RemoveWidgetFromLayer_Internal(Widget);
 }
 
-void ULayeredUI_Subsystem::FindFirstWidgetOnLayer(FGameplayTag Layer, FLayeredWidget& Widget)
+void ULayeredUI_Subsystem::RemoveWidgetFromLayer_Internal(UUserWidget* Widget)
 {
-	FLayeredWidget HigherPriorityWidget;
-	HigherPriorityWidget.LayerPriority = -1;
+	if(!IsValid(Widget))
+	{
+		return;
+	}
+
+	int32 WidgetIndex = LayeredWidgets.Find(FLayeredWidget(Widget));
+	if(WidgetIndex == INDEX_NONE)
+	{
+		for(auto& CurrentSlot: ActiveSlots)
+		{
+			if(IsValid(CurrentSlot.Value.Get()))
+			{
+				if(UPanelWidget* PanelSlot = Cast<UPanelWidget>(CurrentSlot.Value.Get()))
+				{
+					if(PanelSlot->RemoveChild(Widget))
+					{
+						return;
+					}
+				}
+			}
+		}
+		
+		return;
+	}
+	
+	FLayeredWidget LayeredWidget = LayeredWidgets[WidgetIndex];
+	if(!LayeredWidgets.RemoveSingle(LayeredWidget))
+	{
+		return;
+	}
+	
+	Widget->RemoveFromParent();
+	Widget->SetIsEnabled(false);
+
+	WidgetRemoved.Broadcast(LayeredWidget);
+}
+
+void ULayeredUI_Subsystem::FindFirstWidgetOnLayer(const UObject* WorldContextObject, FGameplayTag Layer,
+	FLayeredWidget& Widget)
+{
+	Widget = FLayeredWidget();
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return;
+	}
+	
+	LayeredUI_Subsystem->FindFirstWidgetOnLayer_Internal(Layer, Widget);
+}
+
+void ULayeredUI_Subsystem::FindFirstWidgetOnLayer_Internal(FGameplayTag Layer, FLayeredWidget& Widget)
+{
+	Widget = FLayeredWidget();
+	
 	for(auto& CurrentLayer : LayeredWidgets)
 	{
 		if(CurrentLayer.Layer == Layer)
 		{
-			if(CurrentLayer.LayerPriority > HigherPriorityWidget.LayerPriority)
-			{
-				HigherPriorityWidget = CurrentLayer;
-				Widget = HigherPriorityWidget;
-			}
+			Widget = CurrentLayer;
 		}
+	}
+
+	if(!ActiveSlots.Find(Layer))
+	{
+		return;
+	}
+	
+	if(UWidget* Slot = ActiveSlots.Find(Layer)->Get())
+	{
+		if(UPanelWidget* PanelWidget = Cast<UPanelWidget>(Slot))
+		{
+			if(UUserWidget* SlotWidget = Cast<UUserWidget>(PanelWidget->GetChildAt(PanelWidget->GetChildrenCount() - 1)))
+			{
+				Widget.Layer = Layer;
+				Widget.Widget = SlotWidget;
+				return;
+			}
+			
+		}
+		
+		if(UUserWidget* SlotWidget = Cast<UUserWidget>(Slot))
+		{
+			Widget.Layer = Layer;
+			Widget.Widget = SlotWidget;
+			return;
+		}
+	}
+}
+
+UWidget* ULayeredUI_Subsystem::GetSlotForLayer(FGameplayTag Layer)
+{
+	return ActiveSlots.FindRef(Layer);
+}
+
+void ULayeredUI_Subsystem::RegisterSlot(const UObject* WorldContextObject, UWidget* Slot, FGameplayTag Layer)
+{
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return;
+	}
+	UCommonActivatableWidgetContainerBase* Stack = Cast<UCommonActivatableWidgetContainerBase>(Slot);
+	UPanelWidget* PanelSlot = Cast<UPanelWidget>(Slot);
+	if(Stack || PanelSlot)
+	{
+		LayeredUI_Subsystem->ActiveSlots.Add(Layer, Slot);
+	}
+	else
+	{
+		UKismetSystemLibrary::PrintString(WorldContextObject, "Slot is not a child of UCommonActivatableWidgetContainerBase or UPanelWidget, can't register slot");
 	}
 }
