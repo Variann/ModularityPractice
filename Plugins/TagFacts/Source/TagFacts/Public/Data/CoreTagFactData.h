@@ -15,6 +15,7 @@ enum EFactComparator
 	IsFactEqualTo,
 };
 
+//V: This is unused, remove this?
 UENUM()
 enum EFactType
 {
@@ -44,7 +45,7 @@ FORCEINLINE uint32 GetTypeHash(const FS_Fact& Thing)
 	return Hash;
 }
 
-
+//V: This is unused, remove this?
 USTRUCT(BlueprintType)
 struct FFactCheck
 {
