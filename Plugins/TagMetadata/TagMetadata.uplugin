@@ -1,0 +1,23 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "TagMetadata",
+	"Description": "Metadata system for GameplayTags",
+	"Category": "Other",
+	"CreatedBy": "Varian",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "TagMetadata",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
