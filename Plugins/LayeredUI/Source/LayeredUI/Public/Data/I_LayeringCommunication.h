@@ -30,13 +30,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
 	bool AllowMultipleInstances();
 
-	/**Whenever AddWidgetToLayer is called, it will first ask this function
-	 * to all widgets that are registered as slots. This can be vertical boxes,
-	 * canvas panels, anything that will accept a child and then attempt
-	 * to add the widget as a child for that widget.*/
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
-	UWidget* GetSlotForLayer(UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer);
-
 	//-------------------------
 	/*Some widgets are not part of the CommonUI framework for various reasons, these two interface
 	 events are meant to communicate what state a widget is in or set its state.*/
