@@ -24,8 +24,8 @@ class TAGMETADATA_API UDS_TagMetadata : public UDeveloperSettings
 
 public:
 
-	/**Friendly texts for tags, which can be picked up by the translation tool
-	 * and is meant to give a simple way to pair any text with a tag.*/
+	/**Collections of tag metadata, these are your hosts of the instanced
+	 * objects which grant the tag its metadata.*/
 	UPROPERTY(Config, Category = "Settings", BlueprintReadOnly, EditAnywhere)
 	TArray<TSubclassOf<UO_TagMetadataCollection>> TagMetadataCollections;
 
