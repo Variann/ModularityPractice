@@ -25,8 +25,7 @@ public class TagMetadata : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", 
-				"CodenameSherlock",
+				"Core",
 				"GameplayTags",
 				"DeveloperSettings",
 				// ... add other public dependencies that you statically link with here ...
