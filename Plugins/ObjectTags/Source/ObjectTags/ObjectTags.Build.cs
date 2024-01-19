@@ -29,8 +29,6 @@ public class ObjectTags : ModuleRules
 				"CoreUObject", 
 				"Engine",
 				"GameplayTags", 
-				"GASCompanion",
-				"GameplayAbilities"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
