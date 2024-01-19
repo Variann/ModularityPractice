@@ -160,6 +160,16 @@ void UAC_DialogueController::PlaySound_Internal(UDA_AmbientDialogue* Dialogue, U
 
 void UAC_DialogueController::DialogueFinished()
 {
+	if(!UGameplayStatics::GetPlayerController(this, 0))
+	{
+		return;
+	}
+
+	if(!UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer())
+	{
+		return;
+	}
+	
 	UDialogueManager_SubSystem* DialogueManager = UGameplayStatics::GetPlayerController(this, 0)->GetLocalPlayer()->GetSubsystem<UDialogueManager_SubSystem>();
 	AudioComponent = nullptr;
 	CurrentPlayingDialogue = nullptr;
