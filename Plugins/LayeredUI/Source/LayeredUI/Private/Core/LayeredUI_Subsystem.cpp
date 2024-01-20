@@ -214,13 +214,6 @@ void ULayeredUI_Subsystem::AddWidgetToLayer_Internal(UUserWidget* Widget, FGamep
 		NewLayeredWidget.Layer = Layer;
 		NewLayeredWidget.ZOrder = *ZOrder;
 		LayeredWidget = NewLayeredWidget;
-
-		//Might be called on different thread, engine crashes if we try to add the widget
-		//to viewport outside of the game thread.
-		if(UKismetSystemLibrary::DoesImplementInterface(Widget, UI_LayeringCommunication::StaticClass()))
-		{
-			II_LayeringCommunication::Execute_SetWidgetLayerData(Widget, NewLayeredWidget);
-		}
 		
 		LayeredWidgets.Add(NewLayeredWidget);
 		Widget->AddToViewport(*ZOrder);

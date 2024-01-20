@@ -21,27 +21,6 @@ class LAYEREDUI_API II_LayeringCommunication
 
 public:
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Layering")
-	void SetWidgetLayerData(FLayeredWidget WidgetLayer);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Layering")
-	FLayeredWidget GetWidgetLayerData();
-
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||Settings")
 	bool AllowMultipleInstances();
-
-	//-------------------------
-	/*Some widgets are not part of the CommonUI framework for various reasons, these two interface
-	 events are meant to communicate what state a widget is in or set its state.*/
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||State")
-	bool DeactivateWidgetsState();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||State")
-	bool ActivateWidgetsState();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "LayeredUI||Widgets||State")
-	bool IsWidgetStateActive();
-	
-	//-------------------------
 };
