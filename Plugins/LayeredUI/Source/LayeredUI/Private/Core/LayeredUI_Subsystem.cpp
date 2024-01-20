@@ -14,24 +14,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 
-void ULayeredUI_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-
-	if(const UDS_LayeredUIGameSettings* UIData = GetDefault<UDS_LayeredUIGameSettings>())
-	{
-		if(IsValid(UIData->UIManagerClass))
-		{
-			UW_UI_Manager* CreatedWidget = Cast<UW_UI_Manager>(CreateWidget(UGameplayStatics::GetPlayerController(this, 0), UIData->UIManagerClass));
-			if(CreatedWidget)
-			{
-				CreatedWidget->AddToViewport(UIData->UIManagerZOrder);
-				UIManager = CreatedWidget;
-			}
-		}
-	}
-}
-
 bool ULayeredUI_Subsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
 	return true;
@@ -65,6 +47,65 @@ TArray<UUserWidget*> ULayeredUI_Subsystem::GetCurrentWidgets()
 TArray<FLayeredWidget> ULayeredUI_Subsystem::GetLayeredWidgets()
 {
 	return LayeredWidgets;
+}
+
+UW_UI_Manager* ULayeredUI_Subsystem::GetUIManager(const UObject* WorldContextObject, bool CreateIfMissing)
+{
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return nullptr;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return nullptr;
+	}
+
+	if(IsValid(LayeredUI_Subsystem->UIManager))
+	{
+		return LayeredUI_Subsystem->UIManager;
+	}
+
+	if(CreateIfMissing)
+	{
+		if(const UDS_LayeredUIGameSettings* UIData = GetDefault<UDS_LayeredUIGameSettings>())
+		{
+			if(IsValid(UIData->UIManagerClass))
+			{
+				UW_UI_Manager* CreatedWidget = Cast<UW_UI_Manager>(CreateWidget(UGameplayStatics::GetPlayerController(WorldContextObject, 0), UIData->UIManagerClass));
+				if(CreatedWidget)
+				{
+					CreatedWidget->AddToViewport(UIData->UIManagerZOrder);
+					LayeredUI_Subsystem->UIManager = CreatedWidget;
+					return CreatedWidget;
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+void ULayeredUI_Subsystem::SetUIManager(const UObject* WorldContextObject, UW_UI_Manager* New_UI_Manager)
+{
+	if(!UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		return;
+	}
+
+	ULayeredUI_Subsystem* LayeredUI_Subsystem = UGameplayStatics::GetPlayerController(WorldContextObject, 0)->GetLocalPlayer()->GetSubsystem<ULayeredUI_Subsystem>();
+	if(!LayeredUI_Subsystem)
+	{
+		return;
+	}
+
+	if(!IsValid(New_UI_Manager))
+	{
+		return;
+	}
+
+	LayeredUI_Subsystem->UIManager = New_UI_Manager;
 }
 
 bool ULayeredUI_Subsystem::IsWidgetValid(const UObject* WorldContextObject, FLayeredWidget Widget)

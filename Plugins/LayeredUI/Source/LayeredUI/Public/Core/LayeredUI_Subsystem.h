@@ -43,8 +43,6 @@ public:
 	UPROPERTY(Category = "LayeredUI", BlueprintAssignable)
 	FWidgetRemoved WidgetRemoved;
 
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 	/**Get a copy of the layer map from the project settings.*/
@@ -58,6 +56,12 @@ public:
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable)
 	TArray<FLayeredWidget> GetLayeredWidgets();
+
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject", DisplayName = "Get UI Manager"))
+	static UW_UI_Manager* GetUIManager(const UObject* WorldContextObject, bool CreateIfMissing = true);
+	
+	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject", DisplayName = "Set UI Manager"))
+	static void SetUIManager(const UObject* WorldContextObject, UW_UI_Manager* New_UI_Manager);
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, BlueprintPure, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
 	static bool IsWidgetValid(const UObject* WorldContextObject, FLayeredWidget Widget);
