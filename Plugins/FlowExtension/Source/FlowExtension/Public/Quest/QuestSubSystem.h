@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Nodes/FN_QuestBase.h"
-#include "QuestComponent.generated.h"
+#include "QuestSubSystem.generated.h"
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FQuestWrapper, Quest, TEnumAsByte<EQuestState>, NewState);
@@ -22,8 +22,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskAddedToQuest, FTaskWrapper, Ta
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FTaskWrapper, Task, FQuestWrapper, Quest);
 
 
-UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOWEXTENSION_API UQuestComponent : public UActorComponent, public II_QuestUpdates
+UCLASS(DisplayName = "Core Quest Manager")
+class FLOWEXTENSION_API UQuestSubSystem : public UGameInstanceSubsystem, public II_QuestUpdates
 {
 	GENERATED_BODY()
 
