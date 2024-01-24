@@ -63,5 +63,5 @@ Keep in mind, some of these plugins do not need multiplayer support, such as `La
 - The example project might not be well-organized or maintained. The wiki is the primary source of documentation.
 
 # Links:
-- `Marketplace`: https://www.unrealengine.com/marketplace/en-US/profile/Varian+Daemon
-- `Twitch`: https://www.twitch.tv/variann_
+- [Marketplace](https://www.unrealengine.com/marketplace/en-US/profile/Varian+Daemon)
+- [Twitch](https://www.twitch.tv/variann_)
