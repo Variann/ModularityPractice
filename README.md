@@ -61,3 +61,7 @@ These are plugins that are not mine but are utilized in this project, these plug
 Keep in mind, some of these plugins do not need multiplayer support, such as `LayeredUI`
 - I don't take on many requests unless I see myself using the requested features. These are plugins that already work for my projects.
 - The example project might not be well-organized or maintained. The wiki is the primary source of documentation.
+
+# Links:
+- `Marketplace`: https://www.unrealengine.com/marketplace/en-US/profile/Varian+Daemon
+- `Twitch`: https://www.twitch.tv/variann_
