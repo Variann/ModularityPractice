@@ -22,7 +22,7 @@ public:
 	
 	/**The map used to figure out what ZOrder to assign a widget when adding
 	 * it to the screen.*/
-	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow, Categories="UI.Layer"))
+	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly, meta = (ForceInlineRow, Categories="LayeredUI"))
 	TMap<FGameplayTag, int32> LayerMap;
 
 	UPROPERTY(Category = "Settings", Config, EditAnywhere, BlueprintReadOnly)

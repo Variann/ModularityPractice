@@ -67,16 +67,16 @@ public:
 	static bool IsWidgetValid(const UObject* WorldContextObject, FLayeredWidget Widget);
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
-	static void AddWidgetToLayer(const UObject* WorldContextObject, UUserWidget* Widget, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
-	void AddWidgetToLayer_Internal(UUserWidget* Widget, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
+	static void AddWidgetToLayer(const UObject* WorldContextObject, UUserWidget* Widget, UPARAM(meta=(Categories="LayeredUI"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
+	void AddWidgetToLayer_Internal(UUserWidget* Widget, UPARAM(meta=(Categories="LayeredUI"))FGameplayTag Layer, FLayeredWidget& LayeredWidget);
 
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
 	static void RemoveWidgetFromLayer(const UObject* WorldContextObject, UUserWidget* Widget);
 	void RemoveWidgetFromLayer_Internal(UUserWidget* Widget);
 	
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
-	static void FindFirstWidgetOnLayer(const UObject* WorldContextObject, FGameplayTag Layer, UPARAM(meta=(Categories="UI.Layer"))FLayeredWidget& Widget);
-	void FindFirstWidgetOnLayer_Internal(FGameplayTag Layer, UPARAM(meta=(Categories="UI.Layer"))FLayeredWidget& Widget);
+	static void FindFirstWidgetOnLayer(const UObject* WorldContextObject, FGameplayTag Layer, UPARAM(meta=(Categories="LayeredUI"))FLayeredWidget& Widget);
+	void FindFirstWidgetOnLayer_Internal(FGameplayTag Layer, UPARAM(meta=(Categories="LayeredUI"))FLayeredWidget& Widget);
 
 	/**Register a panel widget as a slot, this will cause all future widgets we attempt
 	 * to add to the screen to rather be added as a child to the slot, instead
@@ -85,7 +85,7 @@ public:
 	 * Since CommonUI doesn't inherit from UPanelSlot and the only parent the two share is UWidget,
 	 * the parameter must be UWidget.*/
 	UFUNCTION(Category="LayeredUI", BlueprintCallable, meta = (CallableWithoutWorldContext, WorldContext = "WorldContextObject"))
-	static void RegisterSlot(const UObject* WorldContextObject, UWidget* Slot, UPARAM(meta=(Categories="UI.Layer"))FGameplayTag Layer);
+	static void RegisterSlot(const UObject* WorldContextObject, UWidget* Slot, UPARAM(meta=(Categories="LayeredUI"))FGameplayTag Layer);
 
 	UWidget* GetSlotForLayer(FGameplayTag Layer);
 };
