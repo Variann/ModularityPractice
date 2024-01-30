@@ -1,4 +1,4 @@
-﻿// Copyright (C) Varian Daemon. All Rights Reserved
+﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
 
 #pragma once
 
@@ -19,6 +19,6 @@ class TAGMETADATA_API UTMD_UI_Text : public UO_TagMetadata
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(Category = "Metadata", EditDefaultsOnly, BlueprintReadOnly)
 	FText UI_Text;
 };

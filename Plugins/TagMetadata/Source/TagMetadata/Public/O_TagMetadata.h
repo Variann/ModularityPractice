@@ -1,4 +1,4 @@
-﻿// Copyright (C) Varian Daemon. All Rights Reserved
+﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
 
 #pragma once
 

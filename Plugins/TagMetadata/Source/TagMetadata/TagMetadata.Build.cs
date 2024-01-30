@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
 
 using UnrealBuildTool;
 
