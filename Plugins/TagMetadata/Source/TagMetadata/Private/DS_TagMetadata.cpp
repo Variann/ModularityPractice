@@ -10,7 +10,7 @@ UDS_TagMetadata::UDS_TagMetadata()
 
 TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSubclassOf<UO_TagMetadataCollection> OptionalCollection)
 {
-	TArray<UO_TagMetadata*> EmptyMetadata;
+	TArray<UO_TagMetadata*> FoundMetadata;
 
 	if(IsValid(OptionalCollection))
 	{
@@ -18,11 +18,11 @@ TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSubcl
 		{
 			if(CurrentMetadata.Tag == Tag)
 			{
-				return CurrentMetadata.Metadata;
+				FoundMetadata.Append(CurrentMetadata.Metadata);
 			}
 		}
 
-		return EmptyMetadata;
+		return FoundMetadata;
 	}
 	
 	if(const UDS_TagMetadata* TagMetadataConfig = GetDefault<UDS_TagMetadata>())
@@ -35,14 +35,14 @@ TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSubcl
 				{
 					if(CurrentMetadata.Tag == Tag)
 					{
-						return CurrentMetadata.Metadata;
+						FoundMetadata.Append(CurrentMetadata.Metadata);
 					}
 				}
 			}
 		}
 	}
 	
-	return EmptyMetadata;
+	return FoundMetadata;
 }
 
 UO_TagMetadata* UDS_TagMetadata::GetTagMetadataByClass(FGameplayTag Tag, TSubclassOf<UO_TagMetadata> Class)
@@ -77,4 +77,26 @@ UO_TagMetadata* UDS_TagMetadata::GetTagMetadataByClassFromCollection(FGameplayTa
 	}
 
 	return nullptr;
+}
+
+TArray<TSubclassOf<UO_TagMetadataCollection>> UDS_TagMetadata::GetAllCollectionsForTag(FGameplayTag Tag)
+{
+	TArray<TSubclassOf<UO_TagMetadataCollection>> FoundCollections;
+	
+	if(const UDS_TagMetadata* TagMetadataConfig = GetDefault<UDS_TagMetadata>())
+	{
+		for(auto& CurrentCollection : TagMetadataConfig->TagMetadataCollections)
+		{
+			for(auto& CurrentTagMetadata : CurrentCollection.GetDefaultObject()->TagsMetadata)
+			{
+				if(CurrentTagMetadata.Tag == Tag)
+				{
+					FoundCollections.Add(CurrentCollection);
+					break;
+				}
+			}
+		}
+	}
+
+	return FoundCollections;
 }

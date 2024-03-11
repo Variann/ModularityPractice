@@ -24,8 +24,8 @@ class TAGMETADATA_API UDS_TagMetadata : public UDeveloperSettings
 
 public:
 
-	/**Collections of tag metadata, these are your hosts of the instanced
-	 * objects which grant the tag its metadata.*/
+	/**Friendly texts for tags, which can be picked up by the translation tool
+	 * and is meant to give a simple way to pair any text with a tag.*/
 	UPROPERTY(Config, Category = "Settings", BlueprintReadOnly, EditAnywhere)
 	TArray<TSubclassOf<UO_TagMetadataCollection>> TagMetadataCollections;
 
@@ -45,4 +45,8 @@ public:
 	UFUNCTION(Category = "Tags Metadata", BlueprintCallable, BlueprintPure, meta = (DeterminesOutputType = "Class"))
 	static UO_TagMetadata* GetTagMetadataByClassFromCollection(FGameplayTag Tag, TSubclassOf<UO_TagMetadata> Class,
 		TSubclassOf<UO_TagMetadataCollection> Collection);
+
+	/**Returns all collections where the @Tag is being used.*/
+	UFUNCTION(Category = "Tags Metadata", BlueprintCallable, BlueprintPure)
+	static TArray<TSubclassOf<UO_TagMetadataCollection>> GetAllCollectionsForTag(FGameplayTag Tag);
 };
