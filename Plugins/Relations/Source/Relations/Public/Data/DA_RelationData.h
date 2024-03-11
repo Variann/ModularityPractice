@@ -11,7 +11,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Relation Asset", ContextMenuPrefix = "RA_"))
 class RELATIONS_API UDA_RelationData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
