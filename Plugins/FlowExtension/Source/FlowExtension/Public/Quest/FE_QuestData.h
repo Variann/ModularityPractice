@@ -1,17 +1,14 @@
-﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
+﻿// Copyright (C) Varian Daemon. All Rights Reserved
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Dialogue/Objects/O_DialogueConditionBase.h"
-#include "UObject/Object.h"
-#include "FE_CommonData.generated.h"
+#include "FE_QuestData.generated.h"
 
+class UO_TaskFailConditionBase;
+class UO_TaskRequirementBase;
 class UDA_Quest;
-class UFlowNode;
-class UFlowAsset;
-class UWidget;
 
 UENUM(BlueprintType)
 enum EQuestState
@@ -24,70 +21,6 @@ enum EQuestState
 	Finished,
 	Failed
 };
-
-UENUM(BlueprintType)
-enum EConditionHandling
-{
-	AnyCondition,
-	AllConditions
-};
-
-
-//--------------//
-//	 Dialogue	//
-
-USTRUCT(BlueprintType)
-struct FDialogueConditionSettings
-{
-	GENERATED_BODY()
-
-	/**When we process the conditions, we can control if only a single condition
-	 * has to return true or if all of them have to return true.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	TEnumAsByte<EConditionHandling> ConditionHandling = AllConditions;
-
-	/**If the owning dialogue option does NOT want to be hidden, but the requirements
-	 * are still not met, the option will be greyed out and not selectable, but still
-	 * visible to the player.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option", meta = (EditCondition = "Conditions.IsEmpty() == true", EditConditionHides))
-	bool HideIfConditionsAreNotMet = true;
-
-	/**When it's time to present this option to the player, what conditions must
-	 * be met?*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Dialogue Option")
-	TArray<UO_DialogueConditionBase*> Conditions;
-};
-
-USTRUCT(BlueprintType)
-struct FDialogueOption
-{
-	GENERATED_BODY()
-
-	/**The text displayed to the player to choose this option.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText ButtonText = FText();
-
-	/**The actual dialogue that occurs when the player presses
-	 * the dialogue button.*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText DialogueText = FText();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FDialogueConditionSettings ConditionSettings;
-};
-
-USTRUCT(BlueprintType)
-struct FScript
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue Option")
-	FText DialogueText;
-};
-
-
-//----------//
-
 
 //----------//
 //	 Task	//
@@ -102,30 +35,6 @@ struct FS_Reward
 
 	UPROPERTY(Category = "Reward", EditAnywhere, BlueprintReadOnly)
 	bool bIsAccepted = false;
-};
-
-//Requirements for a quest.
-//Being left inside a struct in case someone
-//needs to add more basic data to this.
-USTRUCT(BlueprintType)
-struct FTaskRequirement
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
-	TMap<FGameplayTag, float> QuestRequirements;
-};
-
-//Fail conditions for a quest.
-//Being left inside a struct in case someone
-//needs to add more basic data to this.
-USTRUCT(BlueprintType)
-struct FS_TaskFailCondition
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
-	TMap<FGameplayTag, float> FailConditions;
 };
 
 //If you add any data into this struct, remember to go into
@@ -145,25 +54,21 @@ struct FQuestTask
 
 	/**How much progress does this task require?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	float ProgressRequired;
+	float ProgressRequired = 1;
 
 	//Requirements for progressing this task.
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FTaskRequirement> Requirements;
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, Instanced)
+	TArray<UO_TaskRequirementBase*> Requirements;
 
 	/**What scenarios will fail this task?*/
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_TaskFailCondition> FailConditions;
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, Instanced)
+	TArray<UO_TaskFailConditionBase*> FailConditions;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_Reward> Rewards;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	bool IsOptional = false;
-	
-	/**Arbitrary data which can be added to a task, such as a timer, repeat count, etc.*/
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
-	TMap<FGameplayTag, float> Metadata;
 };
 
 //If you add any data into this struct, remember to go into
@@ -172,6 +77,10 @@ USTRUCT(BlueprintType)
 struct FTaskWrapper
 {
 	GENERATED_BODY()
+
+	//The quest this task belongs to.
+	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
+	UDA_Quest* RootQuest = nullptr;
 	
 	/**The task itself*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
@@ -184,19 +93,6 @@ struct FTaskWrapper
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	float CurrentProgress = 0;
 
-	/**How much progress does this task require?*/
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	float ProgressRequired;
-
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FTaskRequirement> Requirements;
-
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_TaskFailCondition> FailConditions;
-
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_Reward> Rewards;
-
 	/**What state is the task currently in?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TEnumAsByte<EQuestState> State = Inactive;
@@ -204,9 +100,6 @@ struct FTaskWrapper
 	/**Arbitrary data which can be added to a task, such as a timer, repeat count, etc.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
 	TMap<FGameplayTag, float> Metadata;
-
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	bool IsOptional = false;
 
 	/**When the task receives interface updates, these objects will receive the same
 	 * interface call.
@@ -258,12 +151,6 @@ struct FQuestWrapper
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FTaskWrapper> Tasks;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FQuestRequirement> Requirements;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_QuestFailCondition> FailConditions;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_Reward> Rewards;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FE_QuestData.h"
 #include "GameplayTagContainer.h"
 #include "Nodes/FN_QuestBase.h"
 #include "QuestSubSystem.generated.h"
@@ -22,7 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskAddedToQuest, FTaskWrapper, Ta
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTaskRemovedFromQuest, FTaskWrapper, Task, FQuestWrapper, Quest);
 
 
-UCLASS(DisplayName = "Core Quest Manager")
+UCLASS(DisplayName = "Core Quest Manager", Blueprintable, meta = (BlueprintSpawnableComponent))
 class FLOWEXTENSION_API UQuestSubSystem : public UGameInstanceSubsystem, public II_QuestUpdates
 {
 	GENERATED_BODY()
@@ -169,7 +170,7 @@ public:
   * @FailQuest Whether or not the entire quest this task belongs to
   * should also be failed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool FailTask(FGameplayTag Task, bool FailQuest);
+ bool FailTask(FGameplayTag Task, bool bFailQuest);
 
  /**Adds a task to a quest, this is not generally advised to use,
   * since the design process is supposed to be all within the quest

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/FE_CommonData.h"
+#include "Quest/FE_QuestData.h"
 #include "Nodes/FlowNode.h"
 #include "Quest/DataAssets/DA_Quest.h"
 #include "Quest/I_QuestUpdates.h"
@@ -26,6 +26,7 @@ public:
 	UDA_Quest* QuestPtr = nullptr;
 
 #if WITH_EDITOR
+	virtual FString GetNodeDescription() const override;
 	virtual EDataValidationResult ValidateNode() override;
 #endif
 };

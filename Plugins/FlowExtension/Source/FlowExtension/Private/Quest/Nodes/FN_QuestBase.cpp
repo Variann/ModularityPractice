@@ -3,6 +3,8 @@
 
 #include "Quest/Nodes/FN_QuestBase.h"
 
+#include "Kismet/KismetStringLibrary.h"
+
 UFN_QuestBase::UFN_QuestBase(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -15,6 +17,25 @@ UFN_QuestBase::UFN_QuestBase(const FObjectInitializer& ObjectInitializer)
 }
 
 #if WITH_EDITOR
+FString UFN_QuestBase::GetNodeDescription() const
+{
+	if(!QuestAsset.IsValid())
+	{
+		return Super::GetNodeDescription();
+	}
+
+	//Load and retrieve the quest ID
+	if(const FGameplayTag QuestID = QuestAsset.LoadSynchronous()->QuestID; QuestID.IsValid())
+	{
+		FString ShortenedString;
+		FString LeftString;
+		UKismetStringLibrary::Split(QuestID.ToString(), "Quests.", LeftString, ShortenedString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+		return ShortenedString;
+	}
+	
+	return Super::GetNodeDescription();
+}
+
 EDataValidationResult UFN_QuestBase::ValidateNode()
 {
 	bool FailedValidation = false;

@@ -10,7 +10,8 @@
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, BlueprintType, AutoExpandCategories = ("Default"), EditInlineNew)
+UCLASS(Abstract, Blueprintable, BlueprintType, AutoExpandCategories = ("Default"), EditInlineNew,
+	meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Dialogue|Condition", ContextMenuPrefix = "DC_"))
 class FLOWEXTENSION_API UO_DialogueConditionBase : public UObject
 {
 	GENERATED_BODY()

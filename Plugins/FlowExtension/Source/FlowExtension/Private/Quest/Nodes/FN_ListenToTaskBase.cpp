@@ -3,6 +3,8 @@
 
 #include "Quest/Nodes/FN_ListenToTaskBase.h"
 
+#include "Kismet/KismetStringLibrary.h"
+
 UFN_ListenToTaskBase::UFN_ListenToTaskBase(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -21,7 +23,10 @@ FString UFN_ListenToTaskBase::GetNodeDescription() const
 {
 	if(TaskToListenTo.IsValid())
 	{
-		return TaskToListenTo.ToString();
+		FString ShortenedString;
+		FString LeftString;
+		UKismetStringLibrary::Split(TaskToListenTo.ToString(), "Quests.", LeftString, ShortenedString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+		return ShortenedString;
 	}
 	
 	return Super::GetNodeDescription();

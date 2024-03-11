@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FE_QuestData.h"
 #include "Quest/DataAssets/DA_Quest.h"
-#include "Data/FE_CommonData.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Nodes/FlowNode.h"
 #include "FL_QuestHelpers.generated.h"
 
+class UQuestSubSystem;
 class UFN_QuestBase;
 /**
  * 
@@ -26,12 +27,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static TArray<UFlowNode*> GetFlowNodes(UFlowAsset* FlowAsset);
 
-	/**Wrap a quest into the struct the quest component will use.
-	 *
-	 * @QuestNode This is optional.*/
+	/**Wrap a quest into the struct the quest component will use.*/
 	UFUNCTION(BlueprintCallable)
 	static FQuestWrapper WrapQuest(UDA_Quest* QuestAsset);
 
 	UFUNCTION(BlueprintCallable)
-	static FTaskWrapper WrapTask(FQuestTask TaskInformation);
+	static FTaskWrapper WrapTask(UDA_Quest* RootQuest, FQuestTask TaskInformation);
+
+	/**Check if the task requirements are met.
+	 * Will return false if any fail.*/
+	UFUNCTION(BlueprintCallable)
+	static bool IsTaskRequirementsMet(UQuestSubSystem* QuestComponent, TArray<UO_TaskRequirementBase*> Requirements);
+
+	/**Check if the task fail conditions are met.
+	 * will return true if any succeed.*/
+	UFUNCTION(BlueprintCallable)
+	static bool IsTaskFailed(UQuestSubSystem* QuestComponent, TArray<UO_TaskFailConditionBase*> FailConditions);
 };

@@ -3,6 +3,8 @@
 
 #include "Dialogue/FL_DialogueHelpers.h"
 
+#include "Dialogue/Objects/O_DialogueConditionBase.h"
+
 bool UFL_DialogueHelpers::DoesDialogueMeetCondition(FDialogueOption DialogueOption)
 {
 	if(DialogueOption.ConditionSettings.Conditions.IsEmpty())

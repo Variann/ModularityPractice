@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Dialogue|Character", ContextMenuPrefix = "CA_"))
 class FLOWEXTENSION_API UDA_DialogueCharacter : public UPrimaryDataAsset
 {
 	GENERATED_BODY()

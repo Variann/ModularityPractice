@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.1",
 	"FriendlyName": "FlowExtension",
 	"Description": "Extends the plugin \"Flow\" to provide common systems such as dialogue and quests.",
 	"Category": "Other",

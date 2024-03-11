@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/FE_CommonData.h"
 #include "UObject/Interface.h"
+#include "FE_QuestData.h"
 #include "I_QuestUpdates.generated.h"
 
 // This class does not need to be modified.

@@ -98,7 +98,7 @@ void SFGN_Quest::UpdateGraphNode()
 			+ SHorizontalBox::Slot()
 			[
 				SNew(SBox)
-				.MaxDesiredWidth(Title->GetDesiredSize().X)
+				.MaxDesiredWidth(300)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))

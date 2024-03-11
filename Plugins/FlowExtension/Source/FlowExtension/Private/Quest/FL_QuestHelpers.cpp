@@ -6,6 +6,8 @@
 #include "FlowAsset.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Quest/Nodes/FN_QuestBase.h"
+#include "Quest/Objects/Parents/O_TaskFailConditionBase.h"
+#include "Quest/Objects/Parents/O_TaskRequirementBase.h"
 
 UFlowNode* UFL_QuestHelpers::GetQuestNode(UFlowAsset* Graph, const TSoftObjectPtr<UDA_Quest> Quest)
 {
@@ -56,28 +58,57 @@ FQuestWrapper UFL_QuestHelpers::WrapQuest(UDA_Quest* QuestAsset)
 	}
 	
 	QuestWrapper.QuestAsset = QuestAsset;
-	QuestWrapper.Requirements = QuestAsset->Requirements;
-	QuestWrapper.FailConditions = QuestAsset->FailConditions;
-	QuestWrapper.Rewards = QuestAsset->Rewards;
 	QuestWrapper.State = InProgress;
-	QuestWrapper.Metadata = QuestAsset->Metadata;
 
 	return QuestWrapper;
 }
 
-FTaskWrapper UFL_QuestHelpers::WrapTask(FQuestTask TaskInformation)
+FTaskWrapper UFL_QuestHelpers::WrapTask(UDA_Quest* RootQuest, FQuestTask TaskInformation)
 {
 	FTaskWrapper TaskWrapper;
-	
+
+	if(!IsValid(RootQuest))
+	{
+		return TaskWrapper;
+	}
+
+	TaskWrapper.RootQuest = RootQuest;
 	TaskWrapper.TaskID = TaskInformation.TaskID;
 	TaskWrapper.TaskName = TaskInformation.TaskName;
-	TaskWrapper.Requirements = TaskInformation.Requirements;
-	TaskWrapper.FailConditions = TaskInformation.FailConditions;
-	TaskWrapper.Rewards = TaskInformation.Rewards;
 	TaskWrapper.State = InProgress;
-	TaskWrapper.ProgressRequired = TaskInformation.ProgressRequired;
-	TaskWrapper.IsOptional = TaskInformation.IsOptional;
-	TaskWrapper.Metadata = TaskInformation.Metadata;
 
 	return TaskWrapper;
 }
+
+bool UFL_QuestHelpers::IsTaskRequirementsMet(UQuestSubSystem* QuestComponent, TArray<UO_TaskRequirementBase*> Requirements)
+{
+	for(auto& CurrentRequirement : Requirements)
+	{
+		if(IsValid(CurrentRequirement))
+		{
+			if(!CurrentRequirement->IsConditionMet_Implementation(QuestComponent))
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool UFL_QuestHelpers::IsTaskFailed(UQuestSubSystem* QuestComponent, TArray<UO_TaskFailConditionBase*> FailConditions)
+{
+	for(auto& CurrentFailContition : FailConditions)
+	{
+		if(IsValid(CurrentFailContition))
+		{
+			if(CurrentFailContition->IsTaskFailed_Implementation(QuestComponent))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+

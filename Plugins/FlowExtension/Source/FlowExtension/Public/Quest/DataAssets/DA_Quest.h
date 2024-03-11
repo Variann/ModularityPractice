@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Data/FE_CommonData.h"
 #include "Engine/DataAsset.h"
 #include "DA_Quest.generated.h"
 
@@ -15,14 +14,21 @@
  * so it is important that it is small enough to not
  * cause any hitches.*/
 
-UCLASS()
+struct FS_Reward;
+struct FS_QuestFailCondition;
+struct FQuestRequirement;
+struct FQuestTask;
+class UO_TaskRequirementBase;
+class UO_TaskFailConditionBase;
+
+UCLASS(meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Quest|Quest Asset", ContextMenuPrefix = "QA_"))
 class FLOWEXTENSION_API UDA_Quest : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
 	FGameplayTag QuestID;
 
 	/**Name of the quest presented to the player*/
@@ -46,7 +52,32 @@ public:
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FS_Reward> Rewards;
 
+	/**What tags are associated with this quest?
+	 * This has no default implementation, you will need
+	 * to write any implementation yourself.*/
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	FGameplayTag Tags;
+
 	/**Arbitrary data which can be added to a quest, such as a timer, repeat count, etc.*/
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow), meta=(Categories="Flow.Quests.Metadata"))
-	TMap<FGameplayTag, float> Metadata;
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
+	TMap<FGameplayTag, float> TagValues;
+
+	UFUNCTION(Category = "Quest", BlueprintCallable)
+	bool IsTaskOptional(FGameplayTag TaskID);
+
+	UFUNCTION(Category = "Quest", BlueprintCallable)
+	float GetRequiredTaskProgression(FGameplayTag TaskID);
+
+	UFUNCTION(Category = "Quest", BlueprintCallable)
+	TArray<UO_TaskRequirementBase*> GetTasksRequirements(FGameplayTag TaskID);
+
+	//Editor
+	
+#if WITH_EDITORONLY_DATA
+
+	//If EditorAssistant is installed, this will override the thumbnail automatically.
+	UPROPERTY(meta = (ThumbnailOverride))
+	UTexture2D* ThumbnailOverride = Cast<UTexture2D>(StaticLoadObject(UObject::StaticClass(), nullptr, TEXT("/FlowExtension/Quest/T_QuestIcon_Editor.T_QuestIcon_Editor"))) ;
+
+#endif
 };

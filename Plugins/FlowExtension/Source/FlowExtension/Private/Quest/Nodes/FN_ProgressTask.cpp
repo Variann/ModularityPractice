@@ -20,8 +20,8 @@ FString UFN_ProgressTask::GetNodeDescription() const
 	{
 		FString ShortenedString;
 		FString LeftString;
-		UKismetStringLibrary::Split(Task.ToString(), ".", LeftString, ShortenedString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
-		return ShortenedString;
+		UKismetStringLibrary::Split(Task.ToString(), "Quests.", LeftString, ShortenedString, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+		return ShortenedString + "  -  " + FString::SanitizeFloat(ProgressToAdd);
 	}
 	
 	return Super::GetNodeDescription();

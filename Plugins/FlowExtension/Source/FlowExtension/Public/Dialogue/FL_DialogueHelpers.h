@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Data/FE_CommonData.h"
+#include "FE_DialogueData.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "FL_DialogueHelpers.generated.h"
 
