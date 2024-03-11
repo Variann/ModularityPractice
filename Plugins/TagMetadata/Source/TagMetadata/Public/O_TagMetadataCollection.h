@@ -53,7 +53,8 @@ struct FTagMetadata
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable)
+UCLASS(Abstract, Blueprintable,
+	meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Collection", ContextMenuPrefix = "TMDC_"))
 class TAGMETADATA_API UO_TagMetadataCollection : public UObject
 {
 	GENERATED_BODY()

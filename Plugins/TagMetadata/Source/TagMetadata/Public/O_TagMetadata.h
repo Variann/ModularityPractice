@@ -9,7 +9,8 @@
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, meta=(ShowWorldContextPin), EditInlineNew, DefaultToInstanced, CollapseCategories)
+UCLASS(Abstract, Blueprintable, meta=(ShowWorldContextPin), EditInlineNew, DefaultToInstanced, CollapseCategories,
+	meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Metadata", ContextMenuPrefix = "TMD_"))
 class TAGMETADATA_API UO_TagMetadata : public UObject
 {
 	GENERATED_BODY()
