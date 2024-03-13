@@ -49,6 +49,12 @@ Note: This has not been tested too much, the project this was meant for has been
   - Ensures the same ambient dialogue isn't repeated by separate NPC's.
 
 ---
+- `EditorAssistant` provides a few quality of life improvements and editor tools.
+  - Allows any class from a plugin or the base game to override thumbnails for classes and data assets in the content browser.
+  - Allows any class from a plugin or the base game to add a custom category and entry into the content browser context menu.
+  - Provides a base editor utility widget to act as a hub for all your editor utility widgets and comes with a few common tools that will benefit most projects.
+
+---
 # External plugins
 These are plugins that are not mine but are utilized in this project, these plugins are amazing and developed by incredibly talented people.
  - `FlowGraph` - https://github.com/MothCocoon/FlowGraph
@@ -57,7 +63,7 @@ These are plugins that are not mine but are utilized in this project, these plug
  - `ImGuiBlueprint` - https://github.com/TheEnbyWitch/ImGuiBlueprint
 
 # Notice:
-- I will NOT be supporting multiplayer in any of these plugins, I am done with mutliplayer programming for the foreseeable future.
+- I will NOT be supporting multiplayer in any of these plugins, I am done with multiplayer programming for the foreseeable future.
 Keep in mind, some of these plugins do not need multiplayer support, such as `LayeredUI`
 - I don't take on many requests unless I see myself using the requested features. These are plugins that already work for my projects.
 - The example project might not be well-organized or maintained. The wiki is the primary source of documentation.
