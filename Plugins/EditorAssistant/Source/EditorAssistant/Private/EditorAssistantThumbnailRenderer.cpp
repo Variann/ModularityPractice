@@ -1,4 +1,4 @@
-﻿// Copyright (C) Varian Daemon 2023. All Rights Reserved.
+﻿// Copyright (C) Varian Daemon. All Rights Reserved
 
 
 #include "EditorAssistantThumbnailRenderer.h"
@@ -20,6 +20,7 @@ void UEditorAssistantThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, 
 
 	//Background by default is pitch black. Set it to the normal gray background.
 	//V: There must be a better way of getting the values.
+	//V: I think these values are getting rounded somewhere? The color is sometimes *slightly* different
 	Canvas->Clear(FLinearColor(0.09803922f,0.10196078f,0.10980392f));
 
 	UTexture2D* ThumbnailToUse = FindThumbnailOverrideForObject(Object);
@@ -49,7 +50,6 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 	 * If so, we want to visualize it.*/
 	for(auto& CurrentThumbnail : Settings->ThumbnailOverrides)
 	{
-		
 		if(CurrentThumbnail.Key.ToSoftObjectPath().IsValid() && CurrentThumbnail.Value.ToSoftObjectPath().IsValid())
 		{
 			if(Object->GetClass() == CurrentThumbnail.Key || Object->GetClass()->IsChildOf(CurrentThumbnail.Key.LoadSynchronous()))
@@ -61,7 +61,7 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 
 	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Contains("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Contains("ThumbnailOverride"))
 		{
 			continue;
 		}
@@ -74,9 +74,9 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 		}
 	}
 
-	for (const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
+	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
 		{
 			continue;
 		}
@@ -89,7 +89,7 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 		}
 	}
 	
-	for (const auto& [Property, Value] : TPropertyValueRange<FObjectProperty>(Object->GetClass(), Object))
+	for(const auto& [Property, Value] : TPropertyValueRange<FObjectProperty>(Object->GetClass(), Object))
 	{
 		if(!Property->HasMetaData("ThumbnailOverride"))
 		{
@@ -110,8 +110,21 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 
 UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UObject* Object)
 {
+	if(!Object)
+	{
+		return nullptr;
+	}
+
+	//Blueprint objects true class can only be fetched through GeneratedClass.Get()
+	UBlueprint* Blueprint = Cast<UBlueprint>(Object);
+	
+	UClass* ObjectClass = Blueprint ? Blueprint->GeneratedClass.Get() : Object->GetClass();
+	if(!ObjectClass)
+	{
+		return nullptr;
+	}
+	
 	//ThumbnailOverrides has the highest priority, if anything is found, use that texture.
-	UClass* ObjectClass = Object->GetClass();
 	const UDS_EditorAssistantSettings* Settings = GetDefault<UDS_EditorAssistantSettings>();
 	for(auto& CurrentThumbnail : Settings->ThumbnailOverrides)
 	{
@@ -128,7 +141,7 @@ UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UO
 	//Go through all hard object references and find any with the name "ThumbnailOverride". If found, use that.
 	for(const auto& [Property, Value] : TPropertyValueRange<FObjectProperty>(ObjectClass, ObjectClass->GetDefaultObject()))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Equals("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Equals("ThumbnailOverride"))
 		{
 			continue;
 		}
@@ -146,7 +159,7 @@ UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UO
 	//Go through all soft object references and find any with the name "ThumbnailOverride". If found, use that.
 	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(ObjectClass, ObjectClass->GetDefaultObject()))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Equals("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Equals("ThumbnailOverride"))
 		{
 			continue;
 		}
@@ -160,9 +173,9 @@ UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UO
 	}
 
 	//Go through any soft object properties with the ThumbnailOverride metadata. If found, use that.
-	for (const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
+	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
 		{
 			continue;
 		}
@@ -178,7 +191,7 @@ UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UO
 	//Go through any hard object properties with the ThumbnailOverride metadata. If found, use that.
 	for(const auto& [Property, Value] : TPropertyValueRange<FObjectProperty>(Object->GetClass(), Object))
 	{
-		if (Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
 		{
 			continue;
 		}
