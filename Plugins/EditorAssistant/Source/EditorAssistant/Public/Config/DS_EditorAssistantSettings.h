@@ -80,6 +80,7 @@ struct FMenuItem : TSharedFromThis<FMenuItem>
 						[
 							SNew(SButton)
 							.ButtonStyle(FAppStyle::Get(), "Menu.Button")
+							.ToolTipText(SubItem->ParentClass->GetToolTipText())
 							.OnClicked_Lambda([=]()
 							{
 								if(SelectedPaths.Num() > 0)
