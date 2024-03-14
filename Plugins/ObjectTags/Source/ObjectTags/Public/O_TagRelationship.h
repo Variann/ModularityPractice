@@ -11,7 +11,8 @@
 /**This class allows you to create complex relationships between a tag
  * and other tags. Using the AddTagsToObject(Map), it'll automatically
  * try to manage the relationship a tag might have with other tags.*/
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins",
+	ContextMenuEntryName = "Tag Relationship", ContextMenuPrefix = "TR_"))
 class OBJECTTAGS_API UO_TagRelationship : public UObject
 {
 	GENERATED_BODY()
