@@ -126,6 +126,10 @@ struct FMenuItem : TSharedFromThis<FMenuItem>
 										}
 									}
 								}
+								//MenuBuilder doesn't have a built in function to call to close the menu.
+                                //Overkill solution, but dismiss all menus.
+                                ////There is DismissMenu, but I'm not sure how to use it with FMenuBuilder
+								FSlateApplication::Get().DismissAllMenus();
 								return FReply::Handled();
 							}
 							)
