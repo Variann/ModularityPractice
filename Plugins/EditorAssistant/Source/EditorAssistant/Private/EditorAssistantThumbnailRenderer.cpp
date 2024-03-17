@@ -43,66 +43,9 @@ bool UEditorAssistantThumbnailRenderer::CanVisualizeAsset(UObject* Object)
 		return true;
 	}
 
-	const UDS_EditorAssistantSettings* Settings = GetDefault<UDS_EditorAssistantSettings>();
-
-	/**Find out if the current object we are trying to visualize is in the
-	 * ThumbnailOverrides map or is a child of any classes in the map.
-	 * If so, we want to visualize it.*/
-	for(auto& CurrentThumbnail : Settings->ThumbnailOverrides)
+	if(UTexture2D* ThumbnailToUse = FindThumbnailOverrideForObject(Object))
 	{
-		if(CurrentThumbnail.Key.ToSoftObjectPath().IsValid() && CurrentThumbnail.Value.ToSoftObjectPath().IsValid())
-		{
-			if(Object->GetClass() == CurrentThumbnail.Key || Object->GetClass()->IsChildOf(CurrentThumbnail.Key.LoadSynchronous()))
-			{
-				return true;
-			}
-		}
-	}
-
-	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
-	{
-		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->GetName().Contains("ThumbnailOverride"))
-		{
-			continue;
-		}
-
-		void* MutableValue = const_cast<void*>(Value);
-		const TSoftObjectPtr<UTexture2D>& SoftTexture = *static_cast<TSoftObjectPtr<UTexture2D>*>(MutableValue);
-		if(SoftTexture.ToSoftObjectPath().IsValid())
-		{
-			return true;
-		}
-	}
-
-	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
-	{
-		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
-		{
-			continue;
-		}
-
-		void* MutableValue = const_cast<void*>(Value);
-		const TSoftObjectPtr<UTexture2D>& SoftTexture = *static_cast<TSoftObjectPtr<UTexture2D>*>(MutableValue);
-		if(SoftTexture.ToSoftObjectPath().IsValid())
-		{
-			return true;
-		}
-	}
-	
-	for(const auto& [Property, Value] : TPropertyValueRange<FObjectProperty>(Object->GetClass(), Object))
-	{
-		if(!Property->HasMetaData("ThumbnailOverride"))
-		{
-			continue;
-		}
-
-		void* MutableValue = const_cast<void*>(Value);
-		const TSoftObjectPtr<UTexture2D> SoftTexture = Cast<UTexture2D>(Property->GetObjectPtrPropertyValue(Value));
-
-		if(SoftTexture.ToSoftObjectPath().IsValid())
-		{
-			return true;
-		}
+		return true;
 	}
 
 	return false;
