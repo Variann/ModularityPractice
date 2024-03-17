@@ -173,6 +173,25 @@ UTexture2D* UEditorAssistantThumbnailRenderer::FindThumbnailOverrideForObject(UO
 	}
 
 	//Go through any soft object properties with the ThumbnailOverride metadata. If found, use that.
+	//NOTE: This is repeated again after this, but on a different class. I don't know why, but if a class
+	//has the property defined in C++, then a blueprint is made out of it, the thumbnail fails to be found.
+	//Repeating it again on the ObjectClass fixes it.
+	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(ObjectClass, ObjectClass->GetDefaultObject()))
+	{
+		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
+		{
+			continue;
+		}
+	
+		void* MutableValue = const_cast<void*>(Value);
+		const TSoftObjectPtr<UTexture2D>& SoftTexture = *static_cast<TSoftObjectPtr<UTexture2D>*>(MutableValue);
+		if(SoftTexture.ToSoftObjectPath().IsValid())
+		{
+			return SoftTexture.LoadSynchronous();
+		}
+	}
+
+	//Go through any soft object properties with the ThumbnailOverride metadata. If found, use that.
 	for(const auto& [Property, Value] : TPropertyValueRange<FSoftObjectProperty>(Object->GetClass(), Object))
 	{
 		if(Property->PropertyClass != UTexture2D::StaticClass() || !Property->HasMetaData("ThumbnailOverride"))
