@@ -13,8 +13,8 @@
  *
  * Use ConstructObjectFromClass so any exposed variables can be filled in easily.
  */
-
-UCLASS(Abstract, Blueprintable, meta=(ShowWorldContextPin))
+UCLASS(Abstract, Blueprintable, meta=(ShowWorldContextPin),
+	meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "ImGui Debugger", ContextMenuPrefix = "IGD_"))
 class IMGUIBLUEPRINT_API UO_ImGuiDebugger : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
