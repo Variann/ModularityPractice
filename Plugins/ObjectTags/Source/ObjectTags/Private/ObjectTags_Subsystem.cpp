@@ -102,7 +102,12 @@ bool UObjectTags_Subsystem::AddTagsToObject_Internal(FGameplayTagContainer TagsT
 
 				if(AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get()))
 				{
-					UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+					FGameplayTagContainer ASCTags;
+					UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->GetOwnedGameplayTags(ASCTags);
+					if(!ASCTags.HasTagExact(CurrentTag))
+					{
+						UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+					}
 				}
 
 				//Notify the object itself
@@ -160,7 +165,12 @@ bool UObjectTags_Subsystem::AddTagsToObject_Internal(FGameplayTagContainer TagsT
 
 			if(AActor* TargetActor = Cast<AActor>(Object))
 			{
-				UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+				FGameplayTagContainer ASCTags;
+				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->GetOwnedGameplayTags(ASCTags);
+				if(!ASCTags.HasTagExact(CurrentTag))
+				{
+					UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+				}
 			}
 
 			//Notify the object itself
