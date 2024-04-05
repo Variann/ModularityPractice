@@ -30,9 +30,15 @@ struct FObjectTag
 {
 	GENERATED_BODY()
 
+	/**This isn't needed, since this is also the key for the TMap,
+	 * but this simplifies a good chunk of logic and takes up tiny
+	 * amount of memory.*/
 	UPROPERTY(Category = "Object Tags", BlueprintReadOnly)
 	TObjectPtr<UObject> Object = nullptr;
 
+	/**What tags have been added with this system?
+	 * Keep in mind, you should always use GetObjectTags,
+	 * as that will also fetch any external tags.*/
 	UPROPERTY(Category = "Object Tags", BlueprintReadOnly)
 	FGameplayTagContainer Tags;
 
@@ -50,21 +56,11 @@ struct FObjectTag
 	TArray<FObjectTagHistory> TagHistory;
 	//TODO: Remove for cooked builds
 
-	FORCEINLINE FObjectTag();
-	FORCEINLINE FObjectTag(UObject* Object);
-
 	bool operator==(const FObjectTag& Argument) const
 	{
 		return Argument.Object == Object;
 	}
 };
-FORCEINLINE FObjectTag::FObjectTag(){}
-FORCEINLINE FObjectTag::FObjectTag(UObject* InObject) : Object(InObject)
-{}
-FORCEINLINE uint32 GetTypeHash(const FObjectTag& Thing)
-{
-	return GetTypeHash(Thing.Object);
-}
 
 UCLASS()
 class OBJECTTAGS_API UObjectTags_Subsystem : public ULocalPlayerSubsystem
@@ -79,7 +75,7 @@ public:
 	bool CollectDebuggingData = true;
 
 	UPROPERTY(Category = "Object Tags", BlueprintReadOnly, SaveGame)
-	TArray<FObjectTag> ObjectTags;
+	TMap<TObjectPtr<UObject>, FObjectTag> ObjectTags;
 	/**V: I don't know why, I couldn't figure out why... But if this is a TSet,
 	 * it will VERY randomly crash. It was worrying enough that I don't think it's
 	 * worthwhile seeing if it's just an editor problem, especially with how much
