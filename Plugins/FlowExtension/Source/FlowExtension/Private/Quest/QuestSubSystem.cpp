@@ -12,9 +12,29 @@
 #include "Math/Color.h"
 
 
+UQuestSubSystem* UQuestSubSystem::Get()
+{
+	if(!GEngine->GameViewport) { return nullptr; }
+	const UWorld* World = GEngine->GameViewport->GetWorld();
+	if(!World) { return nullptr; }
+	if(!UGameplayStatics::GetGameInstance(World)){ return nullptr; }
+	if(UQuestSubSystem* SubSystem = UGameplayStatics::GetGameInstance(World)->GetSubsystem<UQuestSubSystem>())
+	{
+		return SubSystem;
+	}
+
+	return nullptr;
+}
+
 void UQuestSubSystem::AddListenerToQuest(const TSoftObjectPtr<UDA_Quest> Quest, UObject* Listener)
 {
-	FQuestWrapper* QuestWrapper = Quests.Find(Quest);
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return;
+	}
+	
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest);
 	if(QuestWrapper)
 	{
 		QuestWrapper->Listeners.Add(Listener);
@@ -24,6 +44,12 @@ void UQuestSubSystem::AddListenerToQuest(const TSoftObjectPtr<UDA_Quest> Quest, 
 bool UQuestSubSystem::AcceptQuest(UDA_Quest* Quest)
 {
 	if(!IsValid(Quest))
+	{
+		return false;
+	}
+	
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
 	{
 		return false;
 	}
@@ -48,12 +74,12 @@ bool UQuestSubSystem::AcceptQuest(UDA_Quest* Quest)
 		QuestWrapper.Tasks.Add(TaskWrapper);
 	}
 
-	Quests.Add(Quest, QuestWrapper);
-	QuestStateUpdated.Broadcast(QuestWrapper, InProgress);
+	QuestSubSystem->Quests.Add(Quest, QuestWrapper);
+	QuestSubSystem->QuestStateUpdated.Broadcast(QuestWrapper, InProgress);
 
 	#if ENABLE_VISUAL_LOG
 	
-	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 		10, FColor::White, TEXT("Accepted Quest: %s"), *UKismetSystemLibrary::GetObjectName(Quest));
 
 	#endif
@@ -61,7 +87,7 @@ bool UQuestSubSystem::AcceptQuest(UDA_Quest* Quest)
 	return true;
 }
 
-bool UQuestSubSystem::CanAcceptQuest_Implementation(const TSoftObjectPtr<UDA_Quest>& Quest)
+bool UQuestSubSystem::CanAcceptQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
 	if(HasCompletedQuest(Quest))
 	{
@@ -83,7 +109,13 @@ bool UQuestSubSystem::CanAcceptQuest_Implementation(const TSoftObjectPtr<UDA_Que
 
 void UQuestSubSystem::CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck)
 {
-	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return;
+	}
+	
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		return;
@@ -98,11 +130,11 @@ void UQuestSubSystem::CompleteQuest(FQuestWrapper Quest, bool SkipCompletionChec
 	}
 
 	QuestWrapper->State = Finished;
-	QuestStateUpdated.Broadcast(Quest, Finished);
+	QuestSubSystem->QuestStateUpdated.Broadcast(Quest, Finished);
 		
 #if ENABLE_VISUAL_LOG
 		
-	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 	10, FColor::White, TEXT("Completed quest: %s"), *Quest.QuestAsset->GetName());
 		
 #endif
@@ -123,11 +155,17 @@ void UQuestSubSystem::CompleteQuest(FQuestWrapper Quest, bool SkipCompletionChec
 	QuestWrapper->Listeners.Empty();
 }
 
-bool UQuestSubSystem::CanCompleteQuest_Implementation(FQuestWrapper Quest)
+bool UQuestSubSystem::CanCompleteQuest(FQuestWrapper Quest)
 {
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
 	if(!Quest.QuestAsset.IsValid())
 	{
-		UKismetSystemLibrary::PrintString(this, TEXT("Invalid Quest Asset for quest"), true, true);
+		UKismetSystemLibrary::PrintString(QuestSubSystem, TEXT("Invalid Quest Asset for quest"));
 		return false;
 	}
 	
@@ -138,7 +176,7 @@ bool UQuestSubSystem::CanCompleteQuest_Implementation(FQuestWrapper Quest)
 
 	if(Quest.Tasks.IsEmpty())
 	{
-		UKismetSystemLibrary::PrintString(this, TEXT("Quest has no tasks, can't complete"), true, true);
+		UKismetSystemLibrary::PrintString(QuestSubSystem, TEXT("Quest has no tasks, can't complete"));
 		return false;
 	}
 
@@ -147,7 +185,13 @@ bool UQuestSubSystem::CanCompleteQuest_Implementation(FQuestWrapper Quest)
 
 bool UQuestSubSystem::HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
+	if(FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest))
 	{
 		return QuestWrapper->State == Finished;
 	}
@@ -157,7 +201,13 @@ bool UQuestSubSystem::HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 
 bool UQuestSubSystem::HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
+	if(FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest))
 	{
 		return QuestWrapper->State == Failed;
 	}
@@ -167,7 +217,13 @@ bool UQuestSubSystem::HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 
 TEnumAsByte<EQuestState> UQuestSubSystem::GetQuestState(TSoftObjectPtr<UDA_Quest> Quest)
 {
-	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return Inactive;
+	}
+	
+	if(FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest))
 	{
 		return QuestWrapper->State;
 	}
@@ -177,7 +233,13 @@ TEnumAsByte<EQuestState> UQuestSubSystem::GetQuestState(TSoftObjectPtr<UDA_Quest
 
 bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 {
-	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		return false;
@@ -186,7 +248,7 @@ bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 	//Drop the tasks
 	for(const auto& CurrentTask : QuestWrapper->Tasks)
 	{
-		TaskDropped.Broadcast(CurrentTask);
+		QuestSubSystem->TaskDropped.Broadcast(CurrentTask);
 			
 		for(auto& CurrentListener : CurrentTask.Listeners)
 		{
@@ -200,7 +262,7 @@ bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 		}
 	}
 
-	QuestDropped.Broadcast(Quest);
+	QuestSubSystem->QuestDropped.Broadcast(Quest);
 
 	//Announce the quest being dropped
 	for(const auto& CurrentListener : QuestWrapper->Listeners)
@@ -214,20 +276,26 @@ bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 		}
 	}
 
-	Quests.Remove(Quest.QuestAsset);
+	QuestSubSystem->Quests.Remove(Quest.QuestAsset);
 
-#if ENABLE_VISUAL_LOG
-	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	#if ENABLE_VISUAL_LOG
+	UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 	10, FColor::White, TEXT("Dropped quest: %s"),
 	*Quest.QuestAsset->GetName());
-#endif
+	#endif
 
 	return true;
 }
 
 bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
 {
-	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		return false;
@@ -240,11 +308,11 @@ bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
 
 	QuestWrapper->State = Failed;
 
-#if ENABLE_VISUAL_LOG
-	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	#if ENABLE_VISUAL_LOG
+	UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 	10, FColor::White, TEXT("Failed quest: %s"),
 	*Quest.QuestAsset->GetName());
-#endif
+	#endif
 		
 	if(FailTasks)
 	{
@@ -252,7 +320,7 @@ bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
 		for(auto& CurrentTask : QuestWrapper->Tasks)
 		{
 			CurrentTask.State = Failed;
-			TaskFailed.Broadcast(CurrentTask);
+			QuestSubSystem->TaskFailed.Broadcast(CurrentTask);
 			
 			for(auto& CurrentListener : CurrentTask.Listeners)
 			{
@@ -267,7 +335,7 @@ bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
 		}
 	}
 
-	QuestFailed.Broadcast(Quest);
+	QuestSubSystem->QuestFailed.Broadcast(Quest);
 
 	//Announce the quest failure
 	for(const auto& CurrentListener : QuestWrapper->Listeners)
@@ -288,7 +356,13 @@ TArray<FQuestWrapper> UQuestSubSystem::GetQuestsWithState(TEnumAsByte<EQuestStat
 {
 	TArray<FQuestWrapper> FoundQuests;
 
-	for(auto& CurrentQuest : Quests)
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return FoundQuests;
+	}
+
+	for(auto& CurrentQuest : QuestSubSystem->Quests)
 	{
 		if(CurrentQuest.Value.State == State)
 		{
@@ -301,7 +375,13 @@ TArray<FQuestWrapper> UQuestSubSystem::GetQuestsWithState(TEnumAsByte<EQuestStat
 
 FQuestWrapper UQuestSubSystem::GetQuestForTask(const FGameplayTag Task)
 {
-	for(auto& CurrentQuest : Quests)
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return FQuestWrapper();
+	}
+	
+	for(auto& CurrentQuest : QuestSubSystem->Quests)
 	{
 		for(auto& CurrentTask : CurrentQuest.Value.Tasks)
 		{
@@ -317,7 +397,13 @@ FQuestWrapper UQuestSubSystem::GetQuestForTask(const FGameplayTag Task)
 
 TArray<FTaskWrapper> UQuestSubSystem::GetTasksForQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return TArray<FTaskWrapper>();
+	}
+	
+	if(FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(Quest))
 	{
 		return QuestWrapper->Tasks;
 	}
@@ -327,6 +413,12 @@ TArray<FTaskWrapper> UQuestSubSystem::GetTasksForQuest(const TSoftObjectPtr<UDA_
 
 void UQuestSubSystem::AddListenerToTask(FGameplayTag Task, UObject* Listener)
 {
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return;
+	}
+	
 	FQuestWrapper FoundQuest = GetQuestForTask(Task);
 	if(!FoundQuest.QuestAsset)
 	{
@@ -334,7 +426,7 @@ void UQuestSubSystem::AddListenerToTask(FGameplayTag Task, UObject* Listener)
 	}
 
 	//Get a pointer to the real quest wrapper
-	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(FoundQuest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		//This should NEVER happen
@@ -353,6 +445,12 @@ void UQuestSubSystem::AddListenerToTask(FGameplayTag Task, UObject* Listener)
 
 bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator)
 {
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
 	FQuestWrapper FoundQuest = GetQuestForTask(Task);
 	if(!FoundQuest.QuestAsset)
 	{
@@ -360,7 +458,7 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 	}
 
 	//Get a pointer to the real quest wrapper
-	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(FoundQuest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		//This should NEVER happen
@@ -401,7 +499,7 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 				CurrentTask.State = Finished;
 				TaskCompleted = true;
 			}
-			TaskProgressed.Broadcast(CurrentTask, ProgressDelta, Instigator);
+			QuestSubSystem->TaskProgressed.Broadcast(CurrentTask, ProgressDelta, Instigator);
 			
 			//Notify listeners
 			for(const auto& CurrentListener : CurrentTask.Listeners)
@@ -416,7 +514,7 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 			}
 			
 			#if ENABLE_VISUAL_LOG
-			UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+			UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 			10, FColor::White, TEXT("Progressed task %s - %s / %s"),
 			*Task.ToString(),
 			*FString::SanitizeFloat(CurrentTask.CurrentProgress),
@@ -446,6 +544,12 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 
 bool UQuestSubSystem::CanTaskBeProgressed(FGameplayTag Task)
 {
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
 	FQuestWrapper FoundQuest = GetQuestForTask(Task);
 	if(!FoundQuest.QuestAsset)
 	{
@@ -453,7 +557,7 @@ bool UQuestSubSystem::CanTaskBeProgressed(FGameplayTag Task)
 	}
 
 	//Get a pointer to the real quest wrapper
-	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(FoundQuest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		//This should NEVER happen
@@ -474,12 +578,12 @@ bool UQuestSubSystem::CanTaskBeProgressed(FGameplayTag Task)
 				return false;
 			}
 
-			if(UFL_QuestHelpers::IsTaskRequirementsMet(this, CurrentTask.RootQuest->GetTasksRequirements(CurrentTask.TaskID)))
+			if(UFL_QuestHelpers::IsTaskRequirementsMet(CurrentTask.RootQuest->GetTasksRequirements(CurrentTask.TaskID)))
 			{
 				
 			}
 			
-			if(Execute_PreventTaskProgress(this, CurrentTask))
+			if(Execute_PreventTaskProgress(QuestSubSystem, CurrentTask))
 			{
 				return false;
 			}
@@ -505,6 +609,12 @@ bool UQuestSubSystem::CanTaskBeProgressed(FGameplayTag Task)
 
 bool UQuestSubSystem::FailTask(const FGameplayTag Task, const bool bFailQuest)
 {
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+	
 	FQuestWrapper FoundQuest = GetQuestForTask(Task);
 	if(!FoundQuest.QuestAsset)
 	{
@@ -512,7 +622,7 @@ bool UQuestSubSystem::FailTask(const FGameplayTag Task, const bool bFailQuest)
 	}
 
 	//Get a pointer to the real quest wrapper
-	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	FQuestWrapper* QuestWrapper = QuestSubSystem->Quests.Find(FoundQuest.QuestAsset);
 	if(!QuestWrapper)
 	{
 		//This should NEVER happen
@@ -526,12 +636,12 @@ bool UQuestSubSystem::FailTask(const FGameplayTag Task, const bool bFailQuest)
 			CurrentTask.State = Failed;
 
 			#if ENABLE_VISUAL_LOG
-			UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+			UE_VLOG_LOCATION(QuestSubSystem, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(QuestSubSystem, 0)->GetActorLocation(),
 			10, FColor::White, TEXT("Failed task: %s"),
 			*Task.ToString());
 			#endif
 
-			TaskFailed.Broadcast(CurrentTask);
+			QuestSubSystem->TaskFailed.Broadcast(CurrentTask);
 				
 			for(auto& CurrentListener : CurrentTask.Listeners)
 			{
