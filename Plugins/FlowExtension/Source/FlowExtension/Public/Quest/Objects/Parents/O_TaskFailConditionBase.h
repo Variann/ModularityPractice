@@ -19,5 +19,5 @@ class FLOWEXTENSION_API UO_TaskFailConditionBase : public UObject
 public:
 
 	UFUNCTION(Category = "Task Fail Condition", BlueprintCallable, BlueprintPure, BlueprintNativeEvent)
-	bool IsTaskFailed(UQuestSubSystem* QuestComponent);
+	bool IsTaskFailed();
 };

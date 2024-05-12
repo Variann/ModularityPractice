@@ -19,5 +19,5 @@ class FLOWEXTENSION_API UO_TaskRequirementBase : public UObject
 public:
 
 	UFUNCTION(Category = "Task Requirement", BlueprintCallable, BlueprintPure, BlueprintNativeEvent)
-	bool IsConditionMet(UQuestSubSystem* QuestComponent);
+	bool IsConditionMet();
 };

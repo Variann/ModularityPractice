@@ -80,13 +80,13 @@ FTaskWrapper UFL_QuestHelpers::WrapTask(UDA_Quest* RootQuest, FQuestTask TaskInf
 	return TaskWrapper;
 }
 
-bool UFL_QuestHelpers::IsTaskRequirementsMet(UQuestSubSystem* QuestComponent, TArray<UO_TaskRequirementBase*> Requirements)
+bool UFL_QuestHelpers::IsTaskRequirementsMet(TArray<UO_TaskRequirementBase*> Requirements)
 {
 	for(auto& CurrentRequirement : Requirements)
 	{
 		if(IsValid(CurrentRequirement))
 		{
-			if(!CurrentRequirement->IsConditionMet_Implementation(QuestComponent))
+			if(!CurrentRequirement->IsConditionMet_Implementation())
 			{
 				return false;
 			}
@@ -96,13 +96,13 @@ bool UFL_QuestHelpers::IsTaskRequirementsMet(UQuestSubSystem* QuestComponent, TA
 	return true;
 }
 
-bool UFL_QuestHelpers::IsTaskFailed(UQuestSubSystem* QuestComponent, TArray<UO_TaskFailConditionBase*> FailConditions)
+bool UFL_QuestHelpers::IsTaskFailed(TArray<UO_TaskFailConditionBase*> FailConditions)
 {
 	for(auto& CurrentFailContition : FailConditions)
 	{
 		if(IsValid(CurrentFailContition))
 		{
-			if(CurrentFailContition->IsTaskFailed_Implementation(QuestComponent))
+			if(CurrentFailContition->IsTaskFailed_Implementation())
 			{
 				return true;
 			}

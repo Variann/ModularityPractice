@@ -37,10 +37,10 @@ public:
 	/**Check if the task requirements are met.
 	 * Will return false if any fail.*/
 	UFUNCTION(BlueprintCallable)
-	static bool IsTaskRequirementsMet(UQuestSubSystem* QuestComponent, TArray<UO_TaskRequirementBase*> Requirements);
+	static bool IsTaskRequirementsMet(TArray<UO_TaskRequirementBase*> Requirements);
 
 	/**Check if the task fail conditions are met.
 	 * will return true if any succeed.*/
 	UFUNCTION(BlueprintCallable)
-	static bool IsTaskFailed(UQuestSubSystem* QuestComponent, TArray<UO_TaskFailConditionBase*> FailConditions);
+	static bool IsTaskFailed(TArray<UO_TaskFailConditionBase*> FailConditions);
 };

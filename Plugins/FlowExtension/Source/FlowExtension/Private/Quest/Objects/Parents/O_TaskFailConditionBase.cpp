@@ -3,7 +3,7 @@
 
 #include "Quest/Objects/Parents/O_TaskFailConditionBase.h"
 
-bool UO_TaskFailConditionBase::IsTaskFailed_Implementation(UQuestSubSystem* QuestComponent)
+bool UO_TaskFailConditionBase::IsTaskFailed_Implementation()
 {
 	return true;
 }
