@@ -137,22 +137,16 @@ FVector4 ULevelEditingViewportBlueprintLibrary::TransformPixelPointToWorld(float
 
 void ULevelEditingViewportBlueprintLibrary::GetActorUnderCursor(bool& bIsValid, FActorHitProxyInfo& OutActorHitProxyInfo)
 {
+	LevelEditingViewportUtils::GetActorUnderCursor(bIsValid, OutActorHitProxyInfo);
+	if(!bIsValid)
 	{
-		LevelEditingViewportUtils::GetActorUnderCursor(bIsValid, OutActorHitProxyInfo);
-		return;
+		OutActorHitProxyInfo.Clear();
 	}
-
-	OutActorHitProxyInfo.Clear();
-	bIsValid = false;
 }
 
 bool ULevelEditingViewportBlueprintLibrary::IsPrimitiveComponentUnderCursor(UPrimitiveComponent* InPrimComponent)
 {
-	{
-		return LevelEditingViewportUtils::IsPrimitiveComponentUnderCursor(InPrimComponent);
-	}
-
-	return false;
+	return LevelEditingViewportUtils::IsPrimitiveComponentUnderCursor(InPrimComponent);
 }
 
 void ULevelEditingViewportBlueprintLibrary::RedrawLevelEditingViewports(bool bInvalidateHitProxies /*= true*/)
