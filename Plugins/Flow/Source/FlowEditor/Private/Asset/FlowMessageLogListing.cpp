@@ -3,6 +3,9 @@
 #include "Asset/FlowMessageLogListing.h"
 
 #include "MessageLogModule.h"
+#include "Modules/ModuleManager.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowMessageLogListing)
 
 #define LOCTEXT_NAMESPACE "FlowMessageLogListing"
 

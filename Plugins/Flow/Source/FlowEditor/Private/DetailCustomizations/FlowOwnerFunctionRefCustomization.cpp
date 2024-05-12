@@ -2,16 +2,10 @@
 
 #include "DetailCustomizations/FlowOwnerFunctionRefCustomization.h"
 
-#include "FlowAsset.h"
-#include "FlowOwnerInterface.h"
 #include "Nodes/FlowNode.h"
 #include "Nodes/World/FlowNode_CallOwnerFunction.h"
 
 #include "UObject/UnrealType.h"
-#include "FlowOwnerFunctionParams.h"
-
-
-// FFlowOwnerFunctionRefCustomization Implementation
 
 void FFlowOwnerFunctionRefCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InStructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
@@ -69,8 +63,19 @@ TArray<FName> FFlowOwnerFunctionRefCustomization::GetFlowOwnerFunctionRefs(
 	TArray<FName> ValidFunctionNames;
 
 	// Gather a list of potential functions
-	TArray<FName> PotentialFunctionNames;
-	ExpectedOwnerClass.GenerateFunctionList(PotentialFunctionNames);
+	TSet<FName> PotentialFunctionNames;
+
+	const UClass* CurClass = &ExpectedOwnerClass;
+	while (IsValid(CurClass))
+	{
+		TArray<FName> CurClassFunctionNames;
+		CurClass->GenerateFunctionList(CurClassFunctionNames);
+
+		PotentialFunctionNames.Append(CurClassFunctionNames);
+
+		// Recurse to include all of the Super(s) names
+		CurClass = CurClass->GetSuperClass();
+	}
 
 	if (PotentialFunctionNames.Num() == 0)
 	{
@@ -101,19 +106,7 @@ bool FFlowOwnerFunctionRefCustomization::IsFunctionUsable(const UFunction& Funct
 		return false;
 	}
 
-	if (!DoesFunctionHaveExpectedParamType(Function, FlowNodeOwner))
-	{
-		return false;
-	}
-
 	return true;
-}
-
-bool FFlowOwnerFunctionRefCustomization::DoesFunctionHaveExpectedParamType(const UFunction& Function, const UFlowNode_CallOwnerFunction& FlowNodeOwner)
-{
-	const UClass* PropertyClass = UFlowNode_CallOwnerFunction::GetParamsClassForFunction(Function);
-
-	return FlowNodeOwner.IsAcceptableParamsPropertyClass(PropertyClass);
 }
 
 void FFlowOwnerFunctionRefCustomization::SetCuratedName(const FName& NewFunctionName)

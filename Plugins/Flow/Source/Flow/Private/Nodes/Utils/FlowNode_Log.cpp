@@ -1,9 +1,11 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
 
 #include "Nodes/Utils/FlowNode_Log.h"
-#include "FlowModule.h"
+#include "FlowLogChannels.h"
 
 #include "Engine/Engine.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_Log)
 
 UFlowNode_Log::UFlowNode_Log(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

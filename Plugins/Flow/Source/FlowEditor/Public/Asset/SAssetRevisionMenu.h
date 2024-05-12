@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include "Components/VerticalBox.h"
 #include "ISourceControlProvider.h"
 #include "Widgets/SCompoundWidget.h"
 
 class FUpdateStatus;
+class SVerticalBox;
 struct FRevisionInfo;
 
 // Forced to make a variant of SBlueprintRevisionMenu, only to replace to UBlueprint* parameter

@@ -4,10 +4,14 @@
 #include "FlowComponent.h"
 #include "FlowSubsystem.h"
 
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_NotifyActor)
 
 UFlowNode_NotifyActor::UFlowNode_NotifyActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
+	, MatchType(EGameplayContainerMatchType::All)
 	, bExactMatch(true)
 	, NetMode(EFlowNetMode::Authority)
 {
@@ -20,7 +24,7 @@ void UFlowNode_NotifyActor::ExecuteInput(const FName& PinName)
 {
 	if (const UFlowSubsystem* FlowSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFlowSubsystem>())
 	{
-		for (const TWeakObjectPtr<UFlowComponent>& Component : FlowSubsystem->GetComponents<UFlowComponent>(IdentityTags, EGameplayContainerMatchType::Any, bExactMatch))
+		for (const TWeakObjectPtr<UFlowComponent>& Component : FlowSubsystem->GetComponents<UFlowComponent>(IdentityTags, MatchType, bExactMatch))
 		{
 			Component->NotifyFromGraph(NotifyTags, NetMode);
 		}

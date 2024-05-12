@@ -9,12 +9,11 @@
 #include "Toolkits/IToolkit.h"
 
 class FSlateStyleSet;
+class FToolBarBuilder;
 struct FGraphPanelPinConnectionFactory;
 
 class FFlowAssetEditor;
 class UFlowAsset;
-
-DECLARE_LOG_CATEGORY_EXTERN(LogFlowEditor, Log, All)
 
 class FLOWEDITOR_API FFlowEditorModule : public IModuleInterface
 {

@@ -4,7 +4,7 @@
 
 #include "Asset/FlowAssetFactory.h"
 #include "FlowEditorDefines.h"
-#include "FlowEditorModule.h"
+#include "FlowEditorLogChannels.h"
 #include "Graph/FlowGraphSchema_Actions.h"
 #include "Graph/FlowGraph.h"
 
@@ -25,6 +25,8 @@
 #include "K2Node_Event.h"
 #include "K2Node_IfThenElse.h"
 #include "K2Node_Knot.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowImportUtils)
 
 #define LOCTEXT_NAMESPACE "FlowImportUtils"
 

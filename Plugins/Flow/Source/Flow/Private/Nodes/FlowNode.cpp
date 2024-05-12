@@ -3,16 +3,14 @@
 #include "Nodes/FlowNode.h"
 
 #include "FlowAsset.h"
-#include "FlowModule.h"
+#include "FlowLogChannels.h"
 #include "FlowOwnerInterface.h"
 #include "FlowSettings.h"
 #include "FlowSubsystem.h"
 #include "FlowTypes.h"
 
 #include "Components/ActorComponent.h"
-#if WITH_EDITOR
-#include "Editor.h"
-#endif
+#include "Engine/Blueprint.h"
 #include "Engine/Engine.h"
 #include "Engine/ViewportStatsSubsystem.h"
 #include "Engine/World.h"
@@ -21,6 +19,12 @@
 #include "Misc/Paths.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
+
+#if WITH_EDITOR
+#include "Editor.h"
+#endif
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode)
 
 FFlowPin UFlowNode::DefaultInputPin(TEXT("In"));
 FFlowPin UFlowNode::DefaultOutputPin(TEXT("Out"));
@@ -32,8 +36,8 @@ FString UFlowNode::NoActorsFound = TEXT("No actors found");
 
 UFlowNode::UFlowNode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-#if WITH_EDITOR
 	, GraphNode(nullptr)
+#if WITH_EDITOR
 	, bCanDelete(true)
 	, bCanDuplicate(true)
 	, bNodeDeprecated(false)
@@ -59,7 +63,8 @@ void UFlowNode::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	if (PropertyChangedEvent.Property
-		&& (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, InputPins) || PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, OutputPins)))
+		&& (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, InputPins) || PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, OutputPins)
+			|| PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, InputPins) || PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(UFlowNode, OutputPins)))
 	{
 		OnReconstructionRequested.ExecuteIfBound();
 	}
@@ -466,6 +471,29 @@ bool UFlowNode::IsInputConnected(const FName& PinName) const
 bool UFlowNode::IsOutputConnected(const FName& PinName) const
 {
 	return OutputPins.Contains(PinName) && Connections.Contains(PinName);
+}
+
+void UFlowNode::RecursiveFindNodesByClass(UFlowNode* Node, const TSubclassOf<UFlowNode> Class, uint8 Depth, TArray<UFlowNode*>& OutNodes)
+{
+	if (Node)
+	{
+		// Record the node if it is the desired type
+		if (Node->GetClass() == Class)
+		{
+			OutNodes.AddUnique(Node);
+		}
+
+		if (OutNodes.Num() == Depth)
+		{
+			return;
+		}
+
+		// Recurse
+		for (UFlowNode* ConnectedNode : Node->GetConnectedNodes())
+		{
+			RecursiveFindNodesByClass(ConnectedNode, Class, Depth, OutNodes);
+		}
+	}
 }
 
 UFlowSubsystem* UFlowNode::GetFlowSubsystem() const

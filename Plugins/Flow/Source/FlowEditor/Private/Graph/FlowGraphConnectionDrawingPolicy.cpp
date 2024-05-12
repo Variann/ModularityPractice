@@ -16,6 +16,8 @@
 
 #include "Misc/App.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowGraphConnectionDrawingPolicy)
+
 FConnectionDrawingPolicy* FFlowGraphConnectionDrawingPolicyFactory::CreateConnectionPolicy(const class UEdGraphSchema* Schema, int32 InBackLayerID, int32 InFrontLayerID, float ZoomFactor, const class FSlateRect& InClippingRect, class FSlateWindowElementList& InDrawElements, class UEdGraph* InGraphObj) const
 {
 	if (Schema->IsA(UFlowGraphSchema::StaticClass()))
@@ -148,30 +150,27 @@ void FFlowGraphConnectionDrawingPolicy::DetermineWiringStyle(UEdGraphPin* Output
 				Params.WireColor = SelectedColor;
 				Params.WireThickness = SelectedWireThickness;
 				Params.bDrawBubbles = false;
-				return;
 			}
-
 			// recent paths
-			if (RecentPaths.Contains(OutputPin) && RecentPaths[OutputPin] == InputPin)
+			else if (RecentPaths.Contains(OutputPin) && RecentPaths[OutputPin] == InputPin)
 			{
 				Params.WireColor = RecentColor;
 				Params.WireThickness = RecentWireThickness;
 				Params.bDrawBubbles = true;
-				return;
 			}
-
 			// all paths, showing graph history
-			if (RecordedPaths.Contains(OutputPin) && RecordedPaths[OutputPin] == InputPin)
+			else if (RecordedPaths.Contains(OutputPin) && RecordedPaths[OutputPin] == InputPin)
 			{
 				Params.WireColor = RecordedColor;
 				Params.WireThickness = RecordedWireThickness;
 				Params.bDrawBubbles = false;
-				return;
 			}
-
 			// It's not followed, fade it and keep it thin
-			Params.WireColor = InactiveColor;
-			Params.WireThickness = InactiveWireThickness;
+			else
+			{
+				Params.WireColor = InactiveColor;
+				Params.WireThickness = InactiveWireThickness;
+			}
 		}
 	}
 
@@ -196,6 +195,14 @@ void FFlowGraphConnectionDrawingPolicy::DetermineWiringStyle(UEdGraphPin* Output
 			}
 		}
 	}
+
+	const bool bDeemphasizeUnhoveredPins = HoveredPins.Num() > 0;
+
+	if (bDeemphasizeUnhoveredPins)
+	{
+		ApplyHoverDeemphasis(OutputPin, InputPin, /*inout*/ Params.WireThickness, /*inout*/ Params.WireColor);
+	}
+
 }
 
 void FFlowGraphConnectionDrawingPolicy::Draw(TMap<TSharedRef<SWidget>, FArrangedWidget>& InPinGeometries, FArrangedChildren& ArrangedNodes)

@@ -6,6 +6,8 @@
 #include "FlowMessageLog.h"
 #include "FlowSubsystem.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_SubGraph)
+
 FFlowPin UFlowNode_SubGraph::StartPin(TEXT("Start"));
 FFlowPin UFlowNode_SubGraph::FinishPin(TEXT("Finish"));
 
@@ -26,7 +28,7 @@ UFlowNode_SubGraph::UFlowNode_SubGraph(const FObjectInitializer& ObjectInitializ
 
 bool UFlowNode_SubGraph::CanBeAssetInstanced() const
 {
-	return !Asset.IsNull() && (bCanInstanceIdenticalAsset || Asset->GetPathName() != GetFlowAsset()->GetTemplateAsset()->GetPathName());
+	return !Asset.IsNull() && (bCanInstanceIdenticalAsset || Asset.ToString() != GetFlowAsset()->GetTemplateAsset()->GetPathName());
 }
 
 void UFlowNode_SubGraph::PreloadContent()
@@ -55,7 +57,7 @@ void UFlowNode_SubGraph::ExecuteInput(const FName& PinName)
 		}
 		else
 		{
-			LogError(FString::Printf(TEXT("Asset %s cannot be instance, probably is the same as the asset owning this SubGraph node."), *Asset->GetPathName()));
+			LogError(FString::Printf(TEXT("Asset %s cannot be instance, probably is the same as the asset owning this SubGraph node."), *Asset.ToString()));
 		}
 		
 		Finish();

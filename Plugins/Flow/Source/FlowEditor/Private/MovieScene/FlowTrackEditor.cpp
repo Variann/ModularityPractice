@@ -11,6 +11,7 @@
 #include "ISequencerSection.h"
 #include "LevelSequence.h"
 #include "MovieSceneSequenceEditor.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "Sections/MovieSceneEventSection.h"
 #include "SequencerUtilities.h"
 

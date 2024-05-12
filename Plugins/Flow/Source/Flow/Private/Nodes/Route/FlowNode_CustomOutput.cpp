@@ -4,6 +4,8 @@
 #include "FlowAsset.h"
 #include "FlowSettings.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_CustomOutput)
+
 #define LOCTEXT_NAMESPACE "FlowNode_CustomOutput"
 
 UFlowNode_CustomOutput::UFlowNode_CustomOutput(const FObjectInitializer& ObjectInitializer)
@@ -23,10 +25,12 @@ void UFlowNode_CustomOutput::ExecuteInput(const FName& PinName)
 		                           *GetName(),
 		                           *FlowAsset->GetPathName()));
 	}
-	else if (!FlowAsset->GetCustomOutputs().Contains(EventName))
+	else if (!FlowAsset->TryFindCustomOutputNodeByEventName(EventName))
 	{
+		const TArray<FName> OutputNames = FlowAsset->GatherCustomOutputNodeEventNames();
 		FString CustomOutputsString;
-		for (const FName& OutputName : FlowAsset->GetCustomOutputs())
+
+		for (const FName& OutputName : OutputNames)
 		{
 			if (!CustomOutputsString.IsEmpty())
 			{

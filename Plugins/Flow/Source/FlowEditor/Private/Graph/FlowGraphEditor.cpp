@@ -12,11 +12,15 @@
 
 #include "Nodes/Route/FlowNode_SubGraph.h"
 
+#include "EdGraphUtilities.h"
 #include "Framework/Commands/GenericCommands.h"
+#include "GraphEditorActions.h"
 #include "HAL/PlatformApplicationMisc.h"
+#include "IDetailsView.h"
 #include "LevelEditor.h"
 #include "Modules/ModuleManager.h"
 #include "ScopedTransaction.h"
+#include "SNodePanel.h"
 #include "Widgets/Docking/SDockTab.h"
 
 #define LOCTEXT_NAMESPACE "FlowGraphEditor"
@@ -63,6 +67,10 @@ void SFlowGraphEditor::BindGraphCommands()
 
 	CommandList->MapAction(GraphEditorCommands.StraightenConnections,
 	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnStraightenConnections));
+	
+	CommandList->MapAction(GraphEditorCommands.DeleteAndReconnectNodes,
+							   FExecuteAction::CreateSP(this, &SFlowGraphEditor::DeleteSelectedNodes),
+							   FCanExecuteAction::CreateSP(this, &SFlowGraphEditor::CanDeleteNodes));
 
 	// Generic Node commands
 	CommandList->MapAction(GenericCommands.Undo,
@@ -223,6 +231,28 @@ void SFlowGraphEditor::BindGraphCommands()
 	CommandList->MapAction(FlowGraphCommands.JumpToNodeDefinition,
 	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::JumpToNodeDefinition),
 	                               FCanExecuteAction::CreateSP(this, &SFlowGraphEditor::CanJumpToNodeDefinition));
+
+	// Organisation Commands
+	CommandList->MapAction(GraphEditorCommands.AlignNodesTop,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignTop));
+
+	CommandList->MapAction(GraphEditorCommands.AlignNodesMiddle,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignMiddle));
+
+	CommandList->MapAction(GraphEditorCommands.AlignNodesBottom,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignBottom));
+
+	CommandList->MapAction(GraphEditorCommands.AlignNodesLeft,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignLeft));
+
+	CommandList->MapAction(GraphEditorCommands.AlignNodesCenter,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignCenter));
+
+	CommandList->MapAction(GraphEditorCommands.AlignNodesRight,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnAlignRight));
+
+	CommandList->MapAction(GraphEditorCommands.StraightenConnections,
+	                               FExecuteAction::CreateSP(this, &SFlowGraphEditor::OnStraightenConnections));
 }
 
 FGraphAppearanceInfo SFlowGraphEditor::GetGraphAppearanceInfo() const
@@ -348,6 +378,76 @@ TSet<UFlowGraphNode*> SFlowGraphEditor::GetSelectedFlowNodes() const
 	return Result;
 }
 
+void SFlowGraphEditor::ReconnectExecPins(const UFlowGraphNode* Node)
+{
+	if(Node == nullptr)
+	{
+		return;
+	}
+
+	UEdGraphPin* InputPin = nullptr;
+	UEdGraphPin* OutputPin = nullptr;
+
+	for (UEdGraphPin* Pin : Node->InputPins)
+	{
+		if (Pin->HasAnyConnections())
+		{
+			if (InputPin)
+			{
+				// more that one connected input pins - do not reconnect anything
+				return;
+			}
+
+			if (Pin)
+			{
+				InputPin = Pin;
+			}
+		}
+		else if (InputPin == nullptr)
+		{
+			// first pin doesn't have any connections - do not reconnect anything, because we probably don't know expected result for user
+			return;
+		}
+	}
+
+	for (UEdGraphPin* Pin : Node->OutputPins)
+	{
+		if (Pin->HasAnyConnections())
+		{
+			if (OutputPin)
+			{
+				// more that one connected output pins - do not reconnect anything
+				return;
+			}
+
+			if (Pin)
+			{
+				OutputPin = Pin;
+			}
+		}
+		else if (OutputPin == nullptr)
+		{
+			// first pin doesn't have any connections - do not reconnect anything, because we probably don't know expected result for user
+			return;
+		}
+	}
+
+	if (InputPin && OutputPin)
+	{
+		// Make a connection from every incoming exec pin to every outgoing then pin
+		for (UEdGraphPin* const IncomingConnectionPin : InputPin->LinkedTo)
+		{
+			if (IncomingConnectionPin)
+			{
+				for (UEdGraphPin* const ConnectedCompletePin : OutputPin->LinkedTo)
+				{
+					IncomingConnectionPin->MakeLinkTo(ConnectedCompletePin);
+				}
+			}
+		}
+	}
+}
+
 void SFlowGraphEditor::DeleteSelectedNodes()
 {
 	const FScopedTransaction Transaction(LOCTEXT("DeleteSelectedNode", "Delete Selected Node"));
@@ -367,6 +467,12 @@ void SFlowGraphEditor::DeleteSelectedNodes()
 				if (FlowGraphNode->GetFlowNode())
 				{
 					const FGuid NodeGuid = FlowGraphNode->GetFlowNode()->GetGuid();
+
+					// If the user is pressing shift then try and reconnect the pins
+					if (FSlateApplication::Get().GetModifierKeys().IsShiftDown())
+					{
+						ReconnectExecPins(FlowGraphNode);
+					}
 
 					GetCurrentGraph()->GetSchema()->BreakNodeLinks(*Node);
 					Node->DestroyNode();
@@ -625,6 +731,10 @@ void SFlowGraphEditor::OnNodeDoubleClicked(class UEdGraphNode* Node) const
 						}
 					}
 				}
+			}
+			else if (UFlowGraphEditorSettings::Get()->NodeDoubleClickTarget == EFlowNodeDoubleClickTarget::PrimaryAssetOrNodeDefinition)
+			{
+				Node->JumpToDefinition();
 			}
 		}
 	}

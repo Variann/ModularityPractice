@@ -7,12 +7,14 @@
 
 #include "EdGraphUtilities.h"
 #include "Editor.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Framework/MultiBox/MultiBoxDefs.h"
 #include "GraphDiffControl.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Internationalization/Text.h"
+#include "PropertyEditorModule.h"
 #include "SBlueprintDiff.h"
 #include "SlateOptMacros.h"
 #include "Subsystems/AssetEditorSubsystem.h"
@@ -722,6 +724,7 @@ SFlowDiff::FDiffControl SFlowDiff::GenerateDetailsPanel()
 #endif	
 
 	SFlowDiff::FDiffControl Ret;
+	Ret.Widget = SNullWidget::NullWidget;
 	Ret.DiffControl = NewDiffControl;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 3

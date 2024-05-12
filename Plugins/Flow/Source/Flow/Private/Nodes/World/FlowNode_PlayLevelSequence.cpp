@@ -3,15 +3,21 @@
 #include "Nodes/World/FlowNode_PlayLevelSequence.h"
 
 #include "FlowAsset.h"
-#include "FlowModule.h"
+#include "FlowLogChannels.h"
 #include "FlowSubsystem.h"
 #include "LevelSequence/FlowLevelSequencePlayer.h"
+
+#if WITH_EDITOR
 #include "MovieScene/MovieSceneFlowTrack.h"
 #include "MovieScene/MovieSceneFlowTriggerSection.h"
+#endif
 
 #include "LevelSequence.h"
 #include "LevelSequenceActor.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "VisualLogger/VisualLogger.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_PlayLevelSequence)
 
 FFlowNodeLevelSequenceEvent UFlowNode_PlayLevelSequence::OnPlaybackStarted;
 FFlowNodeLevelSequenceEvent UFlowNode_PlayLevelSequence::OnPlaybackCompleted;

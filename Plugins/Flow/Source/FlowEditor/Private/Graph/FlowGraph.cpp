@@ -7,7 +7,10 @@
 
 #include "Nodes/FlowNode.h"
 
+#include "Editor.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowGraph)
 
 void FFlowGraphInterface::OnInputTriggered(UEdGraphNode* GraphNode, const int32 Index) const
 {
@@ -30,7 +33,13 @@ UFlowGraph::UFlowGraph(const FObjectInitializer& ObjectInitializer)
 
 UEdGraph* UFlowGraph::CreateGraph(UFlowAsset* InFlowAsset)
 {
-	UEdGraph* NewGraph = CastChecked<UFlowGraph>(FBlueprintEditorUtils::CreateNewGraph(InFlowAsset, NAME_None, StaticClass(), UFlowGraphSchema::StaticClass()));
+	return CreateGraph(InFlowAsset, UFlowGraphSchema::StaticClass());
+}
+
+UEdGraph* UFlowGraph::CreateGraph(UFlowAsset* InFlowAsset, TSubclassOf<UFlowGraphSchema> FlowSchema)
+{
+	check(FlowSchema);
+	UEdGraph* NewGraph = CastChecked<UFlowGraph>(FBlueprintEditorUtils::CreateNewGraph(InFlowAsset, NAME_None, StaticClass(), FlowSchema));
 	NewGraph->bAllowDeletion = false;
 
 	InFlowAsset->FlowGraph = NewGraph;
@@ -72,7 +81,6 @@ void UFlowGraph::RefreshGraph()
 void UFlowGraph::NotifyGraphChanged()
 {
 	GetFlowAsset()->HarvestNodeConnections();
-	GetFlowAsset()->MarkPackageDirty();
 
 	Super::NotifyGraphChanged();
 }

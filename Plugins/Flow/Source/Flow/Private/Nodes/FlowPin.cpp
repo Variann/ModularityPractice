@@ -2,6 +2,10 @@
 
 #include "Nodes/FlowPin.h"
 
+#include "Misc/DateTime.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlowPin)
+
 //////////////////////////////////////////////////////////////////////////
 // Pin Record
 
