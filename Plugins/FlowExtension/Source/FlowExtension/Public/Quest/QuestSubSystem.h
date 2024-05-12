@@ -31,13 +31,7 @@ class FLOWEXTENSION_API UQuestSubSystem : public UGameInstanceSubsystem, public 
 public:
 
  UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FQuestWrapper> ActiveQuests;
-
- UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FQuestWrapper> CompletedQuests;
-
- UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
- TArray<FQuestWrapper> FailedQuests;
+ TMap<TSoftObjectPtr<UDA_Quest>, FQuestWrapper> Quests;
 
  //Delegates
 
@@ -73,9 +67,6 @@ public:
  UFUNCTION(Category = "Quest", BlueprintCallable)
  void AddListenerToQuest(TSoftObjectPtr<UDA_Quest> Quest, UObject* Listener);
 
- UFUNCTION(Category = "Quest", BlueprintPure, meta = (DisplayName = "Get Quest Wrapper (Active)"))
- FQuestWrapper GetQuestWrapper_Active(TSoftObjectPtr<UDA_Quest> Quest, int32& ArrayIndex);
-
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
   * if it returns false it means the player has already
@@ -88,12 +79,12 @@ public:
 
  /**Get the index of the quest from the active quests array.
   * Can return -1 if the quest is not found.*/
- UFUNCTION(Category = "Quest", BlueprintPure)
- int32 GetQuestIndex_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
+ // UFUNCTION(Category = "Quest", BlueprintPure)
+ // int32 GetQuestIndex_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  /**Complete the quest.
   *
-  * @SkipCompletionCheck Typically you want CanCompleteQuest to be called,
+  * @SkipCompletionCheck Typically, you want CanCompleteQuest to be called,
   * but sometimes you want to forcibly complete the quest.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  void CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck);
@@ -103,9 +94,6 @@ public:
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
-
- UFUNCTION(Category = "Quest", BlueprintPure)
- bool IsQuestActive(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  bool HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
@@ -125,6 +113,9 @@ public:
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
  bool FailQuest(FQuestWrapper Quest, bool FailTasks);
 
+ UFUNCTION(Category = "Quest", BlueprintCallable)
+ TArray<FQuestWrapper> GetQuestsWithState(TEnumAsByte<EQuestState> State);
+
  //------------------
 
 
@@ -132,12 +123,14 @@ public:
  // Task
 
  /**Search the active quests for the task.
-  * @ArrayIndex can return -1 if the quest was not found.*/
+  * TODO: Investigate if we can get away with having a TMap
+  * of task tags with their quest associated with it, so we
+  * can get the quest instantly (if this function is slow)*/
  UFUNCTION(Category = "Quest", BlueprintPure)
- FQuestWrapper GetQuestForTask_Active(FGameplayTag Task, int32& ArrayIndex);
+ FQuestWrapper GetQuestForTask(FGameplayTag Task);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- TArray<FTaskWrapper> GetTasksForQuest_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
+ TArray<FTaskWrapper> GetTasksForQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
  void AddListenerToTask(FGameplayTag Task, UObject* Listener);
@@ -156,14 +149,7 @@ public:
   * ask the boss if they are dead or not, if the boss isn't dead,
   * you can prevent the task from being progressed.*/
  UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
- bool CanTaskBeProgressed(FTaskWrapper Task);
-
- /**Small optimization, CanTaskBeProgressed already looks up
-  * the task, overriding that function at a blueprint level means
-  * you have to search for the task again. This will automatically
-  * receive the already-found task.*/
- // UFUNCTION(Category = "Quest", BlueprintNativeEvent, DisplayName = "Can task be progressed?")
- // bool CanTaskBeProgressed_Internal(FS_TaskWrapper Task);
+ bool CanTaskBeProgressed(FGameplayTag Task);
 
  /**Attempt to fail a task.
   *
@@ -181,12 +167,12 @@ public:
   * Also note: If you try and add a task AFTER all the tasks in the
   * quest have been completed, the quest will still get labelled as
   * completed.*/
- UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly, meta = (DeprecatedFunction = "Unsupported feature, was just complicated to QA around"))
  bool AddTaskToQuest(FQuestTask Task, TSoftObjectPtr<UDA_Quest> Quest);
 
  /**Attempt to remove a task from a quest.
   * If there's no tasks left, the quest will be dropped.*/
- UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly)
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintAuthorityOnly, meta = (DeprecatedFunction = "Unsupported feature, was just complicated to QA around"))
  bool RemoveTaskFromQuest(FGameplayTag Task, TSoftObjectPtr<UDA_Quest> Quest);
 
  //------------------

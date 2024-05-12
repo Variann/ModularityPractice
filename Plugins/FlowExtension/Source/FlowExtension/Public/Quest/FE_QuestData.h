@@ -105,7 +105,7 @@ struct FTaskWrapper
 	 * interface call.
 	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<UObject*> Listeners;
+	TArray<TObjectPtr<UObject>> Listeners;
 };
 
 //----------//
@@ -167,7 +167,7 @@ struct FQuestWrapper
 	 * interface call.
 	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<UObject*> Listeners;
+	TArray<TObjectPtr<UObject>> Listeners;
 
 	bool operator==(const FQuestWrapper& Argument) const
 	{

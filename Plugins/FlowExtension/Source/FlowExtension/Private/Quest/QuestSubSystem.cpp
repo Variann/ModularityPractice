@@ -14,26 +14,11 @@
 
 void UQuestSubSystem::AddListenerToQuest(const TSoftObjectPtr<UDA_Quest> Quest, UObject* Listener)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
-
-	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper* QuestWrapper = Quests.Find(Quest);
+	if(QuestWrapper)
 	{
-		return;
+		QuestWrapper->Listeners.Add(Listener);
 	}
-
-	ActiveQuests[QuestIndex].Listeners.AddUnique(Listener);
-}
-
-FQuestWrapper UQuestSubSystem::GetQuestWrapper_Active(TSoftObjectPtr<UDA_Quest> Quest, int32& ArrayIndex)
-{
-	ArrayIndex = GetQuestIndex_Active(Quest);
-
-	if(ActiveQuests.IsValidIndex(ArrayIndex))
-	{
-		return ActiveQuests[ArrayIndex];
-	}
-
-	return FQuestWrapper();
 }
 
 bool UQuestSubSystem::AcceptQuest(UDA_Quest* Quest)
@@ -63,7 +48,7 @@ bool UQuestSubSystem::AcceptQuest(UDA_Quest* Quest)
 		QuestWrapper.Tasks.Add(TaskWrapper);
 	}
 
-	ActiveQuests.Add(QuestWrapper);
+	Quests.Add(Quest, QuestWrapper);
 	QuestStateUpdated.Broadcast(QuestWrapper, InProgress);
 
 	#if ENABLE_VISUAL_LOG
@@ -83,7 +68,7 @@ bool UQuestSubSystem::CanAcceptQuest_Implementation(const TSoftObjectPtr<UDA_Que
 		return false;
 	}
 
-	if(IsQuestActive(Quest))
+	if(GetQuestState(Quest) == InProgress)
 	{
 		return false;
 	}
@@ -96,62 +81,46 @@ bool UQuestSubSystem::CanAcceptQuest_Implementation(const TSoftObjectPtr<UDA_Que
 	return true;
 }
 
-int32 UQuestSubSystem::GetQuestIndex_Active(const TSoftObjectPtr<UDA_Quest>& Quest)
-{
-	for(int32 CurrentIndex = 0; CurrentIndex < ActiveQuests.Num(); CurrentIndex++)
-	{
-		if(ActiveQuests[CurrentIndex].QuestAsset == Quest)
-		{
-			return CurrentIndex;
-		}
-	}
-
-	return -1;
-}
-
 void UQuestSubSystem::CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest.QuestAsset);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	if(!QuestWrapper)
 	{
-		if(!SkipCompletionCheck)
-		{
-			if(!CanCompleteQuest(ActiveQuests[QuestIndex]))
-			{
-				return;
-			}
-		}
-
-		ActiveQuests[QuestIndex].State = Finished;
-
-		//Move the quest to the completed array.
-		int32 NewQuestIndex = CompletedQuests.Add(ActiveQuests[QuestIndex]);
-		ActiveQuests.RemoveAt(QuestIndex);
-
-		QuestStateUpdated.Broadcast(CompletedQuests[NewQuestIndex], Finished);
-		
-		#if ENABLE_VISUAL_LOG
-		
-		UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
-		10, FColor::White, TEXT("Completed quest: %s"), *Quest.QuestAsset->GetName());
-		
-		#endif
-
-		//Notify listeners
-		for(const auto& CurrentListener : CompletedQuests[NewQuestIndex].Listeners)
-		{
-			if(IsValid(CurrentListener))
-			{
-				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-				{
-					II_QuestUpdates::Execute_QuestStateUpdated(CurrentListener, CompletedQuests[NewQuestIndex], Finished);
-				}
-			}
-		}
-		
-		CompletedQuests[NewQuestIndex].Listeners.Empty();
+		return;
 	}
+	
+	if(!SkipCompletionCheck)
+	{
+		if(!CanCompleteQuest(*QuestWrapper))
+		{
+			return;
+		}
+	}
+
+	QuestWrapper->State = Finished;
+	QuestStateUpdated.Broadcast(Quest, Finished);
+		
+#if ENABLE_VISUAL_LOG
+		
+	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	10, FColor::White, TEXT("Completed quest: %s"), *Quest.QuestAsset->GetName());
+		
+#endif
+
+	//Notify listeners
+	for(const auto& CurrentListener : QuestWrapper->Listeners)
+	{
+		if(IsValid(CurrentListener))
+		{
+			if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+			{
+				II_QuestUpdates::Execute_QuestStateUpdated(CurrentListener, *QuestWrapper, Finished);
+			}
+		}
+	}
+
+	//Quest is completed, no need to keep the listeners array active
+	QuestWrapper->Listeners.Empty();
 }
 
 bool UQuestSubSystem::CanCompleteQuest_Implementation(FQuestWrapper Quest)
@@ -178,25 +147,9 @@ bool UQuestSubSystem::CanCompleteQuest_Implementation(FQuestWrapper Quest)
 
 bool UQuestSubSystem::HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	for(auto& CurrentQuest : CompletedQuests)
+	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
 	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool UQuestSubSystem::IsQuestActive(const TSoftObjectPtr<UDA_Quest>& Quest)
-{
-	for(auto& CurrentQuest : ActiveQuests)
-	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return true;
-		}
+		return QuestWrapper->State == Finished;
 	}
 
 	return false;
@@ -204,12 +157,9 @@ bool UQuestSubSystem::IsQuestActive(const TSoftObjectPtr<UDA_Quest>& Quest)
 
 bool UQuestSubSystem::HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	for(auto& CurrentQuest : FailedQuests)
+	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
 	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return true;
-		}
+		return QuestWrapper->State == Failed;
 	}
 
 	return false;
@@ -217,28 +167,9 @@ bool UQuestSubSystem::HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 
 TEnumAsByte<EQuestState> UQuestSubSystem::GetQuestState(TSoftObjectPtr<UDA_Quest> Quest)
 {
-	for(auto& CurrentQuest : ActiveQuests)
+	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
 	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return CurrentQuest.State;
-		}
-	}
-	
-	for(auto& CurrentQuest : FailedQuests)
-	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return CurrentQuest.State;
-		}
-	}
-
-	for(auto& CurrentQuest : CompletedQuests)
-	{
-		if(CurrentQuest.QuestAsset == Quest)
-		{
-			return CurrentQuest.State;
-		}
+		return QuestWrapper->State;
 	}
 
 	return Inactive;
@@ -246,17 +177,82 @@ TEnumAsByte<EQuestState> UQuestSubSystem::GetQuestState(TSoftObjectPtr<UDA_Quest
 
 bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 {
-	if(Quest.State != InProgress)
+	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	if(!QuestWrapper)
+	{
+		return false;
+	}
+	
+	//Drop the tasks
+	for(const auto& CurrentTask : QuestWrapper->Tasks)
+	{
+		TaskDropped.Broadcast(CurrentTask);
+			
+		for(auto& CurrentListener : CurrentTask.Listeners)
+		{
+			if(IsValid(CurrentListener))
+			{
+				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+				{
+					II_QuestUpdates::Execute_TaskDropped(CurrentListener, CurrentTask);
+				}
+			}
+		}
+	}
+
+	QuestDropped.Broadcast(Quest);
+
+	//Announce the quest being dropped
+	for(const auto& CurrentListener : QuestWrapper->Listeners)
+	{
+		if(IsValid(CurrentListener))
+		{
+			if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+			{
+				II_QuestUpdates::Execute_QuestDropped(CurrentListener, Quest);
+			}
+		}
+	}
+
+	Quests.Remove(Quest.QuestAsset);
+
+#if ENABLE_VISUAL_LOG
+	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	10, FColor::White, TEXT("Dropped quest: %s"),
+	*Quest.QuestAsset->GetName());
+#endif
+
+	return true;
+}
+
+bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
+{
+	FQuestWrapper* QuestWrapper = Quests.Find(Quest.QuestAsset);
+	if(!QuestWrapper)
+	{
+		return false;
+	}
+	
+	if(QuestWrapper->State != InProgress)
 	{
 		return false;
 	}
 
-	if(ActiveQuests.Contains(Quest))
+	QuestWrapper->State = Failed;
+
+#if ENABLE_VISUAL_LOG
+	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	10, FColor::White, TEXT("Failed quest: %s"),
+	*Quest.QuestAsset->GetName());
+#endif
+		
+	if(FailTasks)
 	{
-		//Drop the tasks
-		for(const auto& CurrentTask : Quest.Tasks)
+		//Fail the tasks
+		for(auto& CurrentTask : QuestWrapper->Tasks)
 		{
-			TaskDropped.Broadcast(CurrentTask);
+			CurrentTask.State = Failed;
+			TaskFailed.Broadcast(CurrentTask);
 			
 			for(auto& CurrentListener : CurrentTask.Listeners)
 			{
@@ -264,111 +260,54 @@ bool UQuestSubSystem::DropQuest(FQuestWrapper Quest)
 				{
 					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
 					{
-						II_QuestUpdates::Execute_TaskDropped(CurrentListener, CurrentTask);
+						II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
 					}
 				}
 			}
 		}
-
-		QuestDropped.Broadcast(Quest);
-
-		//Announce the quest being dropped
-		for(const auto& CurrentListener : Quest.Listeners)
-		{
-			if(IsValid(CurrentListener))
-			{
-				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-				{
-					II_QuestUpdates::Execute_QuestDropped(CurrentListener, Quest);
-				}
-			}
-		}
-
-		ActiveQuests.RemoveSingle(Quest);
-
-		#if ENABLE_VISUAL_LOG
-		UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
-		10, FColor::White, TEXT("Dropped quest: %s"),
-		*Quest.QuestAsset->GetName());
-		#endif
-
-		return true;
 	}
 
-	return false;
+	QuestFailed.Broadcast(Quest);
+
+	//Announce the quest failure
+	for(const auto& CurrentListener : QuestWrapper->Listeners)
+	{
+		if(IsValid(CurrentListener))
+		{
+			if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+			{
+				II_QuestUpdates::Execute_QuestFailed(CurrentListener, Quest);
+			}
+		}
+	}
+
+	return true;
 }
 
-bool UQuestSubSystem::FailQuest(FQuestWrapper Quest, const bool FailTasks)
+TArray<FQuestWrapper> UQuestSubSystem::GetQuestsWithState(TEnumAsByte<EQuestState> State)
 {
-	if(Quest.State != InProgress)
+	TArray<FQuestWrapper> FoundQuests;
+
+	for(auto& CurrentQuest : Quests)
 	{
-		return false;
+		if(CurrentQuest.Value.State == State)
+		{
+			FoundQuests.Add(CurrentQuest.Value);
+		}
 	}
 
-	if(ActiveQuests.Contains(Quest))
-	{
-		Quest.State = Failed;
-		ActiveQuests.RemoveSingle(Quest);
-		FailedQuests.Add(Quest);
-
-#if ENABLE_VISUAL_LOG
-		UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
-	10, FColor::White, TEXT("Failed quest: %s"),
-	*Quest.QuestAsset->GetName());
-#endif
-		
-		if(FailTasks)
-		{
-			//Fail the tasks
-			for(auto& CurrentTask : Quest.Tasks)
-			{
-				CurrentTask.State = Failed;
-				TaskFailed.Broadcast(CurrentTask);
-			
-				for(auto& CurrentListener : CurrentTask.Listeners)
-				{
-					if(IsValid(CurrentListener))
-					{
-						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-						{
-							II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
-						}
-					}
-				}
-			}
-		}
-
-		QuestFailed.Broadcast(Quest);
-
-		//Announce the quest failure
-		for(const auto& CurrentListener : Quest.Listeners)
-		{
-			if(IsValid(CurrentListener))
-			{
-				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-				{
-					II_QuestUpdates::Execute_QuestFailed(CurrentListener, Quest);
-				}
-			}
-		}
-
-		return true;
-	}
-
-	return false;
+	return FoundQuests;
 }
 
-FQuestWrapper UQuestSubSystem::GetQuestForTask_Active(const FGameplayTag Task, int32& ArrayIndex)
+FQuestWrapper UQuestSubSystem::GetQuestForTask(const FGameplayTag Task)
 {
-	ArrayIndex = -1;
-	for(int32 CurrentIndex = 0; CurrentIndex < ActiveQuests.Num(); CurrentIndex++)
+	for(auto& CurrentQuest : Quests)
 	{
-		for(auto& CurrentTask : ActiveQuests[CurrentIndex].Tasks)
+		for(auto& CurrentTask : CurrentQuest.Value.Tasks)
 		{
 			if(CurrentTask.TaskID == Task)
 			{
-				ArrayIndex = CurrentIndex;
-				return ActiveQuests[CurrentIndex];
+				return CurrentQuest.Value;
 			}
 		}
 	}
@@ -376,50 +315,62 @@ FQuestWrapper UQuestSubSystem::GetQuestForTask_Active(const FGameplayTag Task, i
 	return FQuestWrapper();
 }
 
-TArray<FTaskWrapper> UQuestSubSystem::GetTasksForQuest_Active(const TSoftObjectPtr<UDA_Quest>& Quest)
+TArray<FTaskWrapper> UQuestSubSystem::GetTasksForQuest(const TSoftObjectPtr<UDA_Quest>& Quest)
 {
-	TArray<FTaskWrapper> FoundTasks;
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
+	if(FQuestWrapper* QuestWrapper = Quests.Find(Quest))
 	{
-		return ActiveQuests[QuestIndex].Tasks;
+		return QuestWrapper->Tasks;
 	}
 	
-	return FoundTasks;
+	return TArray<FTaskWrapper>();
 }
 
 void UQuestSubSystem::AddListenerToTask(FGameplayTag Task, UObject* Listener)
 {
-	int32 QuestIndex = 0;
-	GetQuestForTask_Active(Task, QuestIndex);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper FoundQuest = GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
 	{
-		for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+		return;
+	}
+
+	//Get a pointer to the real quest wrapper
+	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	if(!QuestWrapper)
+	{
+		//This should NEVER happen
+		return;
+	}
+
+	for(auto& CurrentTask : QuestWrapper->Tasks)
+	{
+		if(CurrentTask.TaskID == Task)
 		{
-			if(CurrentTask.TaskID == Task)
-			{
-				CurrentTask.Listeners.AddUnique(Listener);
-			}
+			CurrentTask.Listeners.Add(Listener);
+			return;
 		}
 	}
 }
 
 bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator)
 {
-	int32 QuestIndex;
-	GetQuestForTask_Active(Task, QuestIndex);
-
-	bool TaskCompleted = false;
-	bool QuestCompleted = true;
-
-	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper FoundQuest = GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
 	{
 		return false;
 	}
+
+	//Get a pointer to the real quest wrapper
+	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	if(!QuestWrapper)
+	{
+		//This should NEVER happen
+		return false;
+	}
+
+	bool TaskCompleted = false;
+	bool QuestCompleted = true;
 	
-	for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+	for(auto& CurrentTask : QuestWrapper->Tasks)
 	{
 		if(CurrentTask.TaskID == Task)
 		{
@@ -435,7 +386,7 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 				return false;
 			}
 
-			if(!CanTaskBeProgressed(CurrentTask))
+			if(!CanTaskBeProgressed(CurrentTask.TaskID))
 			{
 				return false;
 			}
@@ -482,7 +433,7 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 
 	if(QuestCompleted)
 	{
-		CompleteQuest(ActiveQuests[QuestIndex], false);
+		CompleteQuest(*QuestWrapper, false);
 	}
 
 	if(TaskCompleted)
@@ -493,19 +444,25 @@ bool UQuestSubSystem::ProgressTask(const FGameplayTag Task, float ProgressToAdd,
 	return false;
 }
 
-bool UQuestSubSystem::CanTaskBeProgressed(FTaskWrapper Task)
+bool UQuestSubSystem::CanTaskBeProgressed(FGameplayTag Task)
 {
-	int32 QuestIndex;
-	GetQuestForTask_Active(Task.TaskID, QuestIndex);
-
-	if(!ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper FoundQuest = GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
 	{
 		return false;
 	}
 
-	for(auto& CurrentTask : ActiveQuests[QuestIndex].Tasks)
+	//Get a pointer to the real quest wrapper
+	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	if(!QuestWrapper)
 	{
-		if(CurrentTask.TaskID == Task.TaskID)
+		//This should NEVER happen
+		return false;
+	}
+
+	for(auto& CurrentTask : QuestWrapper->Tasks)
+	{
+		if(CurrentTask.TaskID == Task)
 		{
 			if(CurrentTask.State != InProgress)
 			{
@@ -548,148 +505,152 @@ bool UQuestSubSystem::CanTaskBeProgressed(FTaskWrapper Task)
 
 bool UQuestSubSystem::FailTask(const FGameplayTag Task, const bool bFailQuest)
 {
-	int32 QuestIndex;
-	GetQuestForTask_Active(Task, QuestIndex);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
+	FQuestWrapper FoundQuest = GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
 	{
-		FQuestWrapper& Quest = ActiveQuests[QuestIndex];
+		return false;
+	}
 
-		for(auto& CurrentTask : Quest.Tasks)
+	//Get a pointer to the real quest wrapper
+	FQuestWrapper* QuestWrapper = Quests.Find(FoundQuest.QuestAsset);
+	if(!QuestWrapper)
+	{
+		//This should NEVER happen
+		return false;
+	}
+
+	for(auto& CurrentTask : QuestWrapper->Tasks)
+	{
+		if(CurrentTask.TaskID == Task)
 		{
-			if(CurrentTask.TaskID == Task)
-			{
-				CurrentTask.State = Failed;
+			CurrentTask.State = Failed;
 
-				#if ENABLE_VISUAL_LOG
-				UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
-				10, FColor::White, TEXT("Failed task: %s"),
-				*Task.ToString());
-				#endif
+			#if ENABLE_VISUAL_LOG
+			UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+			10, FColor::White, TEXT("Failed task: %s"),
+			*Task.ToString());
+			#endif
 
-				TaskFailed.Broadcast(CurrentTask);
+			TaskFailed.Broadcast(CurrentTask);
 				
-				for(auto& CurrentListener : CurrentTask.Listeners)
+			for(auto& CurrentListener : CurrentTask.Listeners)
+			{
+				if(IsValid(CurrentListener))
 				{
-					if(IsValid(CurrentListener))
+					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
 					{
-						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-						{
-							II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
-						}
+						II_QuestUpdates::Execute_TaskFailed(CurrentListener, CurrentTask);
 					}
 				}
-				break;
 			}
+			break;
 		}
-		
-		if(bFailQuest)
-		{
-			//Since we are failing a specific task, don't go ahead and fail the others.
-			FailQuest(Quest, false);
-		}
-
-		return true;
 	}
-	
-	return false;
+		
+	if(bFailQuest)
+	{
+		//Since we are failing a specific task, don't go ahead and fail the others.
+		FailQuest(*QuestWrapper, false);
+	}
+
+	return true;
 }
 
 bool UQuestSubSystem::AddTaskToQuest(FQuestTask Task, TSoftObjectPtr<UDA_Quest> Quest)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
-	{
-		const FTaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(Quest.LoadSynchronous(), Task);
-
-		ActiveQuests[QuestIndex].Tasks.Add(TaskWrapper);
-
-		TaskAddedToQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
-
-		for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
-		{
-			if(IsValid(CurrentListener))
-			{
-				if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-				{
-					II_QuestUpdates::Execute_TaskAddedToQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
-				}
-			}
-		}
-		
-		return true;
-	}
+	// const int32 QuestIndex = GetQuestIndex_Active(Quest);
+	//
+	// if(ActiveQuests.IsValidIndex(QuestIndex))
+	// {
+	// 	const FTaskWrapper TaskWrapper = UFL_QuestHelpers::WrapTask(Quest.LoadSynchronous(), Task);
+	//
+	// 	ActiveQuests[QuestIndex].Tasks.Add(TaskWrapper);
+	//
+	// 	TaskAddedToQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
+	//
+	// 	for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
+	// 	{
+	// 		if(IsValid(CurrentListener))
+	// 		{
+	// 			if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+	// 			{
+	// 				II_QuestUpdates::Execute_TaskAddedToQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+	// 			}
+	// 		}
+	// 	}
+	// 	
+	// 	return true;
+	// }
 
 	return false;
 }
 
 bool UQuestSubSystem::RemoveTaskFromQuest(FGameplayTag Task, TSoftObjectPtr<UDA_Quest> Quest)
 {
-	const int32 QuestIndex = GetQuestIndex_Active(Quest);
-
-	if(ActiveQuests.IsValidIndex(QuestIndex))
-	{
-		FQuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
-		for(int32 CurrentIndex = 0; CurrentIndex < QuestWrapper.Tasks.Num(); CurrentIndex++)
-		{
-			if(QuestWrapper.Tasks[CurrentIndex].TaskID == Task)
-			{
-				const FTaskWrapper TaskWrapper = QuestWrapper.Tasks[CurrentIndex];
-				QuestWrapper.Tasks.RemoveAt(CurrentIndex);
-
-				TaskRemovedFromQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
-
-				for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
-				{
-					if(IsValid(CurrentListener))
-					{
-						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-						{
-							II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
-						}
-					}
-				}
-
-				for(const auto& CurrentListener : TaskWrapper.Listeners)
-				{
-					if(IsValid(CurrentListener))
-					{
-						if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
-						{
-							II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
-						}
-					}
-				}
-				break;
-			}
-		}
-
-		#if ENABLE_VISUAL_LOG
-		UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
-		10, FColor::White, TEXT("Removed task (%s) from quest (%s)"),
-		*Task.ToString(),
-		*Quest->GetName());
-		#endif
-
-		//If all the remaining tasks are optional, drop the quest.
-		bool RemainingTasksAreOptional = true;
-		for(auto& CurrentTask : QuestWrapper.Tasks)
-		{
-			if(!CurrentTask.RootQuest->IsTaskOptional(CurrentTask.TaskID))
-			{
-				RemainingTasksAreOptional = false;
-				break;
-			}
-		}
-
-		if(QuestWrapper.Tasks.Num() == 0 || RemainingTasksAreOptional)
-		{
-			DropQuest(QuestWrapper);
-		}
-		
-		return true;
-	}
+	// const int32 QuestIndex = GetQuestIndex_Active(Quest);
+	//
+	// if(ActiveQuests.IsValidIndex(QuestIndex))
+	// {
+	// 	FQuestWrapper& QuestWrapper = ActiveQuests[QuestIndex];
+	// 	for(int32 CurrentIndex = 0; CurrentIndex < QuestWrapper.Tasks.Num(); CurrentIndex++)
+	// 	{
+	// 		if(QuestWrapper.Tasks[CurrentIndex].TaskID == Task)
+	// 		{
+	// 			const FTaskWrapper TaskWrapper = QuestWrapper.Tasks[CurrentIndex];
+	// 			QuestWrapper.Tasks.RemoveAt(CurrentIndex);
+	//
+	// 			TaskRemovedFromQuest.Broadcast(TaskWrapper, ActiveQuests[QuestIndex]);
+	//
+	// 			for(const auto& CurrentListener : ActiveQuests[QuestIndex].Listeners)
+	// 			{
+	// 				if(IsValid(CurrentListener))
+	// 				{
+	// 					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+	// 					{
+	// 						II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+	// 					}
+	// 				}
+	// 			}
+	//
+	// 			for(const auto& CurrentListener : TaskWrapper.Listeners)
+	// 			{
+	// 				if(IsValid(CurrentListener))
+	// 				{
+	// 					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_QuestUpdates::StaticClass()))
+	// 					{
+	// 						II_QuestUpdates::Execute_TaskRemovedFromQuest(CurrentListener, TaskWrapper, ActiveQuests[QuestIndex]);
+	// 					}
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
+	// 	}
+	//
+	// 	#if ENABLE_VISUAL_LOG
+	// 	UE_VLOG_LOCATION(this, TEXT("Quest System %s"), Verbose, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(),
+	// 	10, FColor::White, TEXT("Removed task (%s) from quest (%s)"),
+	// 	*Task.ToString(),
+	// 	*Quest->GetName());
+	// 	#endif
+	//
+	// 	//If all the remaining tasks are optional, drop the quest.
+	// 	bool RemainingTasksAreOptional = true;
+	// 	for(auto& CurrentTask : QuestWrapper.Tasks)
+	// 	{
+	// 		if(!CurrentTask.RootQuest->IsTaskOptional(CurrentTask.TaskID))
+	// 		{
+	// 			RemainingTasksAreOptional = false;
+	// 			break;
+	// 		}
+	// 	}
+	//
+	// 	if(QuestWrapper.Tasks.Num() == 0 || RemainingTasksAreOptional)
+	// 	{
+	// 		DropQuest(QuestWrapper);
+	// 	}
+	// 	
+	// 	return true;
+	// }
 
 	return false;
 }
