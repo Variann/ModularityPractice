@@ -25,18 +25,6 @@ enum EQuestState
 //----------//
 //	 Task	//
 
-USTRUCT(BlueprintType)
-struct FS_Reward
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(ForceInlineRow))
-	TMap<FGameplayTag, float> Rewards;
-
-	UPROPERTY(Category = "Reward", EditAnywhere, BlueprintReadOnly)
-	bool bIsAccepted = false;
-};
-
 //If you add any data into this struct, remember to go into
 //FL_QuestHelpers and update WrapTask.
 USTRUCT(BlueprintType)
@@ -63,9 +51,6 @@ struct FQuestTask
 	/**What scenarios will fail this task?*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly, Instanced)
 	TArray<UO_TaskFailConditionBase*> FailConditions;
-
-	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_Reward> Rewards;
 
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	bool IsOptional = false;
@@ -151,9 +136,6 @@ struct FQuestWrapper
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	TArray<FTaskWrapper> Tasks;
-
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_Reward> Rewards;
 
 	/**What state is the quest currently in?*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)

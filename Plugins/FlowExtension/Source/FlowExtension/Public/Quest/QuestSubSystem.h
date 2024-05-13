@@ -78,11 +78,6 @@ public:
  UFUNCTION(Category = "Quest", BlueprintPure)
  static bool CanAcceptQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
 
- /**Get the index of the quest from the active quests array.
-  * Can return -1 if the quest is not found.*/
- // UFUNCTION(Category = "Quest", BlueprintPure)
- // int32 GetQuestIndex_Active(const TSoftObjectPtr<UDA_Quest>& Quest);
-
  /**Complete the quest.
   *
   * @SkipCompletionCheck Typically, you want CanCompleteQuest to be called,
