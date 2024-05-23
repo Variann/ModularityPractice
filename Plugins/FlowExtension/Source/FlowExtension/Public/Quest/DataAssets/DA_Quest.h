@@ -7,13 +7,11 @@
 #include "Engine/DataAsset.h"
 #include "DA_Quest.generated.h"
 
-/**Base class for all quests.
- * This class should have very little data and be
- * extremely fast to load.
- * This class is instantly loaded in a few places,
- * so it is important that it is small enough to not
- * cause any hitches.*/
+#if WITH_EDITOR
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDataAssetChanged);
+#endif
 
+class UDA_QuestChain;
 struct FS_Reward;
 struct FS_QuestFailCondition;
 struct FQuestRequirement;
@@ -21,6 +19,12 @@ struct FQuestTask;
 class UO_TaskRequirementBase;
 class UO_TaskFailConditionBase;
 
+/**Base class for all quests.
+ * This class should have very little data and be
+ * extremely fast to load.
+ * This class is instantly loaded in a few places,
+ * so it is important that it is small enough to not
+ * cause any hitches.*/
 UCLASS(meta=(ShowWorldContextPin, ContextMenuCategory = "Varian's Plugins", ContextMenuEntryName = "Quest|Quest Asset", ContextMenuPrefix = "QA_"))
 class FLOWEXTENSION_API UDA_Quest : public UPrimaryDataAsset
 {
@@ -28,17 +32,17 @@ class FLOWEXTENSION_API UDA_Quest : public UPrimaryDataAsset
 
 public:
 
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Flow.Quests"))
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta=(Categories="Quests"))
 	FGameplayTag QuestID;
 
 	/**Name of the quest presented to the player*/
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
 	FText QuestName;
 	
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta = (MultiLine))
 	FText QuestText;
 
-	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly, meta = (TitleProperty = "TaskID"))
 	TArray<FQuestTask> Tasks;
 
 	/**Requirements to accept the quest.*/
@@ -50,7 +54,7 @@ public:
 	TArray<FS_QuestFailCondition> FailConditions;
 
 	UPROPERTY(Category = "Quest", EditAnywhere, BlueprintReadOnly)
-	TArray<FS_Reward> Rewards;
+	TArray<TSoftObjectPtr<UDA_QuestChain>> QuestChains;
 
 	/**What tags are associated with this quest?
 	 * This has no default implementation, you will need
@@ -78,6 +82,16 @@ public:
 	//If EditorAssistant is installed, this will override the thumbnail automatically.
 	UPROPERTY(meta = (ThumbnailOverride))
 	UTexture2D* ThumbnailOverride = Cast<UTexture2D>(StaticLoadObject(UObject::StaticClass(), nullptr, TEXT("/FlowExtension/Quest/T_QuestIcon_Editor.T_QuestIcon_Editor"))) ;
+
+	FOnDataAssetChanged OnDataAssetChanged;
+	
+#endif
+
+#if WITH_EDITOR
+
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 #endif
 };

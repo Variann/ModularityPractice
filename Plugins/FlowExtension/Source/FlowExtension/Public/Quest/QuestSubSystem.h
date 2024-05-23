@@ -13,6 +13,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestStateUpdated, FQuestWrapper, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestDropped, FQuestWrapper, Quest);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestFailed, FQuestWrapper, Quest);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestChainStarted, TSoftObjectPtr<UDA_QuestChain>, QuestChain);
+
 /**@Task the task that was progressed.
  * @ProgressMade the delta of the current and the added progress. This can be negative.
  * @Instigator The object that progressed the quest.*/
@@ -28,10 +30,15 @@ class FLOWEXTENSION_API UQuestSubSystem : public UGameInstanceSubsystem, public 
 {
 	GENERATED_BODY()
 
+ UQuestSubSystem();
+
 public:
 
  UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
  TMap<TSoftObjectPtr<UDA_Quest>, FQuestWrapper> Quests;
+
+ UPROPERTY(Category = "Quest", BlueprintReadOnly, SaveGame)
+ TSet<TSoftObjectPtr<UDA_QuestChain>> QuestChains;
 
  //Delegates
 
@@ -43,6 +50,9 @@ public:
 
  UPROPERTY(Category = "Quest", BlueprintAssignable)
  FQuestFailed QuestFailed;
+
+ UPROPERTY(Category = "Quest", BlueprintAssignable)
+ FQuestChainStarted QuestChainStarted;
 
 
  UPROPERTY(Category = "Task", BlueprintAssignable)
@@ -71,34 +81,37 @@ public:
  /**Accept a quest from a node.
   * Will only return true if the quest was accepted,
   * if it returns false it means the player has already
-  * completed it or has it.*/
+  * completed it or has it.
+  * @ForceAccept if true, we skip CanAcceptQuest() */
  UFUNCTION(Category = "Quest", BlueprintCallable)
- static bool AcceptQuest(UDA_Quest* Quest);
+ static bool AcceptQuest(TSoftObjectPtr<UDA_Quest> Quest, bool ForceAccept = false);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- static bool CanAcceptQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
+ static bool CanAcceptQuest(TSoftObjectPtr<UDA_Quest> Quest);
 
  /**Complete the quest.
   *
   * @SkipCompletionCheck Typically, you want CanCompleteQuest to be called,
-  * but sometimes you want to forcibly complete the quest.*/
+  * but sometimes you want to forcibly complete the quest.
+  * @AutoAcceptQuest If true, we will accept the quest (forcefully) if the
+  * quest hasn't already been accepted.*/
  UFUNCTION(Category = "Quest", BlueprintCallable)
- static void CompleteQuest(FQuestWrapper Quest, bool SkipCompletionCheck);
+ static void CompleteQuest(TSoftObjectPtr<UDA_Quest> Quest, bool SkipCompletionCheck = false, bool AutoAcceptQuest = true);
  
  UFUNCTION(Category = "Quest", BlueprintPure)
  static bool CanCompleteQuest(FQuestWrapper Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- static bool HasCompletedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
+ static bool HasCompletedQuest(TSoftObjectPtr<UDA_Quest> Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- static bool HasFailedQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
+ static bool HasFailedQuest(TSoftObjectPtr<UDA_Quest> Quest);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
  static TEnumAsByte<EQuestState> GetQuestState(TSoftObjectPtr<UDA_Quest> Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
- static bool DropQuest(FQuestWrapper Quest);
+ static bool DropQuest(TSoftObjectPtr<UDA_Quest> Quest);
 
  /**Attempt to fail the quest, only returns false if the quest is
   * not in progress.
@@ -107,13 +120,34 @@ public:
   * and if we should notify its listeners and broadcast the
   * failure delegate.*/
  UFUNCTION(Category = "Quest", BlueprintCallable)
- static bool FailQuest(FQuestWrapper Quest, bool FailTasks);
+ static bool FailQuest(TSoftObjectPtr<UDA_Quest> Quest, bool FailTasks);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
  static TArray<FQuestWrapper> GetQuestsWithState(TEnumAsByte<EQuestState> State);
 
  //------------------
 
+
+ //------------------
+ // Quest Chain
+
+ UFUNCTION(Category = "Quest Chain", BlueprintPure)
+ static TArray<TSoftObjectPtr<UDA_Quest>> GetRequiredQuestsForQuest(TSoftObjectPtr<UDA_Quest> Quest);
+ 
+ /**Resolve whether the required quests have been completed for the @Quest.
+ * Keep in mind, this will load the quest synchronously.*/
+ UFUNCTION(Category = "Quest Chain", BlueprintPure)
+ static bool HasCompletedRequiredQuests(TSoftObjectPtr<UDA_Quest> Quest);
+
+ UFUNCTION(Category = "Quest Chain", BlueprintPure)
+ static int32 GetCurrentStageOnQuestChain(TSoftObjectPtr<UDA_QuestChain> QuestChain);
+
+ /**Get the percentage progress of this quest chain (0 - 1)*/
+ UFUNCTION(Category = "Quest Chain", BlueprintPure)
+ static float GetQuestChainProgress(TSoftObjectPtr<UDA_QuestChain> QuestChain);
+
+ //------------------
+ 
 
  //------------------
  // Task
@@ -124,9 +158,12 @@ public:
   * can get the quest instantly (if this function is slow)*/
  UFUNCTION(Category = "Quest", BlueprintPure)
  static FQuestWrapper GetQuestForTask(FGameplayTag Task);
+ 
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintPure)
+ static FTaskWrapper GetTaskWrapper(FGameplayTag Task);
 
  UFUNCTION(Category = "Quest", BlueprintPure)
- static TArray<FTaskWrapper> GetTasksForQuest(const TSoftObjectPtr<UDA_Quest>& Quest);
+ static TArray<FTaskWrapper> GetTasksForQuest(TSoftObjectPtr<UDA_Quest> Quest);
 
  UFUNCTION(Category = "Quest", BlueprintCallable)
  static void AddListenerToTask(FGameplayTag Task, UObject* Listener);
@@ -135,6 +172,15 @@ public:
   * @Instigator Who is attempting to progress the task?*/
  UFUNCTION(Category = "Quest", BlueprintCallable)
  static bool ProgressTask(const FGameplayTag Task, float ProgressToAdd, UObject* Instigator);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintPure)
+ static float GetTaskProgress(FGameplayTag Task);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable, BlueprintPure)
+ static TEnumAsByte<EQuestState> GetTaskState(FGameplayTag Task);
+
+ UFUNCTION(Category = "Quest", BlueprintCallable)
+ static bool CompleteTask(FGameplayTag Task, UObject* Instigator);
 
  /**Evaluate if the task can be progressed.
   *
@@ -172,5 +218,12 @@ public:
  static bool RemoveTaskFromQuest(FGameplayTag Task, TSoftObjectPtr<UDA_Quest> Quest);
 
  //------------------
- 
+
+
+ //------------------
+ // Editor
+
+ static void SetQuestState(const TArray<FString>& Args);
+
+ //------------------
 };

@@ -68,11 +68,11 @@ EDataValidationResult UFN_QuestBase::ValidateNode()
 		}
 	}
 
-	if(QuestPtr->QuestText.IsEmpty())
-	{
-		ValidationLog.Error<UFlowNode>(TEXT("No quest text"), this);
-		FailedValidation = true;
-	}
+	// if(QuestPtr->QuestText.IsEmpty())
+	// {
+	// 	ValidationLog.Error<UFlowNode>(TEXT("No quest text"), this);
+	// 	FailedValidation = true;
+	// }
 
 	if(FailedValidation)
 	{
@@ -85,4 +85,47 @@ EDataValidationResult UFN_QuestBase::ValidateNode()
 	
 	return EDataValidationResult::Valid;
 }
+
+void UFN_QuestBase::PostLoad()
+{
+	Super::PostLoad();
+	
+	if(!QuestAsset.IsNull())
+	{
+		QuestPtr = QuestAsset.LoadSynchronous();
+		QuestPtr->OnDataAssetChanged.AddDynamic(this, &UFN_QuestBase::OnQuestAssetPropertyChanged);
+	}
+}
+
+void UFN_QuestBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if(!QuestAsset.IsNull())
+	{
+		if(PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UFN_QuestBase, QuestAsset))
+		{
+			if(QuestPtr)
+			{
+				QuestPtr->OnDataAssetChanged.RemoveDynamic(this, &UFN_QuestBase::OnQuestAssetPropertyChanged);
+			}
+			
+			QuestPtr = QuestAsset.LoadSynchronous();
+			QuestPtr->OnDataAssetChanged.AddDynamic(this, &UFN_QuestBase::OnQuestAssetPropertyChanged);
+		}
+	}
+}
+
+void UFN_QuestBase::OnQuestAssetPropertyChanged()
+{
+	//Quest asset was changed, update the node
+	OnReconstructionRequested.ExecuteIfBound();
+}
+
+void UFN_QuestBase::BeginDestroy()
+{
+	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
+	Super::BeginDestroy();
+}
+
 #endif

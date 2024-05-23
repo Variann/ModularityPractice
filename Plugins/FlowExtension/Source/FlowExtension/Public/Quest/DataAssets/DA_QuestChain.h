@@ -10,27 +10,36 @@
 
 class UQuestChain;
 
+USTRUCT(Blueprintable)
+struct FQuestChainStage
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(Category = "Quest Chain stage", BlueprintReadWrite, EditAnywhere)
+	TArray<TSoftObjectPtr<UDA_Quest>> Quests;
+};
+
 UCLASS()
 class FLOWEXTENSION_API UDA_QuestChain : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(Category = "Quest Chain", BlueprintReadOnly, EditAnywhere)
+	FText ChainName;
 	
-	UPROPERTY(Instanced, EditInstanceOnly)
-	UQuestChain* QuestChain;
-};
+	UPROPERTY(Category = "Quest Chain", BlueprintReadOnly, EditAnywhere)
+	TArray<FQuestChainStage> Stages;
 
-UCLASS(Blueprintable, BlueprintType, AutoExpandCategories = ("Default"), EditInlineNew)
-class FLOWEXTENSION_API UQuestChain : public UObject
-{
-	GENERATED_BODY()
+#if WITH_EDITOR
 
-public:
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	
-	UPROPERTY(EditInstanceOnly)
-	UDA_Quest* Quest = nullptr;
-
-	UPROPERTY(Instanced, EditInstanceOnly)
-	TArray<UQuestChain*> ChainedQuests;
+#endif
+	
 };

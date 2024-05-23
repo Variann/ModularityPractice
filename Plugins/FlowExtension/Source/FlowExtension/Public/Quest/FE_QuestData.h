@@ -18,7 +18,7 @@ enum EQuestState
 	Inactive,
 	
 	InProgress,
-	Finished,
+	Completed,
 	Failed
 };
 
@@ -91,6 +91,11 @@ struct FTaskWrapper
 	 * This might be wiped when loading from a save.*/
 	UPROPERTY(Category = "Task", EditAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<UObject>> Listeners;
+	
+	bool IsValid() const
+	{
+		return TaskID.IsValid();
+	}
 };
 
 //----------//

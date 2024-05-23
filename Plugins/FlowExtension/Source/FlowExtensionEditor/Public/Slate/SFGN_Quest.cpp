@@ -2,6 +2,7 @@
 #include "Materials/MaterialInstance.h"
 #include "Dialogue/Nodes/FN_DialogueBase.h"
 #include "Nodes/FGN_Dialogue.h"
+#include "Quest/DataAssets/DA_QuestChain.h"
 #include "Quest/Nodes/FN_QuestBase.h"
 
 #define LOCTEXT_NAMESPACE "PGFlowEditor"
@@ -31,11 +32,12 @@ void SFGN_Quest::UpdateGraphNode()
 	{
 		QuestInformation = Cast<UDA_Quest>(UDA_Quest::StaticClass()->GetDefaultObject());
 	}
-
+	
+	//Title
 	TSharedPtr<STextBlock> Title;
-
 	CenterContentArea->AddSlot()
 	.VAlign(VAlign_Top)
+	.AutoHeight()
 	.Padding(0, 10, 0, 0)
 	[
 	SAssignNew(Title, STextBlock)
@@ -43,10 +45,11 @@ void SFGN_Quest::UpdateGraphNode()
 		.Text(QuestInformation->QuestName)
 	];
 
+	//Quest text. Make sure the text wraps and doesn't expand the node too much.
 	CenterContentArea->AddSlot()
-	.AutoHeight()
-	.Padding(0, 10)
+	.Padding(0, 5)
 	.VAlign(VAlign_Top)
+	.AutoHeight()
 	[
 		SNew(SBox)
 		.VAlign(VAlign_Top)
@@ -58,7 +61,17 @@ void SFGN_Quest::UpdateGraphNode()
 			.Text(QuestInformation->QuestText)
 		]
 	];
-	
+
+	TSharedPtr<SVerticalBox> TasksVerticalBox;
+	CenterContentArea->AddSlot()
+	// .AutoHeight()
+	.VAlign(VAlign_Top)
+	.AutoHeight()
+	.Padding(0, 0, 0, 10)
+	[
+		SAssignNew(TasksVerticalBox, SVerticalBox)
+	];
+	//Create the task bullet points
 	for(auto& CurrentTask : QuestInformation->Tasks)
 	{
 		FText TaskDisplayName;
@@ -79,9 +92,9 @@ void SFGN_Quest::UpdateGraphNode()
 		}
 		
 		
-		CenterContentArea->AddSlot()
+		TasksVerticalBox->AddSlot()
+		.Padding(0, 3)
 		.AutoHeight()
-		.Padding(0, 5)
 		.VAlign(VAlign_Top)
 		[
 			SNew(SHorizontalBox)
@@ -108,6 +121,60 @@ void SFGN_Quest::UpdateGraphNode()
 			]
 		];
 	}
+
+	
+	if(QuestInformation->QuestChains.IsValidIndex(0))
+	{
+		CenterContentArea->AddSlot()
+			.FillHeight(1)
+			.VAlign(VAlign_Bottom)
+			.Padding(0, 3, 0, 0)
+			[
+			SNew(STextBlock)
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
+				.Text(FText::FromString("Chains:"))
+			];
+		for(auto& CurrentChain : QuestInformation->QuestChains)
+		{
+			UDA_QuestChain* LoadedChain = CurrentChain.LoadSynchronous();
+			// CenterContentArea->AddSlot()
+			// .FillHeight(1)
+			// .VAlign(VAlign_Bottom)
+			// .Padding(0, 3, 0, 0)
+			// [
+			// SNew(STextBlock)
+			// 	.Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+			// 	.Text(LoadedChain->ChainName)
+			// ];
+			CenterContentArea->AddSlot()
+			.FillHeight(1)
+			.VAlign(VAlign_Bottom)
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Left)
+				.VAlign(VAlign_Center)
+				.Padding(0, 0, 7, 0)
+				[
+					SNew(SImage)
+					.Image(FAppStyle::GetBrush(TEXT("Icons.BulletPoint")))
+					.DesiredSizeOverride(FVector2D(12.f, 12.f))
+				]
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SBox)
+					.MaxDesiredWidth(300)
+					[
+						SNew(STextBlock)
+						.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+						.AutoWrapText(true)
+						.Text(LoadedChain->ChainName)
+					]
+				]
+			];
+		}
+	}
 }
 
 TSharedRef<SWidget> SFGN_Quest::CreateNodeContentArea()
@@ -127,7 +194,7 @@ TSharedRef<SWidget> SFGN_Quest::CreateNodeContentArea()
 		+SHorizontalBox::Slot()
 		.AutoWidth()
 		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Top)
+		.VAlign(VAlign_Fill)
 		[
 			SAssignNew(CenterContentArea, SVerticalBox)
 		]

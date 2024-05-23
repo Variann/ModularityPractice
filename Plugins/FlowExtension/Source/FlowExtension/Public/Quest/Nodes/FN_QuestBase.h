@@ -28,5 +28,15 @@ public:
 #if WITH_EDITOR
 	virtual FString GetNodeDescription() const override;
 	virtual EDataValidationResult ValidateNode() override;
+	
+	virtual void PostLoad() override;
+	
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	UFUNCTION()
+	void OnQuestAssetPropertyChanged();
+
+	virtual void BeginDestroy() override;
+
 #endif
 };
