@@ -16,7 +16,7 @@ class IMGUIBLUEPRINTUNCOOKEDONLY_API UK2Node_ImGuiButton : public UK2Node
 
 	// K2Node API
 	void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
-	UE_NODISCARD FText GetMenuCategory() const override;
+	FText GetMenuCategory() const override;
 
 	// EdGraphNode API
 	void AllocateDefaultPins() override;

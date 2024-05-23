@@ -23,7 +23,7 @@ namespace CoreTechK2Utilities
 	IMGUIBLUEPRINTUNCOOKEDONLY_API void RefreshAllowedConnections( const UK2Node *K2Node, UEdGraphPin *Pin );
 
 	// Get the pin that is acting as an input to the specified pin
-	UE_NODISCARD IMGUIBLUEPRINTUNCOOKEDONLY_API UEdGraphPin* GetInputPinLink( UEdGraphPin *Pin );
+	IMGUIBLUEPRINTUNCOOKEDONLY_API UEdGraphPin* GetInputPinLink( UEdGraphPin *Pin );
 
 	// Set the tooltip for a pin and prepends the type information to specified tooltip
 	IMGUIBLUEPRINTUNCOOKEDONLY_API void SetPinToolTip( UEdGraphPin *MutablePin, const FText &PinDescription = FText( ) );
@@ -49,13 +49,13 @@ namespace CoreTechK2Utilities
 	IMGUIBLUEPRINTUNCOOKEDONLY_API void ExpandFunctionPins( UK2Node *Node, UFunction *Signature, EEdGraphPinDirection Dir, const FGetPinName &GetPinName, const FDoPinExpansion &DoPinExpansion );
 
 	// Attach pins created by CreateEventDispatcherPins to the object
-	UE_NODISCARD IMGUIBLUEPRINTUNCOOKEDONLY_API UEdGraphPin* ExpandDispatcherPins( FKismetCompilerContext &CompilerContext, UEdGraph *SourceGraph, UK2Node *Node, UEdGraphPin *ExecPin, UClass *Class, UEdGraphPin *InstancePin, TFunction< bool( UEdGraphPin* ) > IsGeneratedPin );
+	IMGUIBLUEPRINTUNCOOKEDONLY_API UEdGraphPin* ExpandDispatcherPins( FKismetCompilerContext &CompilerContext, UEdGraph *SourceGraph, UK2Node *Node, UEdGraphPin *ExecPin, UClass *Class, UEdGraphPin *InstancePin, TFunction< bool( UEdGraphPin* ) > IsGeneratedPin );
 
 	// Change the order of a pin within the Node pins
 	IMGUIBLUEPRINTUNCOOKEDONLY_API void ReorderPin( UK2Node *Node, UEdGraphPin *Pin, int NewIndex );
 
 	// Retrieve the standard UE4 icon and color for a regular function
-	UE_NODISCARD IMGUIBLUEPRINTUNCOOKEDONLY_API FSlateIcon GetFunctionIconAndTint( FLinearColor& OutColor );
+	IMGUIBLUEPRINTUNCOOKEDONLY_API FSlateIcon GetFunctionIconAndTint( FLinearColor& OutColor );
 	// Retrieve the standard UE4 icon and color for a pure function
-	UE_NODISCARD IMGUIBLUEPRINTUNCOOKEDONLY_API FSlateIcon GetPureFunctionIconAndTint( FLinearColor& OutColor );
+	IMGUIBLUEPRINTUNCOOKEDONLY_API FSlateIcon GetPureFunctionIconAndTint( FLinearColor& OutColor );
 }
