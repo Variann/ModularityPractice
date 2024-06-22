@@ -1,7 +1,7 @@
 ﻿{
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.1",
+	"VersionName": "1.2",
 	"FriendlyName": "ObjectTags",
 	"Description": "Base layer built on top of most core classes, adding GameplayTags and making them a more core component of the class.",
 	"Category": "Other",

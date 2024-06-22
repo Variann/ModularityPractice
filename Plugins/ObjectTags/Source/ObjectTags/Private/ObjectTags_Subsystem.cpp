@@ -18,174 +18,136 @@ void UObjectTags_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
 	FCoreUObjectDelegates::GetPreGarbageCollectDelegate().AddUObject(this, &UObjectTags_Subsystem::CleanupObjectTagArray);
 }
 
+UObjectTags_Subsystem* UObjectTags_Subsystem::Get()
+{
+	if(!GEngine->GameViewport) { return nullptr; }
+	const UWorld* World = GEngine->GameViewport->GetWorld();
+	if(!World) { return nullptr; }
+	if(!UGameplayStatics::GetGameInstance(World)){ return nullptr; }
+	UObjectTags_Subsystem* SubSystem = UGameplayStatics::GetGameInstance(World)->GetSubsystem<UObjectTags_Subsystem>();
+	if(!SubSystem)
+	{
+		return nullptr;
+	}
+
+	return SubSystem;
+}
+
 FObjectTag UObjectTags_Subsystem::GetObjectTags(UObject* Object)
 {
-	if(!UGameplayStatics::GetPlayerController(Object, 0))
+	if(!Object)
 	{
 		return FObjectTag();
 	}
 	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(Object, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return FObjectTag();
 	}
 
-	return ObjectTags_Subsystem->GetObjectTags_Internal(Object);
-}
-
-FObjectTag UObjectTags_Subsystem::GetObjectTags_Internal(UObject* Object)
-{
-	if(FObjectTag* FoundObject = ObjectTags.Find(Object))
+	if(FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object))
 	{
-		//Make a copy so we can append external tags without modifying the original
-		FObjectTag FoundTags = *FoundObject;
-		if(UKismetSystemLibrary::DoesImplementInterface(Object, UI_ObjectTagsCommunication::StaticClass()))
-		{
-			const FGameplayTagContainer ExternalTags = II_ObjectTagsCommunication::Execute_GetObjectsExternalTags(Object);
-			if(ExternalTags.IsValid())
-			{
-				FoundTags.Tags.AppendTags(ExternalTags);
-			}
-		}
-
-		if(FoundObject->Object)
-		{
-			if(AActor* TargetActor = Cast<AActor>(Object))
-			{
-				FGameplayTagContainer ASCTags;
-				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->GetOwnedGameplayTags(ASCTags);
-				FoundTags.Tags.AppendTags(ASCTags);
-			}
-		}
-		
-		return FoundTags;
+		return *FoundObject;
 	}
 
 	return FObjectTag();
 }
 
-bool UObjectTags_Subsystem::AddTagsToObject(FGameplayTagContainer TagsToAdd, UObject* Object, UObject* Modifier)
+bool UObjectTags_Subsystem::AddTagToObject(FGameplayTag TagToAdd, UObject* Object, UObject* Modifier, float Value, float Duration)
 {
-	if(!UGameplayStatics::GetPlayerController(Object, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(Object, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
-	if(!ObjectTags_Subsystem)
-	{
-		return false;
-	}
-	
-	return ObjectTags_Subsystem->AddTagsToObject_Internal(TagsToAdd, Object, Modifier);
-}
-
-bool UObjectTags_Subsystem::AddTagsToObject_Internal(FGameplayTagContainer TagsToAdd, UObject* Object,
-	UObject* Modifier)
-{
+	TRACE_CPUPROFILER_EVENT_SCOPE(AddTagToObject)
 	if(!Object)
+	{
+		return false;
+	}
+	
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
+	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 
 	bool bTagAdded = false;
-	FObjectTag* FoundObject = ObjectTags.Find(Object);
+	FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object);
 	if(FoundObject)
 	{
 		//Append the two tag containers and call the TagsModified delegate on the way. - V
-		for(auto& CurrentTag : TagsToAdd)
+		if(!FoundObject->TagsAndValues.Find(TagToAdd))
 		{
-			if(!GetObjectTags(FoundObject->Object).Tags.HasTagExact(CurrentTag))
+			FoundObject->TagsAndValues.Add(TagToAdd, Value);
+
+			if(AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get()))
 			{
-				FoundObject->Tags.AddTag(CurrentTag);
-
-				if(AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get()))
+				FGameplayTagContainer ASCTags;
+				if(UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor))
 				{
-					FGameplayTagContainer ASCTags;
-					UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->GetOwnedGameplayTags(ASCTags);
-					if(!ASCTags.HasTagExact(CurrentTag))
+					AbilitySystemComponent->GetOwnedGameplayTags(ASCTags);
+					if(!ASCTags.HasTagExact(TagToAdd))
 					{
-						UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+						UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({TagToAdd}), true);
 					}
 				}
-
-				//Notify the object itself
-				if(UKismetSystemLibrary::DoesImplementInterface(Object, UI_ObjectTagsCommunication::StaticClass()))
-				{
-					II_ObjectTagsCommunication::Execute_OwningTagsUpdated(Object, CurrentTag, true, Modifier);
-				}
-
-				if(FoundObject->Listeners.IsValidIndex(0))
-				{
-					//Notify any listeners
-					for(int32 CurrentListener = 0; CurrentListener < FoundObject->Listeners.Num(); CurrentListener++)
-					{
-						if(!FoundObject->Listeners[CurrentListener])
-						{
-							continue;
-						}
-					
-						if(UKismetSystemLibrary::DoesImplementInterface(FoundObject->Listeners[CurrentListener], UI_ObjectTagsCommunication::StaticClass()))
-						{
-							II_ObjectTagsCommunication::Execute_ListeningObjectTagsUpdated(FoundObject->Listeners[CurrentListener], CurrentTag, true, Object, Modifier);
-						}
-					}
-				}
-
-				if(FoundObject->TagRelationships.IsValidIndex(0))
-				{
-					//Find out if any current relationships would be removed from the application of this tag.
-					for(int32 CurrentRelationship = 0; CurrentRelationship < FoundObject->TagRelationships.Num(); CurrentRelationship++)
-					{
-						UO_TagRelationship* CurrentTagCDO = FoundObject->TagRelationships[CurrentRelationship].GetDefaultObject();
-						if(CurrentTagCDO->BlockingTags.HasTagExact(CurrentTag))
-						{
-							RemoveTagsFromObject_Internal(FGameplayTagContainer({CurrentTagCDO->Tag}), Object, Modifier);
-							FoundObject->TagRelationships.RemoveAt(CurrentRelationship);
-							CurrentRelationship--;
-						}
-					}
-				}
-			
-				//For now the success logic is simple, as long as any tag
-				//was added, we label this function as a success. - V
-				bTagAdded = true;
 			}
+
+			FoundObject->BroadcastTagChange(TagToAdd, Added, Modifier, Value);
+
+			if(FoundObject->TagRelationships.IsValidIndex(0))
+			{
+				//Find out if any current relationships would be removed from the application of this tag.
+				for(int32 CurrentRelationship = 0; CurrentRelationship < FoundObject->TagRelationships.Num(); CurrentRelationship++)
+				{
+					UO_TagRelationship* CurrentTagCDO = FoundObject->TagRelationships[CurrentRelationship].GetDefaultObject();
+					if(CurrentTagCDO->BlockingTags.HasTagExact(TagToAdd))
+					{
+						ObjectTags_Subsystem->RemoveTagsFromObject(FGameplayTagContainer({CurrentTagCDO->Tag}), Object, Modifier);
+						FoundObject->TagRelationships.RemoveAt(CurrentRelationship);
+						CurrentRelationship--;
+					}
+				}
+			}
+			
+			//For now the success logic is simple, as long as any tag
+			//was added, we label this function as a success. - V
+			bTagAdded = true;
 		}
-		
+		else
+		{
+			//Object was found and already has the tag. Update the value.
+			FoundObject->TagsAndValues.Add(TagToAdd, Value);
+			bTagAdded = true;
+			
+			FoundObject->BroadcastTagChange(TagToAdd, Added, Modifier, Value);
+		}
 	}
 	else
 	{
+		//Object doesn't have the tag, add it
 		FObjectTag NewObjectTag;
 		NewObjectTag.Object = Object;
-		for(auto& CurrentTag : TagsToAdd)
-		{
-			NewObjectTag.Tags.AddTag(CurrentTag);
+		
+		NewObjectTag.TagsAndValues.Add(TagToAdd, Value);
+		ObjectTags_Subsystem->ObjectTags.Add(Object, NewObjectTag);
 
-			if(AActor* TargetActor = Cast<AActor>(Object))
+		if(AActor* TargetActor = Cast<AActor>(Object))
+		{
+			FGameplayTagContainer ASCTags;
+			if(UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor))
 			{
-				FGameplayTagContainer ASCTags;
-				UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->GetOwnedGameplayTags(ASCTags);
-				if(!ASCTags.HasTagExact(CurrentTag))
+				AbilitySystemComponent->GetOwnedGameplayTags(ASCTags);
+				if(!ASCTags.HasTagExact(TagToAdd))
 				{
-					UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
+					UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(TargetActor, FGameplayTagContainer({TagToAdd}), true);
 				}
 			}
-
-			//Notify the object itself
-			if(UKismetSystemLibrary::DoesImplementInterface(Object, UI_ObjectTagsCommunication::StaticClass()))
-			{
-				II_ObjectTagsCommunication::Execute_OwningTagsUpdated(Object, CurrentTag, true, Modifier);
-			}
 		}
-		
-		ObjectTags.Add(Object, NewObjectTag);
+
+		NewObjectTag.BroadcastTagChange(TagToAdd, Added, Modifier, Value);
 
 #if WITH_EDITOR
-		if(CollectDebuggingData)
+		if(ObjectTags_Subsystem->CollectDebuggingData)
 		{
-			FoundObject = ObjectTags.Find(Object);
+			FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object);
 		}
 #endif
 		
@@ -194,106 +156,100 @@ bool UObjectTags_Subsystem::AddTagsToObject_Internal(FGameplayTagContainer TagsT
 
 #if WITH_EDITOR
 
-	if(bTagAdded && CollectDebuggingData)
+	if(bTagAdded && ObjectTags_Subsystem->CollectDebuggingData)
 	{
 		if(!FoundObject)
 		{
-			FoundObject = ObjectTags.Find(Object);
+			FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object);
 			if(FoundObject)
 			{
-				FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), TagsToAdd, true));
+				FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), TagToAdd, true));
 			}
 		}
 		else
 		{
-			FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), TagsToAdd, true));
+			FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), TagToAdd, true));
 		}
 	}
 	
 #endif
 
+	//Set up the timer to have the tag automatically remove itself
+	if(bTagAdded && Duration > 0)
+	{
+		//Find and clear any current timers for this tag, so we can refresh the duration.
+		if(FTimerHandle* OldHandle =FoundObject->TagTimers.Find(TagToAdd))
+		{
+			ObjectTags_Subsystem->GetWorld()->GetTimerManager().ClearTimer(*OldHandle);
+		}
+
+		//Start the timer and pass the needed variables to remove the tag in the future.
+		FTimerHandle NewHandle;
+		ObjectTags_Subsystem->GetWorld()->GetTimerManager().SetTimer(NewHandle, FTimerDelegate::CreateLambda([TagToAdd, Object, Modifier]
+		{
+			if(Object)
+			{
+				UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer({TagToAdd}), Object, Modifier ? Modifier : nullptr);
+			}
+		}), Duration, false);
+
+		//Add the handle so it's possible to refresh the duration if we try to add the tag again.
+		FoundObject->TagTimers.Add(TagToAdd, NewHandle);
+	}
+
 	return bTagAdded;
 }
 
 bool UObjectTags_Subsystem::AddTagToObjectWithRelationship(TSubclassOf<UO_TagRelationship> TagRelationship, UObject* Object,
-	UObject* Modifier)
+                                                           UObject* Modifier, float Duration)
 {
-	if(!UGameplayStatics::GetPlayerController(Object, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(Object, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	TRACE_CPUPROFILER_EVENT_SCOPE(AddTagToObjectWithRelationship)
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 	
-	return ObjectTags_Subsystem->AddTagToObjectWithRelationship_Internal(TagRelationship, Object, Modifier);
-}
-
-bool UObjectTags_Subsystem::AddTagToObjectWithRelationship_Internal(TSubclassOf<UO_TagRelationship> TagRelationship, UObject* Object,
-	UObject* Modifier)
-{
 	UO_TagRelationship* TagCDO = TagRelationship.GetDefaultObject();
 	if(!TagCDO)
 	{
 		return false;	
 	}
 
-	FObjectTag* FoundObject = ObjectTags.Find(Object);
+	FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object);
 	if(FoundObject && FoundObject->Object)
 	{
+		//Logic is a lot simpler by just using the TagContainer helper functions
+		FGameplayTagContainer TagContainer = FoundObject->GetTagsAsContainer();
 			
 		//Check if object already has the tag.
-		if(FoundObject->Tags.HasTagExact(TagCDO->Tag))
+		if(TagContainer.HasTagExact(TagCDO->Tag))
 		{
 			return false;
 		}
 
 		//Check if object has any of the blocking tags.
-		if(FoundObject->Tags.HasAnyExact(TagCDO->BlockingTags))
+		if(TagContainer.HasAnyExact(TagCDO->BlockingTags))
 		{
 			return false;
 		}
 
-		//Check if the object has all of the required tags.
-		if(!FoundObject->Tags.HasAllExact(TagCDO->RequiredTags))
+		//Check if the object has all the required tags.
+		if(!HasRequiredTags(TagRelationship, TagContainer))
 		{
 			return false;
 		}
 
 		//Remove any tags this relationship wants to remove.
-		RemoveTagsFromObject_Internal(TagCDO->RemoveTags, Object, Modifier);
+		RemoveTagsFromObject(TagCDO->RemoveTags, Object, Modifier);
 
 		//Object met requirements, add the tag.
-		AddTagsToObject_Internal(FGameplayTagContainer({TagCDO->Tag}), Object, Modifier);
+		AddTagToObject(TagCDO->Tag, Object, Modifier, TagCDO->Value, Duration);
 
 		if(TagCDO->RemoveTagIfAnyBlockingTagIsApplied)
 		{
 			FoundObject->TagRelationships.Add(TagRelationship);
 		}
-
-		// //Find out if any current relationships would be removed from the application of this tag.
-		// for(auto& CurrentObject : ObjectTags)
-		// {
-		// 	if(CurrentObject.TagRelationships.IsValidIndex(0))
-		// 	{
-		// 		for(int32 CurrentRelationship = 0; CurrentRelationship < FoundObject->TagRelationships.Num(); CurrentRelationship++)
-		// 		{
-		// 			//Fetch the CDO
-		// 			UO_TagRelationship* CurrentTagCDO = CurrentObject.TagRelationships[CurrentRelationship].GetDefaultObject();
-		// 			if(CurrentTagCDO->BlockingTags.HasTagExact(TagCDO->Tag) && CurrentTagCDO->RemoveTagIfAnyBlockingTagIsApplied)
-		// 			{
-		// 				RemoveTagsFromObject_Internal(FGameplayTagContainer({CurrentTagCDO->Tag}), Object, Modifier);
-		// 				//The relationships tag was removed, remove the relationship
-		// 				CurrentObject.TagRelationships.RemoveAt(CurrentRelationship);
-		// 				CurrentRelationship--;
-		// 			}
-		// 		}
-		// 	}
-		// }
-
 
 		return true;
 	}
@@ -301,95 +257,60 @@ bool UObjectTags_Subsystem::AddTagToObjectWithRelationship_Internal(TSubclassOf<
 	{
 		FObjectTag NewObjectTag;
 		NewObjectTag.Object = Object;
-		NewObjectTag.Tags.AddTag(TagCDO->Tag);
+		NewObjectTag.TagsAndValues.Add(TagCDO->Tag, TagCDO->Value);
 
-		//Notify the object itself
-		if(UKismetSystemLibrary::DoesImplementInterface(Object, UI_ObjectTagsCommunication::StaticClass()))
-		{
-			II_ObjectTagsCommunication::Execute_OwningTagsUpdated(Object, TagCDO->Tag, true, Modifier);
-		}
-		ObjectTags.Add(Object, NewObjectTag);
+		FoundObject->BroadcastTagChange(TagCDO->Tag, Added, Modifier, TagCDO->Value);
+		
+		ObjectTags_Subsystem->ObjectTags.Add(Object, NewObjectTag);
 		return true;
 	}
-
-	return false;
 }
 
 bool UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer TagsToRemove, UObject* Object, UObject* Modifier)
 {
-	if(!UGameplayStatics::GetPlayerController(Object, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(Object, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	TRACE_CPUPROFILER_EVENT_SCOPE(RemoveTagsFromObject)
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 
-	return ObjectTags_Subsystem->RemoveTagsFromObject_Internal(TagsToRemove, Object, Modifier);
-}
-
-bool UObjectTags_Subsystem::RemoveTagsFromObject_Internal(FGameplayTagContainer TagsToRemove, UObject* Object,
-	UObject* Modifier)
-{
 	bool bTagRemoved = false;
 
-	FObjectTag* FoundObject = ObjectTags.Find(Object);
+	FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(Object);
 	if(FoundObject && FoundObject->Object)
 	{
 		for(auto& CurrentTag : TagsToRemove)
 		{
-			if(GetObjectTags(FoundObject->Object).Tags.HasTagExact(CurrentTag))
+			if(FoundObject->TagsAndValues.Remove(CurrentTag))
 			{
-				FoundObject->Tags.RemoveTag(CurrentTag);
-
 				if(AActor* TargetActor = Cast<AActor>(FoundObject->Object))
 				{
 					UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
 				}
 
-				//Notify the object itself
-				if(UKismetSystemLibrary::DoesImplementInterface(Object, UI_ObjectTagsCommunication::StaticClass()))
-				{
-					II_ObjectTagsCommunication::Execute_OwningTagsUpdated(Object, CurrentTag, false, Modifier);
-				}
-
-				//Notify any listeners
-				for(auto& CurrentListener : FoundObject->Listeners)
-				{
-					if(UKismetSystemLibrary::DoesImplementInterface(CurrentListener, UI_ObjectTagsCommunication::StaticClass()))
-					{
-						II_ObjectTagsCommunication::Execute_ListeningObjectTagsUpdated(CurrentListener, CurrentTag, false, Object, Modifier);
-					}
-				}
+				FoundObject->BroadcastTagChange(CurrentTag, Removed, Modifier, 0);
 
 				//For now the success logic is simple, as long as any tag
 				//was added, we label this function as a success. - V
 				bTagRemoved = true;
 			}
+			
+			#if WITH_EDITOR
+			if(bTagRemoved && ObjectTags_Subsystem->CollectDebuggingData)
+			{
+				FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), CurrentTag, false));
+			}
+			#endif
 		}
-
-		//It's simpler to have this system interact with GAS's tag system rather than the other way around.
-
 	}
-
-#if WITH_EDITOR
-
-	if(bTagRemoved && CollectDebuggingData)
-	{
-		FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), TagsToRemove, false));
-	}
-	
-#endif
 
 	if(FoundObject)
 	{
 		//If the object has been destroyed or has no tags AND nobody is listening to it, just remove it.
-		if(!FoundObject->Object.Get() || (FoundObject->Tags.IsEmpty() && FoundObject->Listeners.IsEmpty()))
+		if(!FoundObject->Object.Get() || (FoundObject->TagsAndValues.IsEmpty() && FoundObject->Listeners.IsEmpty()))
 		{
-			ObjectTags.Remove(Object);
+			ObjectTags_Subsystem->ObjectTags.Remove(Object);
 		}
 	}
 	
@@ -398,46 +319,55 @@ bool UObjectTags_Subsystem::RemoveTagsFromObject_Internal(FGameplayTagContainer 
 
 bool UObjectTags_Subsystem::DoesObjectHaveTag(FGameplayTag Tag, UObject* Object)
 {
-	if(!UGameplayStatics::GetPlayerController(Object, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(Object, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	TRACE_CPUPROFILER_EVENT_SCOPE(DoesObjectHaveTag)
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 	
-	if(const FGameplayTagContainer FoundTags = ObjectTags_Subsystem->GetObjectTags(Object).Tags; FoundTags.HasTagExact(Tag))
+	if(FObjectTag* ObjectTags = ObjectTags_Subsystem->ObjectTags.Find(Object))
 	{
-		return true;
+		if(ObjectTags->TagsAndValues.Contains(Tag))
+		{
+			return true;
+		}
 	}
 
 	return false;
 }
 
+float UObjectTags_Subsystem::GetTagValueFromObject(FGameplayTag Tag, UObject* Object)
+{
+	TRACE_CPUPROFILER_EVENT_SCOPE(GetTagValueFromObject)
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
+	if(!ObjectTags_Subsystem)
+	{
+		return 0;
+	}
+
+	if(FObjectTag* ObjectTags = ObjectTags_Subsystem->ObjectTags.Find(Object))
+	{
+		if(float* Value = ObjectTags->TagsAndValues.Find(Tag))
+		{
+			return *Value;
+		}
+	}
+
+	return 0;
+}
+
 bool UObjectTags_Subsystem::AddListenerToObject(UObject* Listener, UObject* OtherObject)
 {
-	if(!UGameplayStatics::GetPlayerController(OtherObject, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(OtherObject, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 
-	return ObjectTags_Subsystem->AddListenerToObject_Internal(Listener, OtherObject);
-}
-
-bool UObjectTags_Subsystem::AddListenerToObject_Internal(UObject* Listener, UObject* OtherObject)
-{
 	bool bListenerAdded = false;
 
-	FObjectTag* FoundObject = ObjectTags.Find(OtherObject);
+	FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(OtherObject);
 	if(FoundObject && FoundObject->Object)
 	{
 		if(!FoundObject->Listeners.Contains(Listener))
@@ -452,7 +382,7 @@ bool UObjectTags_Subsystem::AddListenerToObject_Internal(UObject* Listener, UObj
 		NewObjectTag.Object = OtherObject;
 		NewObjectTag.Listeners.AddUnique(Listener);
 		bListenerAdded = true;
-		ObjectTags.Add(OtherObject, NewObjectTag);
+		ObjectTags_Subsystem->ObjectTags.Add(OtherObject, NewObjectTag);
 	}
 
 	return bListenerAdded;
@@ -460,23 +390,13 @@ bool UObjectTags_Subsystem::AddListenerToObject_Internal(UObject* Listener, UObj
 
 bool UObjectTags_Subsystem::RemoveListenerForObject(UObject* Listener, UObject* OtherObject)
 {
-	if(!UGameplayStatics::GetPlayerController(OtherObject, 0))
-	{
-		return false;
-	}
-	
-	UObjectTags_Subsystem* ObjectTags_Subsystem = UGameplayStatics::GetPlayerController(OtherObject, 0)->GetLocalPlayer()->GetSubsystem<UObjectTags_Subsystem>();
+	UObjectTags_Subsystem* ObjectTags_Subsystem = UObjectTags_Subsystem::Get();
 	if(!ObjectTags_Subsystem)
 	{
 		return false;
 	}
 
-	return ObjectTags_Subsystem->RemoveListenerForObject_Internal(Listener, OtherObject);
-}
-
-bool UObjectTags_Subsystem::RemoveListenerForObject_Internal(UObject* Listener, UObject* OtherObject)
-{
-	FObjectTag* FoundObject = ObjectTags.Find(OtherObject);
+	FObjectTag* FoundObject = ObjectTags_Subsystem->ObjectTags.Find(OtherObject);
 	if(FoundObject && FoundObject->Object)
 	{
 		if(FoundObject->Listeners.Contains(Listener))
@@ -491,13 +411,60 @@ bool UObjectTags_Subsystem::RemoveListenerForObject_Internal(UObject* Listener, 
 
 void UObjectTags_Subsystem::CleanupObjectTagArray()
 {
-	for(auto& CurrentObject : ObjectTags)
+	TRACE_CPUPROFILER_EVENT_SCOPE(CleanupObjectTagArray)
+	TArray<TObjectPtr<UObject>> ObjectArray;
+	ObjectTags.GenerateKeyArray(ObjectArray);
+
+	TArray<FObjectTag> TagsArray;
+	ObjectTags.GenerateValueArray(TagsArray);
+	
+	for(int32 CurrentObject = 0; CurrentObject < ObjectArray.Num(); CurrentObject++)
 	{
 		//If an object still has a listener, we do not want to remove the object. Only if an object has no
 		//tags and has no listener, then remove it, even though the object is valid.
-		if(!CurrentObject.Key.Get() || (CurrentObject.Value.Tags.IsEmpty() && CurrentObject.Value.Listeners.IsEmpty()))
+		if(!ObjectArray[CurrentObject].Get() || (TagsArray[CurrentObject].TagsAndValues.IsEmpty() && TagsArray[CurrentObject].Listeners.IsEmpty()))
 		{
-			ObjectTags.Remove(CurrentObject.Key);
+			ObjectTags.Remove(ObjectArray[CurrentObject]);
+			ObjectArray.RemoveAt(CurrentObject);
+			TagsArray.RemoveAt(CurrentObject);
+			CurrentObject--;
 		}
 	}
+}
+
+FGameplayTagContainer UObjectTags_Subsystem::GetConflictingTags(TSubclassOf<UO_TagRelationship> Relationship, FGameplayTagContainer Container)
+{
+	FGameplayTagContainer TagsToRemove;
+
+	for(auto& CurrentTag : Container)
+	{
+		if(Relationship.GetDefaultObject()->RemoveTags.HasTagExact(CurrentTag))
+		{
+			TagsToRemove.AddTagFast(CurrentTag);
+		}
+	}
+
+	return TagsToRemove;
+}
+
+FGameplayTagContainer UObjectTags_Subsystem::GetBlockingTags(TSubclassOf<UO_TagRelationship> Relationship,
+	FGameplayTagContainer Container)
+{
+	FGameplayTagContainer BlockingTags;
+
+	for(auto& CurrentTag : Container)
+	{
+		if(Relationship.GetDefaultObject()->BlockingTags.HasTagExact(CurrentTag))
+		{
+			BlockingTags.AddTagFast(CurrentTag);
+		}
+	}
+
+	return BlockingTags;
+}
+
+bool UObjectTags_Subsystem::HasRequiredTags(TSubclassOf<UO_TagRelationship> Relationship,
+	FGameplayTagContainer Container)
+{
+	return Container.HasAllExact(Relationship.GetDefaultObject()->RequiredTags);
 }

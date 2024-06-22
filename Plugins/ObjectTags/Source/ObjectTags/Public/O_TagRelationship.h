@@ -22,6 +22,9 @@ public:
 	UPROPERTY(Category = "Base Tag", BlueprintReadOnly, EditAnywhere)
 	FGameplayTag Tag;
 
+	UPROPERTY(Category = "Base Tag", BlueprintReadOnly, EditAnywhere)
+	float Value = 1;
+
 	/**What tags does the object have to have for the base tag to be applied?*/
 	UPROPERTY(Category = "Tag Mapping", BlueprintReadOnly, EditAnywhere)
 	FGameplayTagContainer RequiredTags;
