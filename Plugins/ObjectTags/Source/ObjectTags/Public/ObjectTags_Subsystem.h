@@ -61,6 +61,7 @@ struct FObjectTag
 	/**Timers for current temporary tags.
 	 * This map is required to allow for tag durations
 	 * to be refreshed.*/
+	UPROPERTY(Category = "Object Tags", BlueprintReadOnly)
 	TMap<FGameplayTag, FTimerHandle> TagTimers;
 
 	bool operator==(const FObjectTag& Argument) const
@@ -204,4 +205,21 @@ public:
 	/**Does the @Container have the tags that the @Relationship requires to be applied?*/
 	UFUNCTION(Category = "ObjectTags|Tag Relationship", BlueprintCallable, BlueprintPure)
 	static bool HasRequiredTags(TSubclassOf<UO_TagRelationship> Relationship, FGameplayTagContainer Container);
+
+#if WITH_EDITOR
+	
+protected:
+	
+	static AActor* GetActorForConsoleCommand();
+	
+	static void AddTagConsoleCommand(const TArray<FString>& Args);
+	static void AddTagToPlayerConsoleCommand(const TArray<FString>& Args);
+	static void AddTagConsoleCommandInternal(const TArray<FString>& Args, bool AddToPlayer);
+
+	static void RemoveTagConsoleCommand(const TArray<FString>& Args);
+	static void RemoveTagFromPlayerConsoleCommand(const TArray<FString>& Args);
+	static void RemoveTagFConsoleCommandInternal(const TArray<FString>& Args, bool RemoveFromPlayer);
+
+#endif
+	
 };

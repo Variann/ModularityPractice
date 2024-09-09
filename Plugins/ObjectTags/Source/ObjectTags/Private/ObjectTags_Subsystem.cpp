@@ -5,9 +5,12 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayTagsManager.h"
 #include "I_ObjectTagsCommunication.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+
+DEFINE_LOG_CATEGORY_STATIC(ObjectTagsLog, Log, All)
 
 void UObjectTags_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -16,6 +19,30 @@ void UObjectTags_Subsystem::Initialize(FSubsystemCollectionBase& Collection)
 	ObjectTags.Empty();
 
 	FCoreUObjectDelegates::GetPreGarbageCollectDelegate().AddUObject(this, &UObjectTags_Subsystem::CleanupObjectTagArray);
+	
+	IConsoleManager::Get().RegisterConsoleCommand(
+		TEXT("AddTag"),
+		TEXT("Adds a tag to the actor in front of the camera."),
+			FConsoleCommandWithArgsDelegate::CreateStatic(&AddTagConsoleCommand),
+			ECVF_Default);
+
+	IConsoleManager::Get().RegisterConsoleCommand(
+		TEXT("RemoveTag"),
+		TEXT("Remove a tag from the actor in front of the camera."),
+			FConsoleCommandWithArgsDelegate::CreateStatic(&RemoveTagConsoleCommand),
+			ECVF_Default);
+
+	IConsoleManager::Get().RegisterConsoleCommand(
+	TEXT("AddTagToPlayer"),
+	TEXT("Adds a tag to the player pawn"),
+		FConsoleCommandWithArgsDelegate::CreateStatic(&AddTagToPlayerConsoleCommand),
+		ECVF_Default);
+
+	IConsoleManager::Get().RegisterConsoleCommand(
+		TEXT("RemoveTagFromPlayer"),
+		TEXT("Remove a tag from the player pawn"),
+			FConsoleCommandWithArgsDelegate::CreateStatic(&RemoveTagFromPlayerConsoleCommand),
+			ECVF_Default);
 }
 
 UObjectTags_Subsystem* UObjectTags_Subsystem::Get()
@@ -76,8 +103,8 @@ bool UObjectTags_Subsystem::AddTagToObject(FGameplayTag TagToAdd, UObject* Objec
 		if(!FoundObject->TagsAndValues.Find(TagToAdd))
 		{
 			FoundObject->TagsAndValues.Add(TagToAdd, Value);
-
-			if(AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get()))
+			AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get());
+			if(TargetActor)
 			{
 				FGameplayTagContainer ASCTags;
 				if(UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor))
@@ -91,6 +118,20 @@ bool UObjectTags_Subsystem::AddTagToObject(FGameplayTag TagToAdd, UObject* Objec
 			}
 
 			FoundObject->BroadcastTagChange(TagToAdd, Added, Modifier, Value);
+
+			#if ENABLE_VISUAL_LOG
+			if(TargetActor)
+			{
+				UE_VLOG_LOCATION(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TargetActor->GetActorLocation(),
+				3, FColor::White, TEXT("Added tag %s to %s, added by %s"), *TagToAdd.ToString(), *Object->GetName(), *Modifier->GetName());
+			}
+			else
+			{
+				UE_VLOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Added tag tag %s to %s, added by %s"), *TagToAdd.ToString(), *Object->GetName(), *Modifier->GetName());
+			}
+
+			UE_VLOG_UELOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Added tag tag %s to %s, added by %s"), *TagToAdd.ToString(), *Object->GetName(), *Modifier->GetName());
+			#endif
 
 			if(FoundObject->TagRelationships.IsValidIndex(0))
 			{
@@ -118,6 +159,20 @@ bool UObjectTags_Subsystem::AddTagToObject(FGameplayTag TagToAdd, UObject* Objec
 			bTagAdded = true;
 			
 			FoundObject->BroadcastTagChange(TagToAdd, Added, Modifier, Value);
+
+			#if ENABLE_VISUAL_LOG
+			AActor* TargetActor = Cast<AActor>(FoundObject->Object.Get());
+			if(TargetActor)
+			{
+				UE_VLOG_LOCATION(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TargetActor->GetActorLocation(),
+				3, FColor::White, TEXT("Tag value %s set to %f on %s, modified by %s"), *TagToAdd.ToString(), Value, *Object->GetName(), *Modifier->GetName());
+			}
+			else
+			{
+				UE_VLOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Tag value %s set to %f on %s, modified by %s"), *TagToAdd.ToString(), Value, *Object->GetName(), *Modifier->GetName());
+			}
+			UE_VLOG_UELOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Tag value %s set to %f on %s, modified by %s"), *TagToAdd.ToString(), Value, *Object->GetName(), *Modifier->GetName());
+			#endif
 		}
 	}
 	else
@@ -189,7 +244,7 @@ bool UObjectTags_Subsystem::AddTagToObject(FGameplayTag TagToAdd, UObject* Objec
 		{
 			if(Object)
 			{
-				UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer({TagToAdd}), Object, Modifier ? Modifier : nullptr);
+				UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer({TagToAdd}), Object, IsValid(Modifier) ? Modifier : nullptr);
 			}
 		}), Duration, false);
 
@@ -284,12 +339,51 @@ bool UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer TagsToRem
 		{
 			if(FoundObject->TagsAndValues.Remove(CurrentTag))
 			{
-				if(AActor* TargetActor = Cast<AActor>(FoundObject->Object))
+				AActor* TargetActor = Cast<AActor>(FoundObject->Object);
+				if(TargetActor)
 				{
 					UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(TargetActor, FGameplayTagContainer({CurrentTag}), true);
 				}
 
 				FoundObject->BroadcastTagChange(CurrentTag, Removed, Modifier, 0);
+
+				#if ENABLE_VISUAL_LOG
+
+				if(TargetActor)
+				{
+					if(Modifier)
+					{
+						UE_VLOG_LOCATION(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TargetActor->GetActorLocation(),
+						3, FColor::Yellow, TEXT("Removed tag %s from %s, removed by %s"), *CurrentTag.ToString(), *Object->GetName(), *Modifier->GetName());
+					}
+					else
+					{
+						UE_VLOG_LOCATION(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TargetActor->GetActorLocation(),
+						3, FColor::Yellow, TEXT("Removed tag %s from %s, removed by invalid object"), *CurrentTag.ToString(), *Object->GetName());
+					}
+				}
+				else
+				{
+					if(Modifier)
+					{
+						UE_VLOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Removed tag %s from %s, removed by %s"), *CurrentTag.ToString(), *Object->GetName(), *Modifier->GetName());
+					}
+					else
+					{
+						UE_VLOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Removed tag %s from %s, removed by invalid object"), *CurrentTag.ToString(), *Object->GetName());
+					}
+				}
+
+				if(Modifier)
+				{
+					UE_VLOG_UELOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Removed tag %s from %s, removed by %s"), *CurrentTag.ToString(), *Object->GetName(), *Modifier->GetName());
+				}
+				else
+				{
+					UE_VLOG_UELOG(ObjectTags_Subsystem, ObjectTagsLog, Verbose, TEXT("Removed tag %s from %s, removed by invalid object"), *CurrentTag.ToString(), *Object->GetName());
+				}
+
+				#endif
 
 				//For now the success logic is simple, as long as any tag
 				//was added, we label this function as a success. - V
@@ -299,7 +393,7 @@ bool UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer TagsToRem
 			#if WITH_EDITOR
 			if(bTagRemoved && ObjectTags_Subsystem->CollectDebuggingData)
 			{
-				FoundObject->TagHistory.Add(FObjectTagHistory(UKismetSystemLibrary::GetDisplayName(Modifier), CurrentTag, false));
+				FoundObject->TagHistory.Add(FObjectTagHistory( Modifier ? UKismetSystemLibrary::GetDisplayName(Modifier) : "Invalid Object", CurrentTag, false));
 			}
 			#endif
 		}
@@ -467,4 +561,130 @@ bool UObjectTags_Subsystem::HasRequiredTags(TSubclassOf<UO_TagRelationship> Rela
 	FGameplayTagContainer Container)
 {
 	return Container.HasAllExact(Relationship.GetDefaultObject()->RequiredTags);
+}
+
+AActor* UObjectTags_Subsystem::GetActorForConsoleCommand()
+{
+	UObjectTags_Subsystem* Tags_Subsystem = UObjectTags_Subsystem::Get();
+	if(!Tags_Subsystem)
+	{
+		return nullptr;
+	}
+	
+	FVector Location = UGameplayStatics::GetPlayerCameraManager(Tags_Subsystem, 0)->GetCameraLocation();
+	FRotator Rotation = UGameplayStatics::GetPlayerCameraManager(Tags_Subsystem, 0)->GetCameraRotation();
+	FVector DirectionVector = Rotation.Vector();
+	FVector EndLocation = (DirectionVector * 500) + Location;
+	FHitResult HitTarget;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(Tags_Subsystem, 0));
+	FCollisionObjectQueryParams QueryParams(FCollisionObjectQueryParams::AllObjects);
+	Tags_Subsystem->GetWorld()->LineTraceSingleByObjectType(HitTarget, Location, EndLocation, QueryParams, CollisionParams);
+	DrawDebugSphere(Tags_Subsystem->GetWorld(), HitTarget.bBlockingHit ? HitTarget.Location : EndLocation, 10, 12, HitTarget.bBlockingHit ? FColor::Green : FColor::Red, false, 5);
+	return HitTarget.GetActor();
+}
+
+void UObjectTags_Subsystem::AddTagConsoleCommand(const TArray<FString>& Args)
+{
+	AddTagConsoleCommandInternal(Args, false);
+}
+
+void UObjectTags_Subsystem::AddTagToPlayerConsoleCommand(const TArray<FString>& Args)
+{
+	AddTagConsoleCommandInternal(Args, true);
+}
+
+void UObjectTags_Subsystem::AddTagConsoleCommandInternal(const TArray<FString>& Args, bool AddToPlayer)
+{
+	UObjectTags_Subsystem* Tags_Subsystem = UObjectTags_Subsystem::Get();
+	if(!Tags_Subsystem)
+	{
+		return;
+	}
+
+	if(Args.Num() < 1)
+	{
+		return;
+	}
+
+	FGameplayTag TagToAdd = UGameplayTagsManager::Get().RequestGameplayTag(FName(*Args[0]));
+	if(!TagToAdd.IsValid())
+	{
+		UKismetSystemLibrary::PrintString(Tags_Subsystem, "Tag not found");
+	}
+
+	if(Args.IsValidIndex(1))
+	{
+		if(!Args[1].IsNumeric())
+		{
+			UKismetSystemLibrary::PrintString(Tags_Subsystem, "Value parameter was not numeric");
+			return;
+		}
+	}
+
+	if(Args.IsValidIndex(2))
+	{
+		if(!Args[2].IsNumeric())
+		{
+			UKismetSystemLibrary::PrintString(Tags_Subsystem, "Duration parameter was not numeric");
+			return;
+		}
+	}
+
+	float Value = Args.IsValidIndex(1) ? FCString::Atof(*Args[1]) : 1;
+	float Duration = Args.IsValidIndex(2) ? FCString::Atof(*Args[2]) : 0;
+
+	if(AddToPlayer)
+	{
+		UObjectTags_Subsystem::AddTagToObject(TagToAdd, UGameplayStatics::GetPlayerPawn(Tags_Subsystem, 0), Tags_Subsystem, Value, Duration);
+	}
+	else
+	{
+		if(AActor* Target = GetActorForConsoleCommand())
+		{
+			UObjectTags_Subsystem::AddTagToObject(TagToAdd, Target, Tags_Subsystem, Value, Duration);
+		}
+	}
+}
+
+void UObjectTags_Subsystem::RemoveTagConsoleCommand(const TArray<FString>& Args)
+{
+	RemoveTagFConsoleCommandInternal(Args, false);
+}
+
+void UObjectTags_Subsystem::RemoveTagFromPlayerConsoleCommand(const TArray<FString>& Args)
+{
+	RemoveTagFConsoleCommandInternal(Args, true);
+}
+
+void UObjectTags_Subsystem::RemoveTagFConsoleCommandInternal(const TArray<FString>& Args, bool RemoveFromPlayer)
+{
+	UObjectTags_Subsystem* Tags_Subsystem = UObjectTags_Subsystem::Get();
+	if(!Tags_Subsystem)
+	{
+		return;
+	}
+
+	if(Args.Num() != 1)
+	{
+		return;
+	}
+
+	FGameplayTag TagToRemove = UGameplayTagsManager::Get().RequestGameplayTag(FName(*Args[0]));
+	if(!TagToRemove.IsValid())
+	{
+		UKismetSystemLibrary::PrintString(Tags_Subsystem, "Tag not found");
+	}
+
+	if(RemoveFromPlayer)
+	{
+		UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer(TagToRemove), UGameplayStatics::GetPlayerPawn(Tags_Subsystem, 0), Tags_Subsystem);
+	}
+	else
+	{
+		if(AActor* Target = GetActorForConsoleCommand())
+		{
+			UObjectTags_Subsystem::RemoveTagsFromObject(FGameplayTagContainer(TagToRemove), Target, Tags_Subsystem);
+		}
+	}
 }

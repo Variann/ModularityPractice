@@ -35,10 +35,10 @@ public:
 	 * the object tags system.
 	 * These are tags the object tags subsystem will not manage.
 	 * This is where you could implement permanent tags.*/
-	UFUNCTION(Category = "ObjectTags", BlueprintNativeEvent, BlueprintCallable, meta = (DeprecatedFunction = "External tags are deprecated. Please apply your external tags to the subsystem"))
+	UFUNCTION(Category = "ObjectTags", BlueprintNativeEvent, BlueprintCallable)
 	FGameplayTagContainer GetObjectsExternalTags();
 
-	UFUNCTION(Category = "ObjectTags", BlueprintNativeEvent, BlueprintCallable, meta = (DeprecatedFunction = "External tags are deprecated. Please apply your external tags to the subsystem"))
+	UFUNCTION(Category = "ObjectTags", BlueprintNativeEvent, BlueprintCallable)
 	TMap<FGameplayTag, float> GetObjectsExternalTagsAndValues();
 
 	/**The one who receives this function call has had its tags updated

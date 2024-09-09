@@ -29,6 +29,7 @@ public class ObjectTags : ModuleRules
 				"CoreUObject", 
 				"Engine",
 				"GameplayTags", 
+				"StateTreeModule", 
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -45,6 +46,15 @@ public class ObjectTags : ModuleRules
 			}
 			);
 		
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[]
+			{
+				"UnrealEd",
+				"RHI", // <--- And this
+			});
+		}
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
