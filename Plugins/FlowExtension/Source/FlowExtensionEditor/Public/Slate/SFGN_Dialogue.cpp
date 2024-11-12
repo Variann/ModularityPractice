@@ -48,7 +48,6 @@ void SFGN_Dialogue::UpdateGraphNode()
 
 	FText NodeTitleText = LOCTEXT("InvalidSpeaker", "Invalid Speaker!");
 	FLinearColor SpeakerColor;
-	FLinearColor PronounColor;
 	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
 	{
 		UFN_DialogueBase* DialogueNode = Cast<UFN_DialogueBase>(FlowNode);

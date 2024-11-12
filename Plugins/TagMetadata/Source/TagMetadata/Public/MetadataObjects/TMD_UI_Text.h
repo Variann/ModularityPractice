@@ -16,6 +16,6 @@ class TAGMETADATA_API UTMD_UI_Text : public UO_TagMetadata
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
 	FText UI_Text;
 };

@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.4",
+	"EngineAssociation": "5.5",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -29,26 +29,6 @@
 			"Name": "EditorScriptingTools",
 			"Enabled": true,
 			"MarketplaceURL": "https://unrealengineresources.com/plugins"
-		},
-		{
-			"Name": "NodeGraphAssistant",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/d9baaaeadeaf41dcb52b3f6e134e9514"
-		},
-		{
-			"Name": "DarkerNodes",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/4b3441f0228a40ec9ca986489a5bd682"
-		},
-		{
-			"Name": "ZenDev",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/b203c4bd28604e7689512c27f81e1945"
-		},
-		{
-			"Name": "BlueprintAssist",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/9e895371fa3a471c87337860d6f341ff"
 		}
 	]
 }

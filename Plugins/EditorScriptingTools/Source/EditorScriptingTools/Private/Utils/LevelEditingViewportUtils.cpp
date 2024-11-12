@@ -314,7 +314,7 @@ namespace LevelEditingViewportUtils
 	{
 		if (FEditorViewportClient* ViewportClient = GetCurrentEditingViewportClient())
 		{
-			ViewportClient->SetRealtimeOverride(bShouldBeRealtime, SystemDisplayName);
+			SetRealtimeOverride(bShouldBeRealtime, SystemDisplayName);
 		}
 	}
 
@@ -322,7 +322,7 @@ namespace LevelEditingViewportUtils
 	{
 		if (FEditorViewportClient* ViewportClient = GetCurrentEditingViewportClient())
 		{
-			ViewportClient->RemoveRealtimeOverride();
+			RemoveRealtimeOverride();
 		}
 	}
 

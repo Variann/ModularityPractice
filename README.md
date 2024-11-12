@@ -15,6 +15,7 @@ What this repo hosts (That I own/created, see below for external plugins.):
 	- Quest system.
 	- Dialogue system.
    	- Other unrelated nodes, such as portals to reduce wire spaghetti.
+    - NOTE: The Flow plugin in this repo is slightly out of date until more work around AIFlow is made. Check the Flow discord to stay up to date.
 
 ---
  - `TagFacts`, allows you to store gameplay tags with values to serve as a "fact system". This kind of system is very popular among triple A studios.
