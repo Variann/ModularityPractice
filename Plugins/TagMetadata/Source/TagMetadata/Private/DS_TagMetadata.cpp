@@ -8,13 +8,14 @@ UDS_TagMetadata::UDS_TagMetadata()
 	CategoryName = "Plugins";
 }
 
-TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSubclassOf<UO_TagMetadataCollection> OptionalCollection)
+TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSoftClassPtr<UO_TagMetadataCollection> OptionalCollection)
 {
 	TArray<UO_TagMetadata*> FoundMetadata;
 
-	if(IsValid(OptionalCollection))
+	if(!OptionalCollection.IsNull())
 	{
-		for(auto& CurrentMetadata : Cast<UO_TagMetadataCollection>(OptionalCollection->ClassDefaultObject)->TagsMetadata)
+		TSubclassOf<UO_TagMetadataCollection> LoadedClass = OptionalCollection.LoadSynchronous();
+		for(auto& CurrentMetadata : Cast<UO_TagMetadataCollection>(LoadedClass->ClassDefaultObject)->TagsMetadata)
 		{
 			if(CurrentMetadata.Tag == Tag)
 			{
@@ -29,9 +30,10 @@ TArray<UO_TagMetadata*> UDS_TagMetadata::GetTagMetadata(FGameplayTag Tag, TSubcl
 	{
 		for(auto& CurrentCollection : TagMetadataConfig->TagMetadataCollections)
 		{
-			if(IsValid(CurrentCollection))
+			if(!CurrentCollection.IsNull())
 			{
-				for(auto& CurrentMetadata : Cast<UO_TagMetadataCollection>(CurrentCollection->ClassDefaultObject)->TagsMetadata)
+				TSubclassOf<UO_TagMetadataCollection> LoadedClass = CurrentCollection.LoadSynchronous();
+				for(auto& CurrentMetadata : Cast<UO_TagMetadataCollection>(LoadedClass->ClassDefaultObject)->TagsMetadata)
 				{
 					if(CurrentMetadata.Tag == Tag)
 					{
@@ -62,7 +64,7 @@ UO_TagMetadata* UDS_TagMetadata::GetTagMetadataByClass(FGameplayTag Tag, TSubcla
 }
 
 UO_TagMetadata* UDS_TagMetadata::GetTagMetadataByClassFromCollection(FGameplayTag Tag,
-	TSubclassOf<UO_TagMetadata> Class, TSubclassOf<UO_TagMetadataCollection> Collection)
+	TSubclassOf<UO_TagMetadata> Class, TSoftClassPtr<UO_TagMetadataCollection> Collection)
 {
 	TArray<UO_TagMetadata*> TagMetadata = GetTagMetadata(Tag, Collection);
 	for(const auto& CurrentMetadata : TagMetadata)
@@ -87,11 +89,12 @@ TArray<TSubclassOf<UO_TagMetadataCollection>> UDS_TagMetadata::GetAllCollections
 	{
 		for(auto& CurrentCollection : TagMetadataConfig->TagMetadataCollections)
 		{
-			for(auto& CurrentTagMetadata : CurrentCollection.GetDefaultObject()->TagsMetadata)
+			TSubclassOf<UO_TagMetadataCollection> LoadedClass = CurrentCollection.LoadSynchronous();
+			for(auto& CurrentTagMetadata : LoadedClass.GetDefaultObject()->TagsMetadata)
 			{
 				if(CurrentTagMetadata.Tag == Tag)
 				{
-					FoundCollections.Add(CurrentCollection);
+					FoundCollections.Add(CurrentCollection.Get());
 					break;
 				}
 			}

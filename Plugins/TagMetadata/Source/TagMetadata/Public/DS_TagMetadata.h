@@ -27,14 +27,14 @@ public:
 	/**Friendly texts for tags, which can be picked up by the translation tool
 	 * and is meant to give a simple way to pair any text with a tag.*/
 	UPROPERTY(Config, Category = "Settings", BlueprintReadOnly, EditAnywhere)
-	TArray<TSubclassOf<UO_TagMetadataCollection>> TagMetadataCollections;
+	TArray<TSoftClassPtr<UO_TagMetadataCollection>> TagMetadataCollections;
 
 	/**Get all metadata associated with the @Tag.
 	 * If @OptionalCollection is filled, the search will be filtered
 	 * to just that collection, allowing you to specify which collection
 	 * you want the metadata from.*/
 	UFUNCTION(Category = "Tags Metadata", BlueprintCallable, BlueprintPure)
-	static TArray<UO_TagMetadata*> GetTagMetadata(FGameplayTag Tag, TSubclassOf<UO_TagMetadataCollection> OptionalCollection = nullptr);
+	static TArray<UO_TagMetadata*> GetTagMetadata(FGameplayTag Tag, TSoftClassPtr<UO_TagMetadataCollection> OptionalCollection = nullptr);
 
 	/**Get the specified @Class metadata from the first collection that has any
 	 * metadata associated with the @Tag.*/
@@ -44,7 +44,7 @@ public:
 	/**Get the specified metadata from a specified collection.*/
 	UFUNCTION(Category = "Tags Metadata", BlueprintCallable, BlueprintPure, meta = (DeterminesOutputType = "Class"))
 	static UO_TagMetadata* GetTagMetadataByClassFromCollection(FGameplayTag Tag, TSubclassOf<UO_TagMetadata> Class,
-		TSubclassOf<UO_TagMetadataCollection> Collection);
+		TSoftClassPtr<UO_TagMetadataCollection> Collection);
 
 	/**Returns all collections where the @Tag is being used.*/
 	UFUNCTION(Category = "Tags Metadata", BlueprintCallable, BlueprintPure)
