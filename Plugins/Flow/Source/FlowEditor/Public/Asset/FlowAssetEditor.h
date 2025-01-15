@@ -47,6 +47,8 @@ protected:
 
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
 	TSharedPtr<class SSearchBrowser> SearchBrowser;
+#else
+	TSharedPtr<class SFindInFlow> SearchBrowser;
 #endif
 
 	/** Runtime message log, with the log listing that it reflects */
@@ -101,6 +103,8 @@ public:
 	// FAssetEditorToolkit
 	virtual void InitToolMenuContext(FToolMenuContext& MenuContext) override;
 	virtual void PostRegenerateMenusAndToolbars() override;
+	virtual void SaveAsset_Execute() override;
+	virtual void SaveAssetAs_Execute() override;
 	// --
 
 	bool IsTabFocused(const FTabId& TabId) const;
@@ -110,10 +114,10 @@ private:
 	TSharedRef<SDockTab> SpawnTab_Graph(const FSpawnTabArgs& Args) const;
 	TSharedRef<SDockTab> SpawnTab_Palette(const FSpawnTabArgs& Args) const;
 	TSharedRef<SDockTab> SpawnTab_RuntimeLog(const FSpawnTabArgs& Args) const;
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
 	TSharedRef<SDockTab> SpawnTab_Search(const FSpawnTabArgs& Args) const;
-#endif
 	TSharedRef<SDockTab> SpawnTab_ValidationLog(const FSpawnTabArgs& Args) const;
+
+	void DoPresaveAssetUpdate();
 
 public:
 	/** Edits the specified FlowAsset object */
@@ -124,16 +128,14 @@ protected:
 	virtual void BindToolbarCommands();
 	
 	virtual void RefreshAsset();
+	virtual void RefreshDetails();
 
 private:
 	void ValidateAsset_Internal();
 
 protected:
 	virtual void ValidateAsset(FFlowMessageLog& MessageLog);
-
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
 	virtual void SearchInAsset();
-#endif
 
 	void EditAssetDefaults_Clicked() const;
 
@@ -150,7 +152,7 @@ public:
 	virtual void ClearSelectionStateFor(const FName SelectionOwner);
 	FName GetUISelectionState() const;
 
-	virtual void OnSelectedNodesChanged(const TSet<UObject*>& Nodes) {}
+	virtual void OnSelectedNodesChanged(const TSet<UObject*>& Nodes);
 
 #if ENABLE_JUMP_TO_INNER_OBJECT
 	// FAssetEditorToolkit
@@ -160,4 +162,8 @@ public:
 
 protected:
 	void OnLogTokenClicked(const TSharedRef<class IMessageToken>& Token) const;
+
+public:
+	// Find in flow
+	void JumpToNode(const UEdGraphNode* Node) const;
 };

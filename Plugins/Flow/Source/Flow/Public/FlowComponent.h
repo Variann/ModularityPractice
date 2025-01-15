@@ -7,7 +7,7 @@
 
 #include "FlowSave.h"
 #include "FlowTypes.h"
-#include "FlowOwnerInterface.h"
+#include "Interfaces/FlowOwnerInterface.h"
 #include "FlowComponent.generated.h"
 
 class UFlowAsset;
@@ -84,7 +84,8 @@ public:
 protected:
 	void RegisterWithFlowSubsystem();
 	void UnregisterWithFlowSubsystem();
-	
+	virtual void BeginRootFlow(bool bComponentLoadedFromSaveGame);
+
 private:
 	UFUNCTION()
 	void OnRep_AddedIdentityTags();
@@ -117,12 +118,12 @@ public:
 	const FGameplayTagContainer& GetRecentlySentNotifyTags() const { return RecentlySentNotifyTags; }
 
 	// Send single notification from the actor to Flow graphs
-	// If set on server, it always going to be replicated to clients
+	// If set on server, it's always going to be replicated to clients
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void NotifyGraph(const FGameplayTag NotifyTag, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
 	// Send multiple notifications at once - from the actor to Flow graphs
-	// If set on server, it always going to be replicated to clients
+	// If set on server, it's always going to be replicated to clients
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void BulkNotifyGraph(const FGameplayTagContainer NotifyTags, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
@@ -176,7 +177,7 @@ private:
 public:
 	// Asset that might instantiated as "Root Flow" 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RootFlow")
-	UFlowAsset* RootFlow;
+	TObjectPtr<UFlowAsset> RootFlow;
 
 	// If true, component will start Root Flow on Begin Play
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RootFlow")
@@ -192,15 +193,15 @@ public:
 
 	UPROPERTY(SaveGame)
 	FString SavedAssetInstanceName;
-	
+
 	// This will instantiate Flow Asset assigned on this component.
 	// Created Flow Asset instance will be a "root flow", as additional Flow Assets can be instantiated via Sub Graph node
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")
-	void StartRootFlow();
+	virtual void StartRootFlow();
 
 	// This will destroy instantiated Flow Asset - created from asset assigned on this component.
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")
-	void FinishRootFlow(UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy);
+	virtual void FinishRootFlow(UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy);
 
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	TSet<UFlowAsset*> GetRootInstances(const UObject* Owner) const;
@@ -209,18 +210,31 @@ public:
 	UFlowAsset* GetRootFlowInstance() const;
 
 //////////////////////////////////////////////////////////////////////////
-// UFlowComponent overrideable events
+// Custom Input and Output events
 
 public:
-	// Called when a Root flow asset triggers a CustomOutput
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnTriggerRootFlowOutputEvent")
-	void BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+	// This will trigger a specific CustomInput on this components root flow
+	UFUNCTION(BlueprintCallable, Category = "RootFlow")
+	void TriggerRootFlowCustomInput(const FName& EventName) const;
 
-	virtual void OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName) {}
+	// Called when a Root flow asset triggers a CustomOutput
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnRootFlowCustomEvent")
+	void BP_OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+
+	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName) {}
 
 	// UFlowAsset-only access
-	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName);
+	void DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
 	// ---
+
+	UE_DEPRECATED(5.5, "Please use OnRootFlowCustomEvent instead.")
+	void BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+	
+	UE_DEPRECATED(5.5, "Please use OnRootFlowCustomEvent instead.")
+	virtual void OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+	
+	UE_DEPRECATED(5.5, "Please use OnTriggerRootFlowCustomOutputDispatcher instead.")
+	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName);
 
 //////////////////////////////////////////////////////////////////////////
 // SaveGame

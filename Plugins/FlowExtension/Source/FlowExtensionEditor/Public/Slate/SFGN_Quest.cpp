@@ -13,7 +13,7 @@ void SFGN_Quest::UpdateGraphNode()
 
 	UDA_Quest* QuestInformation = nullptr;
 	
-	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+	if(UFlowNode* FlowNode = Cast<UFlowNode>(FlowGraphNode->GetFlowNodeBase()))
 	{
 		UFN_QuestBase* QuestNode = Cast<UFN_QuestBase>(FlowNode);
 		{

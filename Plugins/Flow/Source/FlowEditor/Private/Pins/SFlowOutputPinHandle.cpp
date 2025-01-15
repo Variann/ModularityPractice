@@ -11,7 +11,7 @@ void SFlowOutputPinHandle::RefreshNameList()
 {
 	PinNames.Empty();
 
-	if (Blueprint && Blueprint->GeneratedClass)
+	if (Blueprint && Blueprint->GeneratedClass && Blueprint->GeneratedClass->IsChildOf<UFlowNode>())
 	{
 		if (UFlowNode* FlowNode = Blueprint->GeneratedClass->GetDefaultObject<UFlowNode>())
 		{

@@ -10,7 +10,7 @@ UFlowNode_ExecutionSequence::UFlowNode_ExecutionSequence(const FObjectInitialize
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
-	NodeStyle = EFlowNodeStyle::Logic;
+	NodeDisplayStyle = FlowNodeStyle::Logic;
 #endif
 
 	SetNumberedOutputPins(0, 1);

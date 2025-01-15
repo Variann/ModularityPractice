@@ -16,16 +16,21 @@ class FLOW_API UFlowNode_Timer : public UFlowNode
 
 protected:
 	// If the value is closer to 0, Timer will complete in next tick
-	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f))
+	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f, DefaultForInputFlowPin, FlowPinType = Float))
 	float CompletionTime;
 
 	// this allows to trigger other nodes multiple times before completing the Timer
 	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f))
 	float StepTime;
 
+	static FName INPIN_CompletionTime;
+
 private:
 	FTimerHandle CompletionTimerHandle;
 	FTimerHandle StepTimerHandle;
+
+	UPROPERTY(SaveGame)
+	float ResolvedCompletionTime;
 
 	UPROPERTY(SaveGame)
 	float SumOfSteps;
@@ -37,10 +42,13 @@ private:
 	float RemainingStepTime;
 
 protected:
+	virtual void InitializeInstance() override;
 	virtual void ExecuteInput(const FName& PinName) override;
 
 	virtual void SetTimer();
 	virtual void Restart();
+
+	float ResolveCompletionTime() const;
 	
 private:
 	UFUNCTION()
@@ -56,7 +64,10 @@ protected:
 	virtual void OnLoad_Implementation() override;
 	
 #if WITH_EDITOR
-	virtual FString GetNodeDescription() const override;
+public:
+	virtual void UpdateNodeConfigText_Implementation() override;
+
+protected:
 	virtual FString GetStatusString() const override;
 #endif
 };

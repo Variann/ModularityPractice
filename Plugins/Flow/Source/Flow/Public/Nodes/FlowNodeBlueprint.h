@@ -6,7 +6,7 @@
 #include "FlowNodeBlueprint.generated.h"
 
 /**
- * A specialized blueprint class required for customizing Asset Type Actions
+ * Flow Node Blueprint class
  */
 UCLASS(BlueprintType)
 class FLOW_API UFlowNodeBlueprint : public UBlueprint

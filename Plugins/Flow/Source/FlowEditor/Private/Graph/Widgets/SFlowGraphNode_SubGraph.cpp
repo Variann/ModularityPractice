@@ -4,7 +4,7 @@
 #include "Graph/FlowGraphEditorSettings.h"
 
 #include "FlowAsset.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_SubGraph.h"
 
 #include "SGraphPreviewer.h"
 #include "Widgets/Layout/SBox.h"
@@ -16,7 +16,7 @@ TSharedPtr<SToolTip> SFlowGraphNode_SubGraph::GetComplexTooltip()
 {
 	if (UFlowGraphEditorSettings::Get()->bShowSubGraphPreview && FlowGraphNode)
 	{
-		if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+		if (UFlowNode* FlowNode = Cast<UFlowNode>(FlowGraphNode->GetFlowNodeBase()))
 		{
 			const UFlowAsset* AssetToEdit = Cast<UFlowAsset>(FlowNode->GetAssetToEdit());
 			if (AssetToEdit && AssetToEdit->GetGraph())

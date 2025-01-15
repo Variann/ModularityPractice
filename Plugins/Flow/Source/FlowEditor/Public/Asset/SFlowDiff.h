@@ -8,6 +8,9 @@
 #include "Textures/SlateIcon.h"
 
 struct FFlowGraphToDiff;
+struct FFlowObjectDiffArgs;
+class IDetailsView;
+class SSplitter2x2;
 class UFlowAsset;
 
 enum class EAssetEditorCloseReason : uint8;
@@ -50,8 +53,9 @@ struct FLOWEDITOR_API FFlowDiffPanel
 	/** The box around the graph editor, used to change the content when new graphs are set */
 	TSharedPtr<SBox> GraphEditorBox;
 
-	/** The details view associated with the graph editor */
-	TSharedPtr<class IDetailsView> DetailsView;
+	/** using SNullWidget::NullNullWidget can only work for a single widget, since widget instances can only be
+	 * used one at a time. EmptyDetailsView is used for displaying an empty details panel instead. */
+	TSharedPtr<IDetailsView> EmptyDetailsView;
 
 	/** The graph editor which does the work of displaying the graph */
 	TWeakPtr<class SGraphEditor> GraphEditor;
@@ -97,7 +101,7 @@ public:
 	void OnGraphSelectionChanged(const TSharedPtr<FFlowGraphToDiff> Item, ESelectInfo::Type SelectionType);
 
 	/** Called when user clicks on an entry in the listview of differences */
-	void OnDiffListSelectionChanged(TSharedPtr<struct FDiffResultItem> TheDiff);
+	void OnDiffListSelectionChanged(TSharedPtr<FFlowObjectDiffArgs> FlowObjectDiffArgs);
 
 	/** Helper function for generating an empty widget */
 	static TSharedRef<SWidget> DefaultEmptyPanel();
@@ -214,6 +218,8 @@ protected:
 
 	/** A pointer to the window holding this */
 	TWeakPtr<SWindow> WeakParentWindow;
+
+	TSharedPtr<SSplitter2x2> GraphDiffSplitter = nullptr;
 
 	FDelegateHandle AssetEditorCloseDelegate;
 };

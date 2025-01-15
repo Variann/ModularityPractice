@@ -15,13 +15,13 @@ FFlowGraphToken::FFlowGraphToken(const UFlowAsset* InFlowAsset)
 	CachedText = FText::FromString(InFlowAsset->GetClass()->GetPathName());
 }
 
-FFlowGraphToken::FFlowGraphToken(const UFlowNode* InFlowNode)
-	: GraphNode(InFlowNode->GetGraphNode())
+FFlowGraphToken::FFlowGraphToken(const UFlowNodeBase* InFlowNodeBase)
+	: GraphNode(InFlowNodeBase->GetGraphNode())
 {
-	CachedText = InFlowNode->GetNodeTitle();
+	CachedText = InFlowNodeBase->GetNodeTitle();
 }
 
-FFlowGraphToken::FFlowGraphToken(UEdGraphNode* InGraphNode, const UEdGraphPin* InPin)
+FFlowGraphToken::FFlowGraphToken(const UEdGraphNode* InGraphNode, const UEdGraphPin* InPin)
 	: GraphNode(InGraphNode)
 	, GraphPin(InPin)
 {
@@ -50,18 +50,18 @@ TSharedPtr<IMessageToken> FFlowGraphToken::Create(const UFlowAsset* InFlowAsset,
 	return nullptr;
 }
 
-TSharedPtr<IMessageToken> FFlowGraphToken::Create(const UFlowNode* InFlowNode, FTokenizedMessage& Message)
+TSharedPtr<IMessageToken> FFlowGraphToken::Create(const UFlowNodeBase* InFlowNodeBase, FTokenizedMessage& Message)
 {
-	if (InFlowNode)
+	if (InFlowNodeBase)
 	{
-		Message.AddToken(MakeShareable(new FFlowGraphToken(InFlowNode)));
+		Message.AddToken(MakeShareable(new FFlowGraphToken(InFlowNodeBase)));
 		return Message.GetMessageTokens().Last();
 	}
 	
 	return nullptr;
 }
 
-TSharedPtr<IMessageToken> FFlowGraphToken::Create(UEdGraphNode* InGraphNode, FTokenizedMessage& Message)
+TSharedPtr<IMessageToken> FFlowGraphToken::Create(const UEdGraphNode* InGraphNode, FTokenizedMessage& Message)
 {
 	if (InGraphNode)
 	{

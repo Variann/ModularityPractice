@@ -4,8 +4,8 @@
 
 #include "FlowAsset.h"
 #include "FlowLogChannels.h"
-#include "FlowOwnerInterface.h"
-#include "FlowOwnerFunctionParams.h"
+#include "Interfaces/FlowOwnerInterface.h"
+#include "Types/FlowOwnerFunctionParams.h"
 #include "FlowSettings.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_CallOwnerFunction)
@@ -17,9 +17,9 @@ UFlowNode_CallOwnerFunction::UFlowNode_CallOwnerFunction(const FObjectInitialize
 	, Params(nullptr)
 {
 #if WITH_EDITOR
-	NodeStyle = EFlowNodeStyle::Default;
-	Category = TEXT("World");
-#endif
+	NodeDisplayStyle = FlowNodeStyle::Deprecated;
+	Category = TEXT("Deprecated");
+#endif // WITH_EDITOR
 }
 
 void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
@@ -63,7 +63,7 @@ void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
 
 	Params->PostExecute();
 
-	(void)TryExecuteOutputPin(ResultOutputName);
+	(void) TryExecuteOutputPin(ResultOutputName);
 }
 
 bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName)
@@ -139,225 +139,11 @@ void UFlowNode_CallOwnerFunction::PostEditChangeProperty(struct FPropertyChanged
 	const FName PropertyName = PropertyChangedEvent.Property->GetFName();
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(FFlowOwnerFunctionRef, FunctionName))
 	{
-		if (TryAllocateParamsInstance() || FunctionRef.GetFunctionName().IsNone())
+		if (TryAllocateParamsInstance())
 		{
 			OnReconstructionRequested.ExecuteIfBound();
 		}
 	}
-}
-
-bool UFlowNode_CallOwnerFunction::TryAllocateParamsInstance()
-{
-	if (FunctionRef.GetFunctionName().IsNone())
-	{
-		// Throw out the old params object (if any)
-		Params = nullptr;
-
-		return false;
-	}
-
-	const UClass* ExistingParamsClass = GetExistingParamsClass();
-	const UClass* RequiredParamsClass = GetRequiredParamsClass();
-
-	if (!IsValid(RequiredParamsClass))
-	{
-		return false;
-	}
-
-	const bool bNeedsAllocateParams =
-		!IsValid(ExistingParamsClass) ||
-		ExistingParamsClass != RequiredParamsClass;
-
-	if (!bNeedsAllocateParams)
-	{
-		return false;
-	}
-
-	// Throw out the old params object (if any)
-	Params = nullptr;
-
-	// Create the new params object
-	Params = NewObject<UFlowOwnerFunctionParams>(this, RequiredParamsClass);
-
-	return true;
-}
-
-UClass* UFlowNode_CallOwnerFunction::GetRequiredParamsClass() const
-{
-	const UClass* ExpectedOwnerClass = TryGetExpectedOwnerClass();
-	if (!IsValid(ExpectedOwnerClass))
-	{
-		return nullptr;
-	}
-
-	const FName FunctionNameAsName = FunctionRef.GetFunctionName();
-
-	if (FunctionNameAsName.IsNone())
-	{
-		return nullptr;
-	}
-	
-	UClass* RequiredParamsClass = GetParamsClassForFunctionName(*ExpectedOwnerClass, FunctionNameAsName);
-	return RequiredParamsClass;
-}
-
-UClass* UFlowNode_CallOwnerFunction::GetExistingParamsClass() const
-{
-	if (!IsValid(Params))
-	{
-		return nullptr;
-	}
-
-	UClass* ExistingParamsClass = Params->GetClass();
-	return ExistingParamsClass;
-}
-
-UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunctionName(const UClass& ExpectedOwnerClass, const FName& FunctionName)
-{
-	const UFunction* Function = ExpectedOwnerClass.FindFunctionByName(FunctionName);
-	if (IsValid(Function))
-	{
-		return GetParamsClassForFunction(*Function);
-	}
-
-	return nullptr;
-}
-
-FText UFlowNode_CallOwnerFunction::GetNodeTitle() const
-{
-	const bool bUseAdaptiveNodeTitles = UFlowSettings::Get()->bUseAdaptiveNodeTitles;
-
-	if (bUseAdaptiveNodeTitles && !FunctionRef.GetFunctionName().IsNone())
-	{
-		const FText FunctionNameText = FText::FromName(FunctionRef.FunctionName);
-
-		return FText::Format(LOCTEXT("CallOwnerFunction", "Call {0}"), {FunctionNameText});
-	}
-	else
-	{
-		return Super::GetNodeTitle();
-	}
-}
-
-FString UFlowNode_CallOwnerFunction::GetNodeDescription() const
-{
-	if (UFlowSettings::Get()->bUseAdaptiveNodeTitles)
-	{
-		return Super::GetNodeDescription();
-	}
-
-	return FunctionRef.FunctionName.ToString();
-}
-
-bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass* ParamsClass) const
-{
-	if (!IsValid(ParamsClass))
-	{
-		return false;
-	}
-
-	if (!ParamsClass->IsChildOf<UFlowOwnerFunctionParams>())
-	{
-		return false;
-	}
-
-	const UClass* ExistingParamsClass = GetExistingParamsClass();
-
-	if (IsValid(ExistingParamsClass) && ParamsClass != ExistingParamsClass)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-UClass* UFlowNode_CallOwnerFunction::TryGetExpectedOwnerClass() const
-{
-	const UFlowAsset* FlowAsset = GetFlowAsset();
-	if (IsValid(FlowAsset))
-	{
-		return FlowAsset->GetExpectedOwnerClass();
-	}
-
-	return nullptr;
-}
-
-bool UFlowNode_CallOwnerFunction::DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction& Function)
-{
-	if (GetParamsClassForFunction(Function) == nullptr)
-	{
-		return false;
-	}
-
-	checkf(Function.NumParms == 2, TEXT("This should be checked in GetParamsClassForFunction()"));
-
-	if (!DoesFunctionHaveNameReturnType(Function))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool UFlowNode_CallOwnerFunction::DoesFunctionHaveNameReturnType(const UFunction& Function)
-{
-	checkf(Function.NumParms == 2, TEXT("This should have already been checked in DoesFunctionHaveValidFlowOwnerFunctionSignature()"));
-
-	TFieldIterator<FNameProperty> Iterator(&Function);
-
-	while (Iterator)
-	{
-		return EnumHasAllFlags(Iterator->PropertyFlags, CPF_Parm | CPF_OutParm);
-	}
-
-	return false;
-}
-
-UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunction(const UFunction& Function)
-{
-	if (Function.NumParms != 2)
-	{
-		// Flow Owner Functions expect exactly two parameters:
-		//  - FFlowOwnerFunctionParams* 
-		//  - FName (return)
-		// See FFlowOwnerFunctionSignature
-
-		return nullptr;
-	}
-
-	TFieldIterator<FObjectPropertyBase> Iterator(&Function);
-
-	while (Iterator && (Iterator->PropertyFlags & CPF_Parm))
-	{
-		const FObjectPropertyBase* Prop = *Iterator;
-		check(Prop);
-
-		UClass* PropertyClass = Prop->PropertyClass;
-
-		if (!IsValid(PropertyClass))
-		{
-			return nullptr;
-		}
-
-		if (!PropertyClass->IsChildOf<UFlowOwnerFunctionParams>())
-		{
-			return nullptr;
-		}
-
-		return PropertyClass;
-	}
-
-	return nullptr;
-}
-
-FString UFlowNode_CallOwnerFunction::GetStatusString() const
-{
-	if (ActivationState != EFlowNodeState::NeverActivated)
-	{
-		return UEnum::GetDisplayValueAsText(ActivationState).ToString();
-	}
-
-	return Super::GetStatusString();
 }
 
 EDataValidationResult UFlowNode_CallOwnerFunction::ValidateNode()
@@ -422,48 +208,208 @@ EDataValidationResult UFlowNode_CallOwnerFunction::ValidateNode()
 	return EDataValidationResult::Valid;
 }
 
-TArray<FFlowPin> UFlowNode_CallOwnerFunction::GetContextInputs()
+FString UFlowNode_CallOwnerFunction::GetStatusString() const
 {
-	// refresh Params, just in case function argument type was changed
-	TryAllocateParamsInstance();
-	
-	TArray<FFlowPin> Pins = {};
-
-	if (Params)
+	if (ActivationState != EFlowNodeState::NeverActivated)
 	{
-		for (const FName& Name : Params->GetInputNames())
-		{
-			if (InputPins.Contains(Name))
-			{
-				continue;
-			}
-			
-			Pins.Emplace(Name);
-		}
+		return UEnum::GetDisplayValueAsText(ActivationState).ToString();
 	}
-	return Pins;
+
+	return Super::GetStatusString();
 }
 
-TArray<FFlowPin> UFlowNode_CallOwnerFunction::GetContextOutputs()
+UClass* UFlowNode_CallOwnerFunction::TryGetExpectedOwnerClass() const
 {
-	// refresh Params, just in case function argument type was changed
-	TryAllocateParamsInstance();
-	
-	TArray<FFlowPin> Pins = {};
-
-	if (Params)
+	const UFlowAsset* FlowAsset = GetFlowAsset();
+	if (IsValid(FlowAsset))
 	{
-		for (const FName& Name : Params->GetOutputNames())
-		{
-			if (OutputPins.Contains(Name))
-			{
-				continue;
-			}
-			
-			Pins.Emplace(Name);
-		}
+		return FlowAsset->GetExpectedOwnerClass();
 	}
-	return Pins;
+
+	return nullptr;
+}
+
+bool UFlowNode_CallOwnerFunction::DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction& Function)
+{
+	if (GetParamsClassForFunction(Function) == nullptr)
+	{
+		return false;
+	}
+
+	checkf(Function.NumParms == 2, TEXT("This should be checked in GetParamsClassForFunction()"));
+
+	if (!DoesFunctionHaveNameReturnType(Function))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool UFlowNode_CallOwnerFunction::DoesFunctionHaveNameReturnType(const UFunction& Function)
+{
+	checkf(Function.NumParms == 2, TEXT("This should have already been checked in DoesFunctionHaveValidFlowOwnerFunctionSignature()"));
+
+	TFieldIterator<FNameProperty> Iterator(&Function);
+
+	while (Iterator)
+	{
+		const bool bIsOutParm = EnumHasAllFlags(Iterator->PropertyFlags, CPF_Parm | CPF_OutParm);
+
+		return bIsOutParm;
+	}
+
+	return false;
+}
+
+UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunction(const UFunction& Function)
+{
+	if (Function.NumParms != 2)
+	{
+		// Flow Owner Functions expect exactly two parameters:
+		//  - FFlowOwnerFunctionParams* 
+		//  - FName (return)
+		// See FFlowOwnerFunctionSignature
+
+		return nullptr;
+	}
+
+	TFieldIterator<FObjectPropertyBase> Iterator(&Function);
+
+	while (Iterator && (Iterator->PropertyFlags & CPF_Parm))
+	{
+		const FObjectPropertyBase* Prop = *Iterator;
+		check(Prop);
+
+		UClass* PropertyClass = Prop->PropertyClass;
+
+		if (!IsValid(PropertyClass))
+		{
+			return nullptr;
+		}
+
+		if (!PropertyClass->IsChildOf<UFlowOwnerFunctionParams>())
+		{
+			return nullptr;
+		}
+
+		return PropertyClass;
+	}
+
+	return nullptr;
+}
+
+UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunctionName(const UClass& ExpectedOwnerClass, const FName& FunctionName)
+{
+	const UFunction* Function = ExpectedOwnerClass.FindFunctionByName(FunctionName);
+	if (IsValid(Function))
+	{
+		return GetParamsClassForFunction(*Function);
+	}
+
+	return nullptr;
+}
+
+bool UFlowNode_CallOwnerFunction::TryAllocateParamsInstance()
+{
+	if (FunctionRef.GetFunctionName().IsNone())
+	{
+		// Throw out the old params object (if any)
+		Params = nullptr;
+
+		return false;
+	}
+
+	const UClass* ExistingParamsClass = GetExistingParamsClass();
+	const UClass* RequiredParamsClass = GetRequiredParamsClass();
+
+	if (!IsValid(RequiredParamsClass))
+	{
+		return false;
+	}
+
+	const bool bNeedsAllocateParams = !IsValid(ExistingParamsClass) || ExistingParamsClass != RequiredParamsClass;
+
+	if (!bNeedsAllocateParams)
+	{
+		return false;
+	}
+
+	// Throw out the old params object (if any)
+	Params = nullptr;
+
+	// Create the new params object
+	Params = NewObject<UFlowOwnerFunctionParams>(this, RequiredParamsClass);
+
+	return true;
+}
+
+UClass* UFlowNode_CallOwnerFunction::GetRequiredParamsClass() const
+{
+	const UClass* ExpectedOwnerClass = TryGetExpectedOwnerClass();
+	if (!IsValid(ExpectedOwnerClass))
+	{
+		return nullptr;
+	}
+
+	const FName FunctionNameAsName = FunctionRef.GetFunctionName();
+
+	if (FunctionNameAsName.IsNone())
+	{
+		return nullptr;
+	}
+
+	UClass* RequiredParamsClass = GetParamsClassForFunctionName(*ExpectedOwnerClass, FunctionNameAsName);
+	return RequiredParamsClass;
+}
+
+UClass* UFlowNode_CallOwnerFunction::GetExistingParamsClass() const
+{
+	if (!IsValid(Params))
+	{
+		return nullptr;
+	}
+
+	UClass* ExistingParamsClass = Params->GetClass();
+	return ExistingParamsClass;
+}
+
+bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass* ParamsClass) const
+{
+	if (!IsValid(ParamsClass))
+	{
+		return false;
+	}
+
+	if (!ParamsClass->IsChildOf<UFlowOwnerFunctionParams>())
+	{
+		return false;
+	}
+
+	const UClass* ExistingParamsClass = GetExistingParamsClass();
+
+	if (IsValid(ExistingParamsClass) && ParamsClass != ExistingParamsClass)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+FText UFlowNode_CallOwnerFunction::GetNodeTitle() const
+{
+	const bool bUseAdaptiveNodeTitles = UFlowSettings::Get()->bUseAdaptiveNodeTitles;
+
+	if (bUseAdaptiveNodeTitles && !FunctionRef.GetFunctionName().IsNone())
+	{
+		const FText FunctionNameText = FText::FromName(FunctionRef.FunctionName);
+
+		return FText::Format(LOCTEXT("CallOwnerFunction", "Call {0}"), {FunctionNameText});
+	}
+	else
+	{
+		return Super::GetNodeTitle();
+	}
 }
 
 #endif // WITH_EDITOR

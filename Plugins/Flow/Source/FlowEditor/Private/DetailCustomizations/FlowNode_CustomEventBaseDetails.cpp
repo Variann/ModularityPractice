@@ -2,11 +2,11 @@
 
 #include "DetailCustomizations/FlowNode_CustomEventBaseDetails.h"
 #include "FlowAsset.h"
-#include "Nodes/Route/FlowNode_CustomEventBase.h"
+#include "Nodes/Graph/FlowNode_CustomEventBase.h"
 
 #include "DetailCategoryBuilder.h"
+#include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "PropertyEditing.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/SWidget.h"

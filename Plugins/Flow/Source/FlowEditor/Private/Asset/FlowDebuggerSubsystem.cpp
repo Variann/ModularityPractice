@@ -41,7 +41,7 @@ void UFlowDebuggerSubsystem::OnInstancedTemplateRemoved(UFlowAsset* FlowAsset) c
 	FlowAsset->OnRuntimeMessageAdded().RemoveAll(this);
 }
 
-void UFlowDebuggerSubsystem::OnRuntimeMessageAdded(UFlowAsset* FlowAsset, const TSharedRef<FTokenizedMessage>& Message) const
+void UFlowDebuggerSubsystem::OnRuntimeMessageAdded(const UFlowAsset* FlowAsset, const TSharedRef<FTokenizedMessage>& Message) const
 {
 	const TSharedPtr<class IMessageLogListing> Log = RuntimeLogs.FindRef(FlowAsset);
 	if (Log.IsValid())

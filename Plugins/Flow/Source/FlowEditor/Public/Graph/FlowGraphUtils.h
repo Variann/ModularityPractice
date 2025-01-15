@@ -16,4 +16,6 @@ public:
 
 	static TSharedPtr<FFlowAssetEditor> GetFlowAssetEditor(const UEdGraph* Graph);
 	static TSharedPtr<SFlowGraphEditor> GetFlowGraphEditor(const UEdGraph* Graph);
+
+	static FString RemovePrefixFromNodeText(const FText& Source);
 };

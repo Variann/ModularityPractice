@@ -2,10 +2,13 @@
 
 #include "DetailCustomizations/FlowOwnerFunctionRefCustomization.h"
 
+#include "FlowAsset.h"
+#include "Interfaces/FlowOwnerInterface.h"
 #include "Nodes/FlowNode.h"
 #include "Nodes/World/FlowNode_CallOwnerFunction.h"
 
 #include "UObject/UnrealType.h"
+#include "Types/FlowOwnerFunctionParams.h"
 
 void FFlowOwnerFunctionRefCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InStructPropertyHandle, IDetailChildrenBuilder& StructBuilder, IPropertyTypeCustomizationUtils& StructCustomizationUtils)
 {
@@ -46,14 +49,19 @@ TArray<FName> FFlowOwnerFunctionRefCustomization::GetCuratedNameOptions() const
 const UClass* FFlowOwnerFunctionRefCustomization::TryGetExpectedOwnerClass() const
 {
 	const UFlowNode* NodeOwner = TryGetFlowNodeOuter();
-	const UFlowNode_CallOwnerFunction* CallOwnerFunctionNode = Cast<UFlowNode_CallOwnerFunction>(NodeOwner);
-
-	if (IsValid(CallOwnerFunctionNode))
+	if (!IsValid(NodeOwner))
 	{
-		return CallOwnerFunctionNode->TryGetExpectedOwnerClass();
+		return nullptr;
 	}
 
-	return nullptr;
+	const UFlowAsset* FlowAsset = NodeOwner->GetFlowAsset();
+	if (!IsValid(FlowAsset))
+	{
+		return nullptr;
+	}
+
+	UClass* ExpectedOwnerClass = FlowAsset->GetExpectedOwnerClass();
+	return ExpectedOwnerClass;
 }
 
 TArray<FName> FFlowOwnerFunctionRefCustomization::GetFlowOwnerFunctionRefs(
@@ -118,16 +126,18 @@ void FFlowOwnerFunctionRefCustomization::SetCuratedName(const FName& NewFunction
 	FunctionNameHandle->SetPerObjectValue(0, NewFunctionName.ToString());
 }
 
-FName FFlowOwnerFunctionRefCustomization::GetCuratedName() const
+bool FFlowOwnerFunctionRefCustomization::TryGetCuratedName(FName& OutName) const
 {
 	const FFlowOwnerFunctionRef* FlowOwnerFunction = GetFlowOwnerFunctionRef();
 	if (FlowOwnerFunction)
 	{
-		return FlowOwnerFunction->FunctionName;
+		OutName = FlowOwnerFunction->FunctionName;
+
+		return true;
 	}
 	else
 	{
-		return NAME_None;
+		return false;
 	}
 }
 

@@ -19,6 +19,10 @@ class FLOW_API UFlowSettings : public UDeveloperSettings
 
 	static UFlowSettings* Get() { return CastChecked<UFlowSettings>(UFlowSettings::StaticClass()->GetDefaultObject()); }
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 	// Set if to False, if you don't want to create client-side Flow Graphs
 	// And you don't access to the Flow Component registry on clients
 	UPROPERTY(Config, EditAnywhere, Category = "Networking")
@@ -40,6 +44,11 @@ class FLOW_API UFlowSettings : public UDeveloperSettings
 	UPROPERTY(EditAnywhere, config, Category = "Nodes")
 	bool bUseAdaptiveNodeTitles;
 
+#if WITH_EDITOR
+	DECLARE_DELEGATE(FFlowSettingsEvent);
+	FFlowSettingsEvent OnAdaptiveNodeTitlesChanged;
+#endif
+	
 	// Default class to use as a FlowAsset's "ExpectedOwnerClass" 
 	UPROPERTY(EditAnywhere, Config, Category = "Nodes", meta = (MustImplement = "/Script/Flow.FlowOwnerInterface"))
 	FSoftClassPath DefaultExpectedOwnerClass;

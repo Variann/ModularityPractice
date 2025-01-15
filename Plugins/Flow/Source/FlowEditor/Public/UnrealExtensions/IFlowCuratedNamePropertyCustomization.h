@@ -36,17 +36,22 @@ protected:
 
 	bool CustomIsResetToDefaultVisible(TSharedPtr<IPropertyHandle> Property) const;
 	void CustomResetToDefault(TSharedPtr<IPropertyHandle> Property);
+	bool CustomIsEnabled() const;
 
 	// IFlowCuratedNamePropertyCustomization
 	virtual TSharedPtr<IPropertyHandle> GetCuratedNamePropertyHandle() const = 0;
 	virtual void SetCuratedName(const FName& NewName) = 0;
-	virtual FName GetCuratedName() const = 0;
+	virtual bool TryGetCuratedName(FName& OutName) const = 0;
 	virtual TArray<FName> GetCuratedNameOptions() const = 0;
+	virtual bool AllowNameNoneIfOtherOptionsExist() const { return true; }
 	// ---
 
 public:
 	// Cached property handle for the Curated Name property that is being customized
 	TSharedPtr<IPropertyHandle> CachedNameHandle;
+
+	// Cached PropertyUtils
+	TSharedPtr<IPropertyUtilities> CachedPropertyUtils;
 
 	// Cache FTexts for the ComboBox dropdown & current selected
 	TArray<TSharedPtr<FText>> CachedTextList;

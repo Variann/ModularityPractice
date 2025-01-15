@@ -11,6 +11,7 @@
 #include "Graph/Nodes/FlowGraphNode.h"
 
 #include "FlowAsset.h"
+#include "FlowEditorLogChannels.h"
 #include "Graph/Nodes/FlowGraphNode_Reroute.h"
 #include "Nodes/FlowNode.h"
 
@@ -64,6 +65,13 @@ void FFlowGraphConnectionDrawingPolicy::BuildPaths()
 
 			for (const TPair<uint8, FPinRecord>& Record : Node->GetWireRecords())
 			{
+				if (!FlowGraphNode->OutputPins.IsValidIndex(Record.Key))
+				{
+					UE_LOG(LogFlowEditor, Error, TEXT("Flow node '%s' has an invalid pin connection.  This is probably an flow editor code bug."), *Node->GetName());
+
+					continue;
+				}
+
 				if (UEdGraphPin* OutputPin = FlowGraphNode->OutputPins[Record.Key])
 				{
 					// check if Output pin is connected to anything
@@ -133,16 +141,16 @@ void FFlowGraphConnectionDrawingPolicy::DetermineWiringStyle(UEdGraphPin* Output
 	{
 		Params.WireColor = FLinearColor::Red;
 	}
-	else if (Cast<UFlowGraphNode>(OutputPin->GetOwningNode())->GetSignalMode() == EFlowSignalMode::Disabled)
-	{
-		Params.WireColor *= 0.5f;
-		Params.WireThickness = 0.5f;
-	}
 	else
 	{
 		Params.WireColor = Schema->GetPinTypeColor(OutputPin->PinType);
 
-		if (InputPin)
+		if (Cast<UFlowGraphNode>(OutputPin->GetOwningNode())->GetSignalMode() == EFlowSignalMode::Disabled)
+		{
+			Params.WireColor *= 0.5f;
+			Params.WireThickness = 0.5f;
+		}
+		else if (InputPin && FFlowPin::IsExecPinCategory(InputPin->PinType.PinCategory))
 		{
 			// selected paths
 			if (SelectedPaths.Contains(OutputPin) || SelectedPaths.Contains(InputPin))
@@ -202,7 +210,6 @@ void FFlowGraphConnectionDrawingPolicy::DetermineWiringStyle(UEdGraphPin* Output
 	{
 		ApplyHoverDeemphasis(OutputPin, InputPin, /*inout*/ Params.WireThickness, /*inout*/ Params.WireColor);
 	}
-
 }
 
 void FFlowGraphConnectionDrawingPolicy::Draw(TMap<TSharedRef<SWidget>, FArrangedWidget>& InPinGeometries, FArrangedChildren& ArrangedNodes)
@@ -306,7 +313,7 @@ bool FFlowGraphConnectionDrawingPolicy::ShouldChangeTangentForReroute(UFlowGraph
 
 		FVector2D AverageLeftPin;
 		FVector2D AverageRightPin;
-		FVector2D CenterPin;
+		FVector2D CenterPin = FVector2D::ZeroVector;
 		const bool bCenterValid = Reroute->OutputPins.Num() == 0 ? false : FindPinCenter(Reroute->OutputPins[0], /*out*/ CenterPin);
 		const bool bLeftValid = GetAverageConnectedPosition(Reroute, EGPD_Input, /*out*/ AverageLeftPin);
 		const bool bRightValid = GetAverageConnectedPosition(Reroute, EGPD_Output, /*out*/ AverageRightPin);

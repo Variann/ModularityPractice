@@ -20,7 +20,6 @@
 #include "Widgets/Text/STextBlock.h"
 
 #include "AssetToolsModule.h"
-#include "IAssetTypeActions.h"
 #include "ISourceControlModule.h"
 #include "ISourceControlProvider.h"
 #include "SourceControlHelpers.h"
@@ -210,24 +209,31 @@ void FFlowAssetToolbar::BuildAssetToolbar(UToolMenu* ToolbarMenu) const
 		Section.InsertPosition = FToolMenuInsert("FlowAsset", EToolMenuInsertType::After);
 
 		// Visual Diff: menu to choose asset revision compared with the current one 
-		Section.AddDynamicEntry("SourceControlCommands", FNewToolMenuSectionDelegate::CreateLambda([this](FToolMenuSection& InSection)
+		Section.AddDynamicEntry("SourceControlCommands", FNewToolMenuSectionDelegate::CreateLambda([](FToolMenuSection& InSection)
 		{
-			InSection.InsertPosition = FToolMenuInsert();
-			FToolMenuEntry DiffEntry = FToolMenuEntry::InitComboButton(
-				"Diff",
-				FUIAction(),
-				FOnGetContent::CreateRaw(this, &FFlowAssetToolbar::MakeDiffMenu),
-				LOCTEXT("Diff", "Diff"),
-				LOCTEXT("FlowAssetEditorDiffToolTip", "Diff against previous revisions"),
-				FSlateIcon(FAppStyle::Get().GetStyleSetName(), "BlueprintDiff.ToolbarIcon")
-			);
-			DiffEntry.StyleNameOverride = "CalloutToolbar";
-			InSection.AddEntry(DiffEntry);
+			const UFlowAssetEditorContext* Context = InSection.FindContext<UFlowAssetEditorContext>();
+			if (Context && Context->FlowAssetEditor.IsValid())
+			{
+				InSection.InsertPosition = FToolMenuInsert();
+				FToolMenuEntry DiffEntry = FToolMenuEntry::InitComboButton(
+					"Diff",
+					FUIAction(),
+					FOnGetContent::CreateStatic(&FFlowAssetToolbar::MakeDiffMenu, Context),
+					LOCTEXT("Diff", "Diff"),
+					LOCTEXT("FlowAssetEditorDiffToolTip", "Diff against previous revisions"),
+					FSlateIcon(FAppStyle::Get().GetStyleSetName(), "BlueprintDiff.ToolbarIcon")
+				);
+				DiffEntry.StyleNameOverride = "CalloutToolbar";
+				InSection.AddEntry(DiffEntry);
+			}
 		}));
-
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
-		Section.AddEntry(FToolMenuEntry::InitToolBarButton(FFlowToolbarCommands::Get().SearchInAsset));
-#endif
+		
+		Section.AddEntry(FToolMenuEntry::InitToolBarButton(
+			FFlowToolbarCommands::Get().SearchInAsset,
+			TAttribute<FText>(),
+			TAttribute<FText>(),
+			FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.FindResults")
+		));
 	}
 }
 
@@ -267,7 +273,7 @@ static void OnDiffRevisionPicked(FRevisionInfo const& RevisionInfo, const FStrin
 					}
 					else
 					{
-						FMessageDialog::Open(EAppMsgType::Ok, NSLOCTEXT("SourceControl.HistoryWindow", "UnableToLoadAssets", "Unable to load assets to diff. Content may no longer be supported?"));
+						FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("UnableToLoadAssets", "Unable to load assets to diff. Content may no longer be supported?"));
 					}
 				}
 				break;
@@ -277,11 +283,11 @@ static void OnDiffRevisionPicked(FRevisionInfo const& RevisionInfo, const FStrin
 }
 
 // Variant of FBlueprintEditorToolbar::MakeDiffMenu
-TSharedRef<SWidget> FFlowAssetToolbar::MakeDiffMenu() const
+TSharedRef<SWidget> FFlowAssetToolbar::MakeDiffMenu(const UFlowAssetEditorContext* Context)
 {
 	if (ISourceControlModule::Get().IsEnabled() && ISourceControlModule::Get().GetProvider().IsAvailable())
 	{
-		UFlowAsset* FlowAsset = FlowAssetEditor.Pin()->GetFlowAsset();
+		UFlowAsset* FlowAsset = Context ? Context->FlowAssetEditor.Pin()->GetFlowAsset() : nullptr;
 		if (FlowAsset)
 		{
 			FString Filename = SourceControlHelpers::PackageFilename(FlowAsset->GetPathName());

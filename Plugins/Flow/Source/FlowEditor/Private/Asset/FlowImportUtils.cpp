@@ -10,7 +10,7 @@
 
 #include "FlowAsset.h"
 #include "Nodes/FlowPin.h"
-#include "Nodes/Route/FlowNode_Start.h"
+#include "Nodes/Graph/FlowNode_Start.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
@@ -166,7 +166,8 @@ void UFlowImportUtils::ImportBlueprintGraph(UBlueprint* Blueprint, UFlowAsset* F
 	UFlowGraphNode* StartGraphNode = FFlowGraphSchemaAction_NewNode::CreateNode(FlowGraph, nullptr, UFlowNode_Start::StaticClass(), FVector2D::ZeroVector);
 	FlowGraph->GetSchema()->SetNodeMetaData(StartGraphNode, FNodeMetadata::DefaultGraphNode);
 	StartGraphNode->NodeGuid = StartNode->NodeGuid;
-	StartGraphNode->GetFlowNode()->SetGuid(StartNode->NodeGuid);
+	UFlowNode* StartFlowNode = Cast<UFlowNode>(StartGraphNode->GetFlowNodeBase());
+	StartFlowNode->SetGuid(StartNode->NodeGuid);
 	TargetNodes.Add(StartGraphNode->NodeGuid, StartGraphNode);
 
 	// execute graph import
@@ -232,7 +233,7 @@ void UFlowImportUtils::ImportBlueprintFunction(const UFlowAsset* FlowAsset, cons
 		TMap<const FName, const UEdGraphPin*> InputPins;
 		GetValidInputPins(NodeImport.SourceGraphNode, InputPins);
 
-		UClass* FlowNodeClass = FlowGraphNode->GetFlowNode()->GetClass();
+		UClass* FlowNodeClass = FlowGraphNode->GetFlowNodeBase()->GetClass();
 		for (TFieldIterator<FProperty> PropIt(FlowNodeClass, EFieldIteratorFlags::IncludeSuper); PropIt && (PropIt->PropertyFlags & CPF_Edit); ++PropIt)
 		{
 			const FProperty* Param = *PropIt;
@@ -244,8 +245,8 @@ void UFlowImportUtils::ImportBlueprintFunction(const UFlowAsset* FlowAsset, cons
 					if (MatchingInputPin->LinkedTo.Num() == 0) // nothing connected to pin, so user can set value directly on this pin
 					{
 						FString const PinValue = MatchingInputPin->GetDefaultAsString();
-						uint8* Offset = Param->ContainerPtrToValuePtr<uint8>(FlowGraphNode->GetFlowNode());
-						Param->ImportText_Direct(*PinValue, Offset, FlowGraphNode->GetFlowNode(), PPF_Copy, GLog);
+						uint8* Offset = Param->ContainerPtrToValuePtr<uint8>(FlowGraphNode->GetFlowNodeBase());
+						Param->ImportText_Direct(*PinValue, Offset, FlowGraphNode->GetFlowNodeBase(), PPF_Copy, GLog);
 					}
 				}
 				else // try to find matching Pin in connected pure nodes
@@ -272,8 +273,8 @@ void UFlowImportUtils::ImportBlueprintFunction(const UFlowAsset* FlowAsset, cons
 										if (PureInputPin->LinkedTo.Num() == 0) // nothing connected to pin, so user can set value directly on this pin
 										{
 											FString const PinValue = PureInputPin->GetDefaultAsString();
-											uint8* Offset = Param->ContainerPtrToValuePtr<uint8>(FlowGraphNode->GetFlowNode());
-											Param->ImportText_Direct(*PinValue, Offset, FlowGraphNode->GetFlowNode(), PPF_Copy, GLog);
+											uint8* Offset = Param->ContainerPtrToValuePtr<uint8>(FlowGraphNode->GetFlowNodeBase());
+											Param->ImportText_Direct(*PinValue, Offset, FlowGraphNode->GetFlowNodeBase(), PPF_Copy, GLog);
 
 											bPinFound = true;
 										}
@@ -296,7 +297,7 @@ void UFlowImportUtils::ImportBlueprintFunction(const UFlowAsset* FlowAsset, cons
 	}
 
 	// Flow Nodes with Context Pins needs to update related data and call OnReconstructionRequested.ExecuteIfBound() in order to fully construct a graph node
-	FlowGraphNode->GetFlowNode()->PostImport();
+	FlowGraphNode->GetFlowNodeBase()->PostImport();
 
 	// connect new node to all already recreated nodes
 	for (const TPair<FName, FConnectedPin>& Connection : NodeImport.Incoming)

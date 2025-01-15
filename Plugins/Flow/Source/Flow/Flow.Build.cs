@@ -10,7 +10,8 @@ public class Flow : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new[]
 		{
-			"LevelSequence"
+			"LevelSequence",
+			"StructUtils",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new[]
@@ -22,6 +23,7 @@ public class Flow : ModuleRules
 			"GameplayTags",
 			"MovieScene",
 			"MovieSceneTracks",
+			"NetCore",
 			"Slate",
 			"SlateCore"
 		});

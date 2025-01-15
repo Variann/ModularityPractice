@@ -9,7 +9,7 @@
 #include "Misc/UObjectToken.h"
 
 class UFlowAsset;
-class UFlowNode;
+class UFlowNodeBase;
 
 /**
  * Message Log token that links to an element in Flow Graph
@@ -17,18 +17,18 @@ class UFlowNode;
 class FLOW_API FFlowGraphToken : public IMessageToken
 {
 private:
-	const TWeakObjectPtr<UEdGraphNode> GraphNode;
+	const TWeakObjectPtr<const UEdGraphNode> GraphNode;
 	const FEdGraphPinReference GraphPin;
 
 	explicit FFlowGraphToken(const UFlowAsset* InFlowAsset);
-	explicit FFlowGraphToken(const UFlowNode* InFlowNode);
-	explicit FFlowGraphToken(UEdGraphNode* InGraphNode, const UEdGraphPin* InPin);
+	explicit FFlowGraphToken(const UFlowNodeBase* InFlowNodeBase);
+	explicit FFlowGraphToken(const UEdGraphNode* InGraphNode, const UEdGraphPin* InPin);
 
 public:
 	/** Factory method, tokens can only be constructed as shared refs */
 	static TSharedPtr<IMessageToken> Create(const UFlowAsset* InFlowAsset, FTokenizedMessage& Message);
-	static TSharedPtr<IMessageToken> Create(const UFlowNode* InFlowNode, FTokenizedMessage& Message);
-	static TSharedPtr<IMessageToken> Create(UEdGraphNode* InGraphNode, FTokenizedMessage& Message);
+	static TSharedPtr<IMessageToken> Create(const UFlowNodeBase* InFlowNodeBase, FTokenizedMessage& Message);
+	static TSharedPtr<IMessageToken> Create(const UEdGraphNode* InGraphNode, FTokenizedMessage& Message);
 	static TSharedPtr<IMessageToken> Create(const UEdGraphPin* InPin, FTokenizedMessage& Message);
 
 	const UEdGraphNode* GetGraphNode() const { return GraphNode.Get(); }

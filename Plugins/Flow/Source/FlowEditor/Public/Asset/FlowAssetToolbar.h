@@ -8,6 +8,7 @@
 #include "FlowAsset.h"
 
 class FFlowAssetEditor;
+class UFlowAssetEditorContext;
 class UToolMenu;
 
 //////////////////////////////////////////////////////////////////////////
@@ -87,7 +88,7 @@ public:
 
 private:
 	void BuildAssetToolbar(UToolMenu* ToolbarMenu) const;
-	TSharedRef<SWidget> MakeDiffMenu() const;
+	static TSharedRef<SWidget> MakeDiffMenu(const UFlowAssetEditorContext* InContext);
 	
 	void BuildDebuggerToolbar(UToolMenu* ToolbarMenu) const;
 

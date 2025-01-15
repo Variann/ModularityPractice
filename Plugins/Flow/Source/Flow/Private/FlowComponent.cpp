@@ -12,6 +12,7 @@
 #include "Engine/ViewportStatsSubsystem.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
 
@@ -34,12 +35,24 @@ void UFlowComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UFlowComponent, AddedIdentityTags);
-	DOREPLIFETIME(UFlowComponent, RemovedIdentityTags);
+#if WITH_PUSH_MODEL
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
 
-	DOREPLIFETIME(UFlowComponent, RecentlySentNotifyTags);
-	DOREPLIFETIME(UFlowComponent, NotifyTagsFromGraph);
-	DOREPLIFETIME(UFlowComponent, NotifyTagsFromAnotherComponent);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AddedIdentityTags, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RemovedIdentityTags, Params);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RecentlySentNotifyTags, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, NotifyTagsFromGraph, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, NotifyTagsFromAnotherComponent, Params);
+#else
+	DOREPLIFETIME(ThisClass, AddedIdentityTags);
+	DOREPLIFETIME(ThisClass, RemovedIdentityTags);
+
+	DOREPLIFETIME(ThisClass, RecentlySentNotifyTags);
+	DOREPLIFETIME(ThisClass, NotifyTagsFromGraph);
+	DOREPLIFETIME(ThisClass, NotifyTagsFromAnotherComponent);
+#endif
 }
 
 void UFlowComponent::BeginPlay()
@@ -61,16 +74,21 @@ void UFlowComponent::RegisterWithFlowSubsystem()
 
 		FlowSubsystem->RegisterComponent(this);
 
-		if (RootFlow)
+		BeginRootFlow(bComponentLoadedFromSaveGame);
+	}
+}
+
+void UFlowComponent::BeginRootFlow(bool bComponentLoadedFromSaveGame)
+{
+	if (RootFlow)
+	{
+		if (bComponentLoadedFromSaveGame)
 		{
-			if (bComponentLoadedFromSaveGame)
-			{
-				LoadRootFlow();
-			}
-			else if (bAutoStartRootFlow)
-			{
-				StartRootFlow();
-			}
+			LoadRootFlow();
+		}
+		else if (bAutoStartRootFlow)
+		{
+			StartRootFlow();
 		}
 	}
 }
@@ -109,6 +127,9 @@ void UFlowComponent::AddIdentityTag(const FGameplayTag Tag, const EFlowNetMode N
 			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
 			{
 				AddedIdentityTags = FGameplayTagContainer(Tag);
+#if WITH_PUSH_MODEL
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, AddedIdentityTags, this);
+#endif
 			}
 		}
 	}
@@ -141,6 +162,9 @@ void UFlowComponent::AddIdentityTags(FGameplayTagContainer Tags, const EFlowNetM
 			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
 			{
 				AddedIdentityTags = ValidatedTags;
+#if WITH_PUSH_MODEL
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, AddedIdentityTags, this);
+#endif
 			}
 		}
 	}
@@ -164,6 +188,9 @@ void UFlowComponent::RemoveIdentityTag(const FGameplayTag Tag, const EFlowNetMod
 			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
 			{
 				RemovedIdentityTags = FGameplayTagContainer(Tag);
+#if WITH_PUSH_MODEL
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, RemovedIdentityTags, this);
+#endif
 			}
 		}
 	}
@@ -196,6 +223,9 @@ void UFlowComponent::RemoveIdentityTags(FGameplayTagContainer Tags, const EFlowN
 			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
 			{
 				RemovedIdentityTags = ValidatedTags;
+#if WITH_PUSH_MODEL
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, RemovedIdentityTags, this);
+#endif
 			}
 		}
 	}
@@ -264,9 +294,15 @@ void UFlowComponent::NotifyGraph(const FGameplayTag NotifyTag, const EFlowNetMod
 {
 	if (IsFlowNetMode(NetMode) && NotifyTag.IsValid() && HasBegunPlay())
 	{
-		// save recently notify, this allow for the retroactive check in nodes
+		// save recently notify, this allows for the retroactive check in nodes
 		// if retroactive check wouldn't be performed, this is only used by the network replication
 		RecentlySentNotifyTags = FGameplayTagContainer(NotifyTag);
+#if WITH_PUSH_MODEL
+		if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
+		{
+			MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, RecentlySentNotifyTags, this);
+		}
+#endif
 
 		OnRep_SentNotifyTags();
 	}
@@ -287,9 +323,15 @@ void UFlowComponent::BulkNotifyGraph(const FGameplayTagContainer NotifyTags, con
 
 		if (ValidatedTags.Num() > 0)
 		{
-			// save recently notify, this allow for the retroactive check in nodes
+			// save recently notify, this allows for the retroactive check in nodes
 			// if retroactive check wouldn't be performed, this is only used by the network replication
 			RecentlySentNotifyTags = ValidatedTags;
+#if WITH_PUSH_MODEL
+			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
+			{
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, RecentlySentNotifyTags, this);
+			}
+#endif
 
 			OnRep_SentNotifyTags();
 		}
@@ -327,6 +369,9 @@ void UFlowComponent::NotifyFromGraph(const FGameplayTagContainer& NotifyTags, co
 			if (IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer))
 			{
 				NotifyTagsFromGraph = ValidatedTags;
+#if WITH_PUSH_MODEL
+				MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, NotifyTagsFromGraph, this);
+#endif
 			}
 		}
 	}
@@ -356,6 +401,9 @@ void UFlowComponent::NotifyActor(const FGameplayTag ActorTag, const FGameplayTag
 		{
 			NotifyTagsFromAnotherComponent.Empty();
 			NotifyTagsFromAnotherComponent.Add(FNotifyTagReplication(ActorTag, NotifyTag));
+#if WITH_PUSH_MODEL
+			MARK_PROPERTY_DIRTY_FROM_NAME(UFlowComponent, NotifyTagsFromAnotherComponent, this);
+#endif
 		}
 	}
 }
@@ -421,10 +469,40 @@ UFlowAsset* UFlowComponent::GetRootFlowInstance() const
 	return nullptr;
 }
 
+void UFlowComponent::TriggerRootFlowCustomInput(const FName& EventName) const
+{
+	if (RootFlow && IsFlowNetMode(RootFlowMode))
+	{
+		if (const UFlowSubsystem* FlowSubsystem = GetFlowSubsystem())
+		{
+			UFlowAsset* RootFlowInstance = FlowSubsystem->GetRootFlow(this);
+			if (IsValid(RootFlowInstance))
+			{
+				RootFlowInstance->TriggerCustomInput(EventName);
+			}
+		}
+	}
+}
+
+void UFlowComponent::DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+{
+	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName);
+	OnRootFlowCustomEvent(RootFlowInstance, EventName);
+}
+
+void UFlowComponent::BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+{
+	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName);
+}
+
+void UFlowComponent::OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+{
+	OnRootFlowCustomEvent(RootFlowInstance, EventName);
+}
+
 void UFlowComponent::OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName)
 {
-	BP_OnTriggerRootFlowOutputEvent(RootFlowInstance, EventName);
-	OnTriggerRootFlowOutputEvent(RootFlowInstance, EventName);
+	DispatchRootFlowCustomEvent(RootFlowInstance, EventName);
 }
 
 void UFlowComponent::SaveRootFlow(TArray<FFlowAssetSaveData>& SavedFlowInstances)

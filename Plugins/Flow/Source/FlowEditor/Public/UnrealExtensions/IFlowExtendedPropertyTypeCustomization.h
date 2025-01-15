@@ -63,7 +63,8 @@ StructT* IFlowExtendedPropertyTypeCustomization::TryGetTypedStructValue(const TS
 		TArray<void*> RawData;
 		StructPropertyHandle->AccessRawData(RawData);
 
-		if (RawData.Num() > 0)
+		// (must be exactly one, multi-select is not supported for this feature)
+		if (RawData.Num() == 1)
 		{
 			return reinterpret_cast<StructT*>(RawData[0]);
 		}

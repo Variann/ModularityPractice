@@ -3,6 +3,7 @@
 #include "Graph/FlowGraphUtils.h"
 #include "Asset/FlowAssetEditor.h"
 #include "Graph/FlowGraph.h"
+#include "Graph/FlowGraphSettings.h"
 
 #include "FlowAsset.h"
 
@@ -35,4 +36,27 @@ TSharedPtr<SFlowGraphEditor> FFlowGraphUtils::GetFlowGraphEditor(const UEdGraph*
 	}
 
 	return FlowGraphEditor;
+}
+
+FString FFlowGraphUtils::RemovePrefixFromNodeText(const FText& Source)
+{
+	FString SourceString = Source.ToString();
+	TArray<FString> NodePrefixes = UFlowGraphSettings::Get()->NodePrefixesToRemove;
+	
+	for (FString Prefix : NodePrefixes)
+	{
+		Prefix = FName::NameToDisplayString(Prefix, false);
+		if (SourceString.StartsWith(Prefix))
+		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 4
+			SourceString.MidInline(Prefix.Len(), MAX_int32, false);
+#else
+			SourceString.MidInline(Prefix.Len(), MAX_int32, EAllowShrinking::No);
+#endif
+
+			SourceString = SourceString.TrimStart();
+		}
+	}
+	
+	return SourceString;
 }

@@ -4,7 +4,6 @@
 
 #include "FlowEditorCommands.h"
 #include "FlowEditorLogChannels.h"
-#include "FlowMessageLog.h"
 
 #include "Asset/FlowAssetEditorContext.h"
 #include "Asset/FlowAssetToolbar.h"
@@ -31,6 +30,8 @@
 
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
 #include "Source/Private/Widgets/SSearchBrowser.h"
+#else
+#include "Find/FindInFlow.h"
 #endif
 
 #define LOCTEXT_NAMESPACE "FlowAssetEditor"
@@ -76,10 +77,6 @@ void FFlowAssetEditor::HandleUndoTransaction()
 
 void FFlowAssetEditor::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged)
 {
-	if (PropertyChangedEvent.ChangeType != EPropertyChangeType::Interactive)
-	{
-		GraphEditor->NotifyGraphChanged();
-	}
 }
 
 FName FFlowAssetEditor::GetToolkitFName() const
@@ -128,14 +125,12 @@ void FFlowAssetEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& 
 				.SetDisplayName(LOCTEXT("RuntimeLog", "Runtime Log"))
 				.SetGroup(WorkspaceMenuCategoryRef)
 				.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.CompilerResults"));
-
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
+	
 	InTabManager->RegisterTabSpawner(SearchTab, FOnSpawnTab::CreateSP(this, &FFlowAssetEditor::SpawnTab_Search))
 				.SetDisplayName(LOCTEXT("SearchTab", "Search"))
 				.SetGroup(WorkspaceMenuCategoryRef)
 				.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.FindResults"));
-#endif
-
+	
 	InTabManager->RegisterTabSpawner(ValidationLogTab, FOnSpawnTab::CreateSP(this, &FFlowAssetEditor::SpawnTab_ValidationLog))
 				.SetDisplayName(LOCTEXT("ValidationLog", "Validation Log"))
 				.SetGroup(WorkspaceMenuCategoryRef)
@@ -150,9 +145,7 @@ void FFlowAssetEditor::UnregisterTabSpawners(const TSharedRef<class FTabManager>
 	InTabManager->UnregisterTabSpawner(GraphTab);
 	InTabManager->UnregisterTabSpawner(ValidationLogTab);
 	InTabManager->UnregisterTabSpawner(PaletteTab);
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
 	InTabManager->UnregisterTabSpawner(SearchTab);
-#endif
 }
 
 void FFlowAssetEditor::InitToolMenuContext(FToolMenuContext& MenuContext)
@@ -186,6 +179,31 @@ void FFlowAssetEditor::PostRegenerateMenusAndToolbars()
 		];
 
 	SetMenuOverlay(MenuOverlayBox);
+}
+
+void FFlowAssetEditor::SaveAsset_Execute()
+{
+	DoPresaveAssetUpdate();
+
+	FAssetEditorToolkit::SaveAsset_Execute();
+}
+void FFlowAssetEditor::SaveAssetAs_Execute()
+{
+	DoPresaveAssetUpdate();
+
+	FAssetEditorToolkit::SaveAssetAs_Execute();
+}
+
+void FFlowAssetEditor::DoPresaveAssetUpdate()
+{
+	if (IsValid(FlowAsset))
+	{
+		UFlowGraph* FlowGraph = Cast<UFlowGraph>(FlowAsset->GetGraph());
+		if (IsValid(FlowGraph))
+		{
+			FlowGraph->OnSave();
+		}
+	}
 }
 
 bool FFlowAssetEditor::IsTabFocused(const FTabId& TabId) const
@@ -246,7 +264,6 @@ TSharedRef<SDockTab> FFlowAssetEditor::SpawnTab_RuntimeLog(const FSpawnTabArgs& 
 		];
 }
 
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
 TSharedRef<SDockTab> FFlowAssetEditor::SpawnTab_Search(const FSpawnTabArgs& Args) const
 {
 	check(Args.GetTabId() == SearchTab);
@@ -261,7 +278,6 @@ TSharedRef<SDockTab> FFlowAssetEditor::SpawnTab_Search(const FSpawnTabArgs& Args
 			]
 		];
 }
-#endif
 
 TSharedRef<SDockTab> FFlowAssetEditor::SpawnTab_ValidationLog(const FSpawnTabArgs& Args) const
 {
@@ -278,11 +294,19 @@ void FFlowAssetEditor::InitFlowAssetEditor(const EToolkitMode::Type Mode, const 
 {
 	FlowAsset = CastChecked<UFlowAsset>(ObjectToEdit);
 
+	UFlowGraph* FlowGraph = Cast<UFlowGraph>(FlowAsset->GetGraph());
+	if (IsValid(FlowGraph))
+	{
+		// Call the OnLoaded event for the flowgraph that is being edited
+		FlowGraph->OnLoaded();
+	}
+
 	// Support undo/redo
 	FlowAsset->SetFlags(RF_Transactional);
 	GEditor->RegisterForUndo(this);
 
 	UFlowGraphSchema::SubscribeToAssetChanges();
+	FlowAsset->OnDetailsRefreshRequested.BindThreadSafeSP(this, &FFlowAssetEditor::RefreshDetails);
 
 	BindToolbarCommands();
 	CreateToolbar();
@@ -376,12 +400,10 @@ void FFlowAssetEditor::BindToolbarCommands()
 	ToolkitCommands->MapAction(ToolbarCommands.ValidateAsset,
 								FExecuteAction::CreateSP(this, &FFlowAssetEditor::ValidateAsset_Internal),
 								FCanExecuteAction());
-
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
+	
 	ToolkitCommands->MapAction(ToolbarCommands.SearchInAsset,
 								FExecuteAction::CreateSP(this, &FFlowAssetEditor::SearchInAsset),
 								FCanExecuteAction());
-#endif
 
 	ToolkitCommands->MapAction(ToolbarCommands.EditAssetDefaults,
 								FExecuteAction::CreateSP(this, &FFlowAssetEditor::EditAssetDefaults_Clicked),
@@ -404,6 +426,14 @@ void FFlowAssetEditor::RefreshAsset()
 	CastChecked<UFlowGraph>(FlowAsset->GetGraph())->RefreshGraph();
 }
 
+void FFlowAssetEditor::RefreshDetails()
+{
+	if (DetailsView.IsValid())
+	{
+		DetailsView->ForceRefresh();
+	}
+}
+
 void FFlowAssetEditor::ValidateAsset_Internal()
 {
 	FFlowMessageLog LogResults;
@@ -416,21 +446,26 @@ void FFlowAssetEditor::ValidateAsset_Internal()
 		TabManager->TryInvokeTab(ValidationLogTab);
 		ValidationLogListing->AddMessages(LogResults.Messages);
 	}
+
 	ValidationLogListing->OnDataChanged().Broadcast();
+
+	FlowAsset->GetGraph()->NotifyGraphChanged();
 }
 
 void FFlowAssetEditor::ValidateAsset(FFlowMessageLog& MessageLog)
 {
-	FlowAsset->ValidateAsset(MessageLog);
+	UFlowGraph* FlowGraph = Cast<UFlowGraph>(FlowAsset->GetGraph());
+	if (FlowGraph)
+	{
+		FlowGraph->ValidateAsset(MessageLog);
+	}
 }
 
-#if ENABLE_SEARCH_IN_ASSET_EDITOR
 void FFlowAssetEditor::SearchInAsset()
 {
 	TabManager->TryInvokeTab(SearchTab);
 	SearchBrowser->FocusForUse();
 }
-#endif
 
 void FFlowAssetEditor::EditAssetDefaults_Clicked() const
 {
@@ -476,6 +511,8 @@ void FFlowAssetEditor::CreateWidgets()
 	// Search
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
 	SearchBrowser = SNew(SSearchBrowser, GetFlowAsset());
+#else
+	SearchBrowser = SNew(SFindInFlow, SharedThis(this));
 #endif
 
 	// Logs
@@ -532,12 +569,16 @@ FName FFlowAssetEditor::GetUISelectionState() const
 	return CurrentUISelection;
 }
 
+void FFlowAssetEditor::OnSelectedNodesChanged(const TSet<UObject*>& Nodes)
+{
+}
+
 #if ENABLE_JUMP_TO_INNER_OBJECT
 void FFlowAssetEditor::JumpToInnerObject(UObject* InnerObject)
 {
-	if (const UFlowNode* FlowNode = Cast<UFlowNode>(InnerObject))
+	if (const UFlowNodeBase* FlowNodeBase = Cast<UFlowNodeBase>(InnerObject))
 	{
-		GraphEditor->JumpToNode(FlowNode->GetGraphNode(), true);
+		GraphEditor->JumpToNode(FlowNodeBase->GetGraphNode(), true);
 	}
 	else if (const UEdGraphNode* GraphNode = Cast<UEdGraphNode>(InnerObject))
 	{
@@ -581,4 +622,11 @@ void FFlowAssetEditor::OnLogTokenClicked(const TSharedRef<IMessageToken>& Token)
 	}
 }
 
+void FFlowAssetEditor::JumpToNode(const UEdGraphNode* Node) const
+{
+	if (GetFlowGraph().IsValid())
+	{
+		GetFlowGraph()->JumpToNode(Node, false);
+	}
+}
 #undef LOCTEXT_NAMESPACE

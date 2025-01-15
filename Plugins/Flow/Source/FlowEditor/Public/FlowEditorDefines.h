@@ -9,6 +9,7 @@
 #define ENABLE_JUMP_TO_INNER_OBJECT 0
 
 /**
+ * When false, use custom SWidget to complete the search logic (cf.SFindInFlow)
  * Documentation: https://github.com/MothCocoon/FlowGraph/wiki/Asset-Search
  * Set macro value to 1, if you made these changes to the engine: https://github.com/EpicGames/UnrealEngine/pull/9943
  */

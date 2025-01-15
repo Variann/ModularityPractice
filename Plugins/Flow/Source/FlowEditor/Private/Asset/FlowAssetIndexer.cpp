@@ -3,7 +3,7 @@
 #include "Asset/FlowAssetIndexer.h"
 
 #include "FlowAsset.h"
-#include "Nodes/FlowNode.h"
+#include "Nodes/FlowNodeBase.h"
 
 #include "Graph/Nodes/FlowGraphNode_Reroute.h"
 
@@ -112,14 +112,15 @@ void FFlowAssetIndexer::IndexGraph(const UFlowAsset* InFlowAsset, FSearchSeriali
 		// Indexing Flow Node
 		if (const UFlowGraphNode* FlowGraphNode = Cast<UFlowGraphNode>(Node))
 		{
-			if (const UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+			if (const UFlowNodeBase* FlowNodeBase = FlowGraphNode->GetFlowNodeBase())
 			{
-				const FString NodeFriendlyName = FString::Printf(TEXT("%s: %s"), *FlowNode->GetClass()->GetName(), *FlowNode->GetNodeDescription());
-				Serializer.BeginIndexingObject(FlowNode, NodeFriendlyName);
-				FIndexerUtilities::IterateIndexableProperties(FlowNode, [&Serializer](const FProperty* Property, const FString& Value)
+				const FString NodeFriendlyName = FString::Printf(TEXT("%s: %s"), *FlowNodeBase->GetClass()->GetName(), *FlowNodeBase->GetNodeDescription());
+				Serializer.BeginIndexingObject(FlowNodeBase, NodeFriendlyName);
+				FIndexerUtilities::IterateIndexableProperties(FlowNodeBase, [&Serializer](const FProperty* Property, const FString& Value)
 				{
 					Serializer.IndexProperty(Property, Value);
 				});
+				FlowGraphNode->AdditionalNodeIndexing(Serializer);
 				Serializer.EndIndexingObject();
 			}
 		}

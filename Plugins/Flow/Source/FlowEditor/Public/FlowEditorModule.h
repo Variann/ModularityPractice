@@ -15,6 +15,11 @@ struct FGraphPanelPinConnectionFactory;
 class FFlowAssetEditor;
 class UFlowAsset;
 
+struct FLOWEDITOR_API FFLowAssetCategoryPaths : EAssetCategoryPaths
+{
+	static FAssetCategoryPath Flow;
+};
+
 class FLOWEDITOR_API FFlowEditorModule : public IModuleInterface
 {
 public:
@@ -30,6 +35,8 @@ public:
 	virtual void ShutdownModule() override;
 
 private:
+	void TrySetFlowNodeDisplayStyleDefaults() const;
+
 	void RegisterAssets();
 	void UnregisterAssets();
 

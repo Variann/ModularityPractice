@@ -3,20 +3,28 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "Types/FlowEnumUtils.h"
+
 #include "FlowTypes.generated.h"
 
 #if WITH_EDITORONLY_DATA
 UENUM(BlueprintType)
 enum class EFlowNodeStyle : uint8
 {
+	// Deprecated EFlowNodeStyle enum (use NodeDisplayStyle tag instead)
 	Condition,
 	Default,
 	InOut UMETA(Hidden),
 	Latent,
 	Logic,
 	SubGraph UMETA(Hidden),
-	Custom
+	Custom,
+
+	Max UMETA(Hidden),
+	Invalid UMETA(Hidden),
+	Min = 0 UMETA(Hidden),
 };
+FLOW_ENUM_RANGE_VALUES(EFlowNodeStyle)
 #endif
 
 UENUM(BlueprintType)
@@ -25,8 +33,13 @@ enum class EFlowNodeState : uint8
 	NeverActivated,
 	Active,
 	Completed,
-	Aborted
+	Aborted,
+
+	Max UMETA(Hidden),
+	Invalid UMETA(Hidden),
+	Min = 0 UMETA(Hidden),
 };
+FLOW_ENUM_RANGE_VALUES(EFlowNodeState)
 
 // Finish Policy value is read by Flow Node
 // Nodes have opportunity to terminate themselves differently if Flow Graph has been aborted
@@ -91,3 +104,59 @@ enum class EFlowOnScreenMessageType : uint8
 	Temporary,
 	Permanent
 };
+
+UENUM(BlueprintType)
+enum class EFlowAddOnAcceptResult : uint8
+{
+	// Note that these enum values are ordered by priority, where greater numerical values are higher priority
+	// (see CombineFlowAddOnAcceptResult)
+
+	// No result from the current operation
+	Undetermined,
+
+	// Accept, if all other conditions are met
+	TentativeAccept,
+
+	// Reject the AddOn outright, regardless if previously TentativelyAccept-ed
+	Reject,
+
+	Max UMETA(Hidden),
+	Invalid UMETA(Hidden),
+	Min = Undetermined UMETA(Hidden),
+};
+FLOW_ENUM_RANGE_VALUES(EFlowAddOnAcceptResult);
+
+FORCEINLINE_DEBUGGABLE EFlowAddOnAcceptResult CombineFlowAddOnAcceptResult(EFlowAddOnAcceptResult Result0, EFlowAddOnAcceptResult Result1)
+{
+	const FlowEnum::safe_underlying_type<EFlowAddOnAcceptResult>::type Result0AsInt = FlowEnum::ToInt(Result0);
+	const FlowEnum::safe_underlying_type<EFlowAddOnAcceptResult>::type Result1AsInt = FlowEnum::ToInt(Result1);
+
+	// Prioritize the higher numerical value enum value
+	return static_cast<EFlowAddOnAcceptResult>(FMath::Max(Result0AsInt, Result1AsInt));
+}
+
+UENUM()
+enum class EFlowForEachAddOnFunctionReturnValue : int8
+{
+	// Continue iterating the ForEach loop
+	Continue,
+
+	// Break out of the ForEach loop, with a "Success" result (whatever that means to the TFunction)
+	BreakWithSuccess,
+
+	// Break out of the ForEach loop, with a "Failure" return (whatever that means to the TFunction)
+	BreakWithFailure,
+
+	Max UMETA(Hidden),
+	Invalid = -1 UMETA(Hidden),
+	Min = 0 UMETA(Hidden),
+
+	ContinueForEachFirst = Continue UMETA(Hidden),
+	ContinueForEachLast = Continue UMETA(Hidden),
+};
+FLOW_ENUM_RANGE_VALUES(EFlowForEachAddOnFunctionReturnValue);
+
+namespace EFlowForEachAddOnFunctionReturnValue_Classifiers
+{
+	FORCEINLINE bool ShouldContinueForEach(EFlowForEachAddOnFunctionReturnValue Result) { return FLOW_IS_ENUM_IN_SUBRANGE(Result, EFlowForEachAddOnFunctionReturnValue::ContinueForEach); }
+}

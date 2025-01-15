@@ -48,7 +48,7 @@ void SFGN_Dialogue::UpdateGraphNode()
 
 	FText NodeTitleText = LOCTEXT("InvalidSpeaker", "Invalid Speaker!");
 	FLinearColor SpeakerColor;
-	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+	if(UFlowNode* FlowNode = Cast<UFlowNode>(FlowGraphNode->GetFlowNodeBase()))
 	{
 		UFN_DialogueBase* DialogueNode = Cast<UFN_DialogueBase>(FlowNode);
 		{
@@ -227,7 +227,7 @@ void SFGN_Dialogue::UpdateGraphNode()
 
 TSharedRef<SWidget> SFGN_Dialogue::CreateDialogueContentArea()
 {
-	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+	if(UFlowNode* FlowNode = Cast<UFlowNode>(FlowGraphNode->GetFlowNodeBase()))
 	{
 		UFN_DialogueBase* DialogueNode = Cast<UFN_DialogueBase>(FlowNode);
 		if(DialogueNode)
@@ -324,7 +324,7 @@ TSharedRef<SWidget> SFGN_Dialogue::CreateNodeContentArea()
 
 void SFGN_Dialogue::CreateBelowPinControls(TSharedPtr<SVerticalBox> MainBox)
 {
-	if (UFlowNode* FlowNode = FlowGraphNode->GetFlowNode())
+	if(UFlowNode* FlowNode = Cast<UFlowNode>(FlowGraphNode->GetFlowNodeBase()))
 	{
 		UFN_DialogueBase* DialogueNode = Cast<UFN_DialogueBase>(FlowNode);
 		if(DialogueNode)
