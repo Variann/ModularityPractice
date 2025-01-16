@@ -7,3 +7,13 @@ bool UO_TaskFailConditionBase::IsTaskFailed_Implementation()
 {
 	return true;
 }
+
+class UWorld* UO_TaskFailConditionBase::GetWorld() const
+{
+	if(!GEngine->GameViewport)
+	{
+		return nullptr;
+	}
+	
+	return GEngine->GameViewport->GetWorld();
+}

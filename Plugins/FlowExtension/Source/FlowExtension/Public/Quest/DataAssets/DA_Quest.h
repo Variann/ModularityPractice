@@ -75,6 +75,9 @@ public:
 	UFUNCTION(Category = "Quest", BlueprintCallable)
 	TArray<UO_TaskRequirementBase*> GetTasksRequirements(FGameplayTag TaskID);
 
+	UFUNCTION(Category = "Quest", BlueprintCallable)
+	TArray<UO_TaskFailConditionBase*> GetTasksFailConditions(FGameplayTag TaskID);
+
 	//Editor
 	
 #if WITH_EDITORONLY_DATA

@@ -4,7 +4,9 @@
 #include "Quest/FL_QuestHelpers.h"
 
 #include "FlowAsset.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Quest/QuestSubSystem.h"
 #include "Quest/Nodes/FN_QuestBase.h"
 #include "Quest/Objects/Parents/O_TaskFailConditionBase.h"
 #include "Quest/Objects/Parents/O_TaskRequirementBase.h"
@@ -96,13 +98,50 @@ bool UFL_QuestHelpers::IsTaskRequirementsMet(TArray<UO_TaskRequirementBase*> Req
 	return true;
 }
 
-bool UFL_QuestHelpers::IsTaskFailed(TArray<UO_TaskFailConditionBase*> FailConditions)
+bool UFL_QuestHelpers::IsTaskFailed(FGameplayTag Task)
 {
-	for(auto& CurrentFailContition : FailConditions)
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
 	{
-		if(IsValid(CurrentFailContition))
+		return false;
+	}
+
+	FQuestWrapper FoundQuest = UQuestSubSystem::GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
+	{
+		return false;
+	}
+
+	for(auto& CurrentTask : FoundQuest.Tasks)
+	{
+		if(CurrentTask.TaskID == Task && CurrentTask.State == Failed)
 		{
-			if(CurrentFailContition->IsTaskFailed_Implementation())
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UFL_QuestHelpers::ShouldTaskFail(FGameplayTag Task)
+{
+	UQuestSubSystem* QuestSubSystem = UQuestSubSystem::Get();
+	if(!QuestSubSystem)
+	{
+		return false;
+	}
+
+	FQuestWrapper FoundQuest = UQuestSubSystem::GetQuestForTask(Task);
+	if(!FoundQuest.QuestAsset)
+	{
+		return false;
+	}
+
+	for(auto& CurrentFailCondition : FoundQuest.QuestAsset.LoadSynchronous()->GetTasksFailConditions(Task))
+	{
+		if(IsValid(CurrentFailCondition))
+		{
+			if(CurrentFailCondition->IsTaskFailed_Implementation())
 			{
 				return true;
 			}

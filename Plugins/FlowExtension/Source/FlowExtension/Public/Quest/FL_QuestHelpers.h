@@ -39,8 +39,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 	static bool IsTaskRequirementsMet(TArray<UO_TaskRequirementBase*> Requirements);
 
-	/**Check if the task fail conditions are met.
-	 * will return true if any succeed.*/
+	/**Returns true if the task has been LABELLED as failed,
+	 * but does not check if the task should be labelled as failed.
+	 *
+	 * For example, if the task fails due to a condition not being met,
+	 * lets say when you open the wrong door, there's nothing in the quest
+	 * subsystem that is actively checking this. Meaning you have to both
+	 * check @ShouldTaskFail and if so, call @FailTask.
+	 * You can use this function to check if it has already been labelled as failed.*/
 	UFUNCTION(BlueprintCallable)
-	static bool IsTaskFailed(TArray<UO_TaskFailConditionBase*> FailConditions);
+	static bool IsTaskFailed(FGameplayTag Task);
+
+	/**Checks all the fail conditions to check if the task should fail.
+	 * This can return false, even though the task has been labelled as failed. */
+	UFUNCTION(BlueprintCallable)
+	static bool ShouldTaskFail(FGameplayTag Task);
 };

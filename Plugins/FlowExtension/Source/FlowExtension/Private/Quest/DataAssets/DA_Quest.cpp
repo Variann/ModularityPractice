@@ -49,6 +49,19 @@ TArray<UO_TaskRequirementBase*> UDA_Quest::GetTasksRequirements(FGameplayTag Tas
 	return FoundRequirements;
 }
 
+TArray<UO_TaskFailConditionBase*> UDA_Quest::GetTasksFailConditions(FGameplayTag TaskID)
+{
+	for(auto& CurrentTask : Tasks)
+	{
+		if(CurrentTask.TaskID == TaskID)
+		{
+			return CurrentTask.FailConditions;
+		}
+	}
+	
+	return TArray<UO_TaskFailConditionBase*>();
+}
+
 #if WITH_EDITOR
 
 EDataValidationResult UDA_Quest::IsDataValid(FDataValidationContext& Context) const
