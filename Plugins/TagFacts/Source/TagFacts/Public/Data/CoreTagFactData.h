@@ -58,7 +58,7 @@ struct FFactCheck
 	TEnumAsByte<EFactComparator> CheckToPerform = IsTrue;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fact")
-	TEnumAsByte<EFactType> Type;
+	TEnumAsByte<EFactType> Type = Value;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Fact", meta = (EditCondition="Type == EFactType::Fact", EditConditionHides))
 	FS_Fact FactToCompare;
